@@ -17,14 +17,12 @@ The Bayaan REST API. Handles audio ingestion from the Android app, routes audio 
 
 ## Tech Stack
 
-- **Runtime:** Node.js 20+
-- **Package manager:** npm
-- **Language:** JavaScript/TypeScript (confirm with team)
+- **Framework:** Ktor (Kotlin)
+- **Language:** Kotlin
+- **Database:** PostgreSQL
+- **Auth/sync:** Firebase Auth + Firestore
 - **Deployment:** Railway
-- **Database:** Supabase (PostgreSQL)
-- **Notifications:** Firebase
-
-> ⚠️ Stack note: README confirms Node.js (`npm install && npm run dev`). If the team migrates to Ktor (Kotlin), update this entire file — stack, commands, skills, and branch convention.
+- **Build:** Gradle (Kotlin DSL)
 
 ---
 
@@ -43,8 +41,9 @@ backend/
 When working in this module, invoke these skills via the Skill tool if available:
 - `everything-claude-code:backend-patterns` — Backend architecture patterns
 - `everything-claude-code:api-design` — REST API design conventions
+- `kotlin-patterns` — Idiomatic Kotlin
 
-If skills are not available, apply patterns manually: follow RESTful conventions, validate all inputs at the boundary, never log secrets, use environment variables for all credentials.
+If skills are not available, apply patterns manually: follow RESTful conventions, use Ktor's routing DSL, validate all inputs at the boundary, never log secrets, use environment variables for all credentials.
 
 ---
 
@@ -53,10 +52,9 @@ If skills are not available, apply patterns manually: follow RESTful conventions
 These commands are auto-approved by the team's `.claude/settings.json`:
 
 ```bash
-npm install
-npm run dev
-npm run build
-npm run test
+./gradlew build
+./gradlew test
+./gradlew run
 ```
 
 ---
@@ -67,7 +65,7 @@ Copy `.env.example` to `.env` before running:
 
 ```bash
 cp ../.env.example .env
-# Fill in Supabase URL, Supabase anon key, Railway config, Firebase credentials
+# Fill in PostgreSQL connection string, Railway config, Firebase credentials
 ```
 
 **Never commit `.env`.** It is gitignored at the repo root.

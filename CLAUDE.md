@@ -2,7 +2,7 @@
 
 ## Project Identity
 
-Bayaan is an AI-powered Quran recitation coach for Android. It listens to your recitation, runs it through a fine-tuned wav2vec2 Tajweed classifier, and delivers real-time feedback via voice and on-screen annotations. The goal: help students improve Tajweed without needing a teacher present. Stack: Kotlin/Jetpack Compose (Android) · Node.js (Backend) · Python/PyTorch (ML) · Supabase · Firebase · Railway.
+Bayaan is an AI-powered Quran recitation coach for Android. It listens to your recitation, runs it through a fine-tuned wav2vec2 Tajweed classifier, and delivers real-time feedback via voice and on-screen annotations. The goal: help students improve Tajweed without needing a teacher present. Stack: Kotlin/Jetpack Compose (Android) · Ktor/PostgreSQL (Backend) · Python/PyTorch (ML) · Firebase · Railway.
 
 ---
 
@@ -78,4 +78,4 @@ Each module has its own `CLAUDE.md` with a HARD BOUNDARY clause. **An AI session
 
 ## Backend Stack Note
 
-Backend stack is **Node.js** (confirmed from README: `npm install && npm run dev`). If the team migrates to Ktor (Kotlin), update `/backend/CLAUDE.md` to reflect the new stack, commands, and skills.
+Backend stack is **Ktor (Kotlin) + PostgreSQL** (confirmed from project proposal). The README incorrectly listed Node.js — that was a placeholder and has been corrected.

@@ -8,7 +8,7 @@ Bayaan listens to your Quran recitation and gives you real-time Tajweed feedback
 
 Bayaan uses a combination of speech recognition, phonetic analysis, and a fine-tuned ML model to detect Tajweed errors (e.g., incorrect Madd, missed Ghunnah, wrong Qalqalah) as you recite. Feedback is delivered immediately through voice and visual cues in the app.
 
-**Stack:** Kotlin (Android) · Node.js/Python (Backend) · PyTorch (ML) · Supabase · Firebase · Railway
+**Stack:** Kotlin (Android) · Ktor/PostgreSQL (Backend) · PyTorch (ML) · Firebase · Railway
 
 ---
 
