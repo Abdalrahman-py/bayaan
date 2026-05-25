@@ -1,0 +1,23 @@
+# CODEOWNERS — Bayaan
+# Routes PRs to the right reviewers automatically.
+#
+# NOTE: Android handles for Issa and Osama, and Ramzi's handle for backend,
+# are pending confirmation. Uncomment and update when confirmed.
+
+# Backend PRs → Abdalrahman (+ Ramzi when handle confirmed)
+# TODO: add @RamziGitHubHandle to the backend line when confirmed
+/backend/ @Abdalrahman-py
+
+# ML PRs → Abdalrahman
+/ml/ @Abdalrahman-py
+
+# Docs → Abdalrahman
+/docs/ @Abdalrahman-py
+
+# Root config requires AI lead sign-off
+/CLAUDE.md @Abdalrahman-py
+/.claude/ @Abdalrahman-py
+/.github/ @Abdalrahman-py
+
+# TODO: uncomment when Issa and Osama's GitHub handles are confirmed
+# /android/ @IssaGitHubHandle @OsamaGitHubHandle
