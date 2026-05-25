@@ -8,7 +8,7 @@ Bayaan listens to your Quran recitation and gives you real-time Tajweed feedback
 
 Bayaan uses a combination of speech recognition, phonetic analysis, and a fine-tuned ML model to detect Tajweed errors (e.g., incorrect Madd, missed Ghunnah, wrong Qalqalah) as you recite. Feedback is delivered immediately through voice and visual cues in the app.
 
-**Stack:** Kotlin (Android) · Node.js/Python (Backend) · PyTorch (ML) · Supabase · Firebase · Railway
+**Stack:** Kotlin (Android) · Ktor/PostgreSQL (Backend) · PyTorch (ML) · Firebase · Railway
 
 ---
 
@@ -65,3 +65,35 @@ cp .env.example .env
 | `dev`  | Active development, PRs merge here first |
 
 All changes go through a PR. See `.github/PULL_REQUEST_TEMPLATE.md`.
+
+---
+
+## AI-Assisted Development
+
+Bayaan is set up as a Claude Code agentic workspace. Each module has its own `CLAUDE.md` that scopes the AI's knowledge and authority to that module.
+
+### How to use Claude Code
+
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/Abdalrahman-py/bayaan.git
+   cd bayaan
+   ```
+
+2. **Open your module in Claude Code** — open ONLY your module directory, not the repo root:
+   - Android team → `claude /path/to/bayaan/android`
+   - Backend team → `claude /path/to/bayaan/backend`
+   - ML team      → `claude /path/to/bayaan/ml`
+
+3. **Run setup**
+   ```bash
+   bash scripts/setup.sh
+   ```
+
+4. **Start working** — The AI already knows what your module does, which commands are safe, and where to push work.
+
+### Rules for AI-generated PRs
+
+- Always use the PR template (auto-applied by GitHub)
+- AI cannot approve its own PRs — a human reviewer is required
+- Module boundaries are enforced: AI opened in `/android` cannot edit `/backend`

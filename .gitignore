@@ -56,3 +56,7 @@ npm-debug.log
 
 # OS
 Thumbs.db
+
+# Claude Code local state (settings.json is intentionally committed as team policy)
+.claude/*
+!.claude/settings.json
