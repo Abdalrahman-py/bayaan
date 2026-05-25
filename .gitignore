@@ -1,0 +1,58 @@
+# Kotlin / Gradle
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+out/
+bin/
+gen/
+proguard/
+lint.xml
+*.class
+release/
+keystore/
+
+# Gradle wrapper
+gradlew
+gradlew.bat
+gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio
+*.orig
+.navigation/
+*.hprof
+
+# Python / ML
+__pycache__/
+ml/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+*.egg
+venv/
+.venv/
+env/
+*.pyc
+
+# Environment
+.env
+*.env.local
+
+# Node / misc
+node_modules/
+npm-debug.log
+
+# OS
+Thumbs.db
