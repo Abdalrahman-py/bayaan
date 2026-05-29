@@ -21,11 +21,6 @@ lint.xml
 release/
 keystore/
 
-# Gradle wrapper
-gradlew
-gradlew.bat
-gradle/wrapper/gradle-wrapper.jar
-
 # Android Studio
 *.orig
 .navigation/
@@ -45,6 +40,13 @@ venv/
 .venv/
 env/
 *.pyc
+
+# ML artifacts — large files must not be committed
+checkpoints/
+ml/data/raw/
+*.onnx
+*.pt
+*.pth
 
 # Environment
 .env

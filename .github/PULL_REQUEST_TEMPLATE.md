@@ -2,23 +2,31 @@
 
 <!-- One sentence summary -->
 
-## Module(s) affected
+## Module affected
 
 - [ ] Android (`/android`)
 - [ ] Backend (`/backend`)
 - [ ] ML (`/ml`)
-- [ ] Docs / Infra
+- [ ] Docs / infra (cross-module — needs lead sign-off)
+
+> One module per PR. If this PR touches multiple modules, coordinate with the lead first.
+
+## Target branch
+
+- [ ] `dev` (correct target for module work)
+- [ ] `main` (only for release PRs from `dev`)
 
 ## How to test
 
-<!-- Steps to verify, or "N/A for docs" -->
+<!-- Steps for the reviewer. Use "N/A" only for pure docs/config changes. -->
 
 ## AI-assisted development checklist
 
-- [ ] CLAUDE.md for affected module is still accurate after this change
-- [ ] No `.env` files or API keys committed (`git diff --cached | grep -i "key\|secret\|password"`)
+- [ ] Module's `AGENTS.md` is still accurate after this change (update it if conventions changed)
+- [ ] No `.env` files, API keys, or secrets committed
+      Run: `git diff origin/dev | grep -iE "(api[_-]?key|secret|password|token)"`
 - [ ] Changes stay within the module boundary (no cross-module edits)
-- [ ] Branch name follows convention: `<module>/<feature-name>`
+- [ ] If an AI agent generated significant portions of this PR, a human teammate has reviewed it line-by-line
 
 ## Standard checklist
 
