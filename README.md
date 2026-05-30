@@ -8,18 +8,29 @@ Bayaan listens to your Quran recitation and gives you real-time Tajweed feedback
 
 Bayaan combines speech recognition (Groq Whisper), a fine-tuned wav2vec2 Tajweed classifier, and an LLM-driven explanation layer to detect Tajweed errors (e.g., incorrect Madd, missed Ghunnah) as you recite. Feedback is delivered immediately through voice (ElevenLabs TTS) and visual cues in the app.
 
-**Stack:** Kotlin / Jetpack Compose (Android) · Ktor + Supabase Postgres (Backend) · Python / PyTorch (ML) · Firebase Auth · Railway
+**Stack:** Kotlin · Jetpack Compose (Android) · Ktor (Backend) · PyTorch/wav2vec2 (ML) · Supabase (Auth + DB) · Railway
 
 ---
 
 ## Team
 
-| Name        | Role                              |
-| ----------- | --------------------------------- |
-| Abdalrahman | AI & Backend Lead                 |
-| Issa        | Android — Screens & Navigation    |
-| Ramzi       | Backend + Infra                   |
-| Osama       | Android — Voice & Core Recitation |
+| Name | Module | Role |
+|------|--------|------|
+| Abdalrahman | `/backend` + `/ml` | Backend API, ML classifier, architecture |
+| Ramzi | `/backend` | Supabase JWT middleware, database schema, Railway deployment |
+| Issa | `/android` | Compose UI, navigation, Supabase Auth SDK |
+| Osama | `/android` | Audio recording, HTTP client, recitation loop |
+
+---
+
+## Documentation
+
+| Doc | What's in it |
+|-----|-------------|
+| [Architecture](docs/architecture.md) | System diagram, data flows, database schema, env vars |
+| [API Spec](docs/api-spec.md) | All backend endpoints with request/response shapes |
+| [Team Roles](docs/team-roles.md) | Who owns what — especially useful for new team members |
+| [Tajweed Rules](docs/tajweed-rules.md) | The rules Bayaan teaches: Ghunnah + Madd, with examples |
 
 ---
 
@@ -39,6 +50,11 @@ Tajweed classification model. Takes user recitation audio and outputs rule-viola
 ## Getting started
 
 ### Prerequisites
+- Android Studio (Ladybug or later)
+- JDK 17+ (for the Ktor backend)
+- Python 3.11+ (for the ML module)
+- A [Supabase](https://supabase.com) project (free tier is enough for development)
+- API keys — copy `.env.example` to `.env` and fill in the values
 
 - **Android team:** Android Studio (Ladybug or later)
 - **Backend team:** JDK 17+, Gradle 8+
@@ -52,20 +68,56 @@ Tajweed classification model. Takes user recitation audio and outputs rule-viola
 git clone https://github.com/Abdalrahman-py/bayaan.git
 cd bayaan
 cp .env.example .env
-# Fill in only the keys your module needs.
-```
-
-### Onboarding (any team member)
-
-```bash
-bash scripts/setup.sh
+# Fill in .env, then:
+# Android → open android/ in Android Studio
+# Backend → cd backend && ./gradlew run
+# ML      → cd ml && pip install -r requirements.txt
 ```
 
 The script asks which role you have and prints the next commands for your module.
 
 ---
 
-## Branch model
+## MVP Task List
+
+These are the foundational tasks each team member needs to complete to get to a working end-to-end demo. Start from the top of your list — later tasks depend on earlier ones.
+
+### Ramzi — Backend Infrastructure
+- [ ] Create Supabase project, run the schema SQL from `docs/architecture.md`
+- [ ] Set up `.env` with `SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `DATABASE_URL`
+- [ ] Scaffold Ktor project in `backend/src` (Application.kt, routing, DI)
+- [ ] Implement Supabase JWT verification middleware
+- [ ] Implement `POST /auth/sync` endpoint
+- [ ] Write `UserRepository`, `SessionRepository`, `ViolationRepository`
+- [ ] Implement `GET /progress` and `GET /progress/sessions` endpoints
+- [ ] Deploy to Railway, confirm `/health` returns 200
+
+### Abdalrahman — Backend API + ML
+- [ ] Implement `POST /audio/analyze` endpoint (can return mock violations first)
+- [ ] Set up Python inference server in `ml/` that loads an ONNX model
+- [ ] Download QDAT dataset, run wav2vec2 fine-tuning on Kaggle (Ghunnah first)
+- [ ] Export trained model to ONNX, wire it into the inference server
+- [ ] Connect `POST /audio/analyze` to the real ML inference server
+- [ ] Repeat fine-tuning for Madd rule
+
+### Issa — Android UI
+- [ ] Add Supabase Android SDK dependency, configure with project URL + anon key
+- [ ] Build sign-in screen (email + password, calls Supabase Auth)
+- [ ] Build recitation screen scaffold (verse display, record button, loading state)
+- [ ] Build violation feedback overlay (highlights words, shows rule name)
+- [ ] Build progress screen (session list, per-rule accuracy)
+- [ ] Wire Supabase Auth session so JWT is attached to every HTTP request
+
+### Osama — Android Audio + Networking
+- [ ] Implement audio recording with `MediaRecorder` (output: M4A or WAV)
+- [ ] Add HTTP client (Retrofit or Ktor client), configure base URL from `.env`
+- [ ] Implement `POST /audio/analyze` call with audio file + JWT header
+- [ ] Parse violation response and pass data to Issa's UI layer
+- [ ] Test end-to-end: record → send → receive violations → render
+
+---
+
+## Branch Strategy
 
 ```
 main         production. Tagged releases only.
