@@ -15,6 +15,7 @@
 /docs/ @Abdalrahman-py
 
 # Root config requires AI lead sign-off
+/AGENTS.md @Abdalrahman-py
 /CLAUDE.md @Abdalrahman-py
 /.claude/ @Abdalrahman-py
 /.github/ @Abdalrahman-py
