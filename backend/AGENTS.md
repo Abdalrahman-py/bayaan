@@ -24,7 +24,7 @@ Target end-to-end latency: **under 800ms** for the full loop. Deployed on Railwa
 | Name        | Responsibility                                                                                                                            |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Abdalrahman | AI & Backend Lead. Owns the AI pipeline (Whisper, ONNX inference wrapper, LLM, TTS), API contracts, and integration with the ML model.    |
-| Ramzi       | Infrastructure. Owns Supabase schema, Firebase Auth integration, Railway deployment, environment management, and the progress endpoints.  |
+| Ramzi       | Infrastructure. Owns Supabase schema, Supabase JWT middleware, Railway deployment, environment management, and the progress endpoints.    |
 
 Default reviewer for a backend PR: the other backend owner.
 
@@ -35,7 +35,7 @@ Default reviewer for a backend PR: the other backend owner.
 - **Language:** Kotlin
 - **Framework:** Ktor (server)
 - **Database:** Supabase Postgres (managed Postgres + REST + Realtime)
-- **Auth:** Firebase Auth (JWT validation middleware)
+- **Auth:** Supabase Auth (JWT validation middleware — HS256, verified locally using `SUPABASE_JWT_SECRET`)
 - **Realtime audio:** Ktor WebSocket
 - **External services:** Groq (Whisper), ElevenLabs (TTS), Anthropic or Google (LLM)
 - **ML inference:** ONNX Runtime (Java/Kotlin bindings) running the wav2vec2-derived Tajweed classifier from `/ml`
@@ -52,7 +52,7 @@ backend/
 │   ├── main/kotlin/         Application source
 │   │   ├── routes/          Ktor routing modules
 │   │   ├── pipeline/        Audio → transcript → Tajweed → LLM → TTS
-│   │   ├── auth/            Firebase JWT middleware
+│   │   ├── auth/            Supabase JWT middleware
 │   │   ├── db/              Supabase Postgres queries
 │   │   └── Application.kt   Entry point
 │   └── test/kotlin/         Tests
@@ -74,7 +74,7 @@ git pull origin backend
 cd backend
 cp ../.env.example .env       # if you haven't already
 # Fill in: GROQ_API_KEY, ELEVENLABS_API_KEY, CLAUDE_API_KEY (or Gemini),
-#          SUPABASE_URL, SUPABASE_ANON_KEY, FIREBASE_PROJECT_ID
+#          SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_JWT_SECRET
 ./gradlew build
 ./gradlew run
 ```
@@ -112,7 +112,7 @@ cp ../.env.example .env       # if you haven't already
 ### What to avoid
 
 - Don't block the event loop. No `Thread.sleep`, no blocking IO without a dispatcher.
-- Don't trust client-supplied user IDs — always derive from the verified Firebase JWT.
+- Don't trust client-supplied user IDs — always derive from the verified Supabase JWT.
 - Don't store raw audio. We process it in-stream; only metadata persists.
 - Don't add new external services without checking with the AI Lead.
 
