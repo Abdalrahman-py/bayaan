@@ -15,37 +15,19 @@ Same treatment the backend got on June 10. Technology decisions researched, term
 
 ## Part 1: Harsh Review — 7 Issues With the Current Android Plan
 
-### Issue #1: KMP Stays — Strategic From Day One (DECISION)
+### Issue #1: KMP Adds Complexity With Zero MVP Benefit (CRITICAL)
 
-The proposal says "Kotlin Multiplatform + Jetpack Compose." KMP was questioned in the initial review as "unnecessary for Android-only MVP." Jade overruled: KMP is the architecture from day one.
+The proposal says "Kotlin Multiplatform + Jetpack Compose." KMP is great for sharing business logic across Android and iOS. But Bayaan's MVP is Android-only. There is no iOS target.
 
-**The strategy:**
-- MVP ships Android-only (Jetpack Compose)
-- Post-graduation: iOS app via SwiftUI, consuming the same shared module
-- The shared module (models, API client, repositories) is pure Kotlin — it doesn't care about the platform
-- Building it in a KMP structure from the start means zero extraction work later
+What KMP would force on this project:
+- `expect`/`actual` declarations for platform-specific code (audio recording, file I/O)
+- KMP module structure (`shared/`, `androidApp/`)
+- Multiplatform dependency management (some libraries don't support KMP)
+- A learning curve for Issa, who's already learning Compose
 
-**How it works:**
-```
-bayaan/
-  shared/           ← Pure Kotlin, multiplatform
-    models/          ← AnalyzeResponse, Verse, Surah, Progress...
-    api/             ← BayaanApi (Ktor Client — already multiplatform)
-    repository/      ← ApiRepository, AuthRepository
-  androidApp/        ← Android-only (MVP target)
-    ui/              ← Compose screens
-    audio/           ← MediaRecorder (Android API)
-    di/              ← Koin modules
-  iosApp/            ← Future: SwiftUI, consumes shared/
-```
+What KMP would give us: nothing. There's no iOS app.
 
-**What KMP gives us now (even with only Android):**
-- Enforced separation — UI code can't accidentally import Android stuff into shared logic
-- Clean module boundaries — Issa works in `androidApp/`, Osama works across both
-- Zero-cost future-proofing — the shared module compiles for JVM today, ready for iOS tomorrow
-- No `expect`/`actual` needed — since there's nothing platform-specific in shared (Ktor Client handles platform differences internally)
-
-**Verdict: Full KMP structure. Android-only target for MVP. iOS-ready from day one.**
+**Verdict: Pure Android for MVP.** Standard Android project structure. If Bayaan ever expands to iOS, the business logic can be extracted into a shared KMP module later. Don't pay the KMP tax for code that won't be shared.
 
 ### Issue #2: Retrofit Is Legacy for New Kotlin Projects (ARCHITECTURE)
 
@@ -218,7 +200,7 @@ Android's built-in audio recording API. You configure it (source = mic, format =
 | Concern | What we're using | Why | Rejected |
 |---------|-----------------|-----|----------|
 | **UI framework** | Jetpack Compose | Modern, Kotlin-native, no XML | XML (legacy) |
-| **Platform** | Kotlin Multiplatform (KMP) — Android target for MVP, iOS-ready | Strategic: shared module from day one, iOS app later via SwiftUI | Pure Android (iOS would require extraction later) |
+| **Platform** | Pure Android (not KMP) | MVP is Android-only, simpler setup | KMP (no iOS target, adds complexity) |
 | **Architecture** | MVVM + Single Activity | Standard, well-documented, Compose-native | MVI (overkill for 6 screens) |
 | **State management** | StateFlow + collectAsState | Compose-native, coroutine-based | LiveData (legacy) |
 | **Navigation** | Compose Navigation (type-safe routes) | Official, type-safe at compile time | Third-party (unnecessary) |
@@ -235,18 +217,8 @@ Android's built-in audio recording API. You configure it (source = mic, format =
 Issa owns screens, navigation, auth UI, and feedback rendering. 8 tasks, ordered.
 
 ### I1. Project Setup + Dependencies
-- Create KMP project structure:
-  - `shared/` module — pure Kotlin, no Android deps
-  - `androidApp/` module — Compose UI, audio, DI
-- Add to `shared/build.gradle.kts`:
-  ```kotlin
-  kotlin {
-      androidTarget()
-      // iosArm64(), iosSimulatorArm64() — uncomment post-MVP
-  }
-  // Ktor Client (multiplatform), kotlinx.serialization, models
-  ```
-- Add to `androidApp/build.gradle.kts`: all Compose, Koin, Supabase, MediaRecorder deps (same list as before)
+- Create Android project in `/android` (target SDK 34, min SDK 26)
+- Add `build.gradle.kts` dependencies:
   ```kotlin
   // Compose BOM
   implementation(platform("androidx.compose:compose-bom:2025.05.00"))
@@ -493,7 +465,7 @@ Shared:        S1 ────────────────── S2
 
 | Item | Why cut |
 |------|---------|
-| ~~KMP / shared module~~ | KEPT — strategic decision, iOS-ready from day one |
+| KMP / shared module | No iOS target. Pure Android for MVP. |
 | Retrofit | Legacy. Ktor Client is consistent with backend. |
 | Hilt | Overkill for 6 screens. Koin is simpler. |
 | XML layouts | Compose-only. Issa is learning it anyway. |
