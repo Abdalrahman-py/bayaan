@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bayaan — Class B Experiments Handoff</title>
+<style>
+  :root{
+    --ink:#1d2733; --muted:#5b6b7b; --line:#e2e8ef; --bg:#f7f9fb;
+    --accent:#1f7a8c; --accent2:#2e8b57; --warn:#b45309; --bad:#c0392b; --good:#2e8b57;
+    --chip:#eef4f6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 22px 80px;}
+  header{border-bottom:3px solid var(--accent);padding-bottom:18px;margin-bottom:26px;}
+  h1{font-size:30px;margin:0 0 6px;}
+  h2{font-size:21px;margin:38px 0 12px;padding-top:10px;border-top:1px solid var(--line);color:var(--ink);}
+  h3{font-size:16px;margin:20px 0 6px;color:var(--accent);}
+  .sub{color:var(--muted);font-size:14px}
+  p{margin:8px 0}
+  code{background:#eef2f5;padding:1px 6px;border-radius:4px;font-size:13.5px;
+    font-family:Consolas,Menlo,monospace}
+  pre{background:#0f1b24;color:#d6e3ea;padding:14px 16px;border-radius:8px;overflow:auto;
+    font-size:13px;line-height:1.5}
+  pre .c{color:#7fa6b5}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14.5px;background:#fff;
+    border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:#eef4f6;font-weight:600}
+  tr:last-child td{border-bottom:none}
+  .tldr{background:#fff;border:1px solid var(--line);border-left:5px solid var(--accent);
+    border-radius:8px;padding:16px 18px;margin:6px 0 8px}
+  .tldr ul{margin:6px 0 0;padding-left:20px}
+  .grid{display:flex;gap:18px;flex-wrap:wrap}
+  .card{flex:1 1 200px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+  .kpi{font-size:30px;font-weight:700;color:var(--accent)}
+  .kpi.good{color:var(--good)} .kpi.warn{color:var(--warn)}
+  .chip{display:inline-block;background:var(--chip);border:1px solid var(--line);
+    border-radius:20px;padding:2px 10px;font-size:12.5px;color:var(--muted);margin:2px 4px 2px 0}
+  .note{background:#fff7ec;border:1px solid #f1d9b5;border-left:5px solid var(--warn);
+    border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14.5px}
+  .ok{color:var(--good);font-weight:600}
+  .no{color:var(--bad);font-weight:600}
+  figure{margin:16px 0;background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px}
+  figcaption{font-size:13px;color:var(--muted);margin-top:8px;text-align:center}
+  .ar{font-size:18px}
+  footer{margin-top:40px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:13px}
+  ol li,ul li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Bayaan — Acoustic Classifier (Class B) Experiments</h1>
+  <div class="sub">Internal handoff report &nbsp;·&nbsp; 14 June 2026 &nbsp;·&nbsp;
+  Hybrid rule-acoustic Tajweed mispronunciation detection</div>
+  <div style="margin-top:10px">
+    <span class="chip">QDAT training</span>
+    <span class="chip">wav2vec2-XLSR-53-Arabic</span>
+    <span class="chip">ONNX</span>
+    <span class="chip">Class A rule engine</span>
+    <span class="chip">FGR metric</span>
+  </div>
+</header>
+
+<!-- TLDR -->
+<div class="tldr">
+  <strong>TL;DR</strong>
+  <ul>
+    <li>We built the full Bayaan ML pipeline end-to-end and trained the two acoustic classifiers.</li>
+    <li><b>Results (QDAT held-out test set):</b> Ghunnah <b>F1&nbsp;=&nbsp;0.93</b>, Madd <b>F1&nbsp;=&nbsp;0.87</b> — both above the 0.75 target.</li>
+    <li><b>Important:</b> these are <i>in-distribution</i> numbers, <u>not</u> comparable to the IQRA 2026 leaderboard (0.72) yet — that comparison needs the held-out QuranMB.v2 test (Phase 9).</li>
+    <li>The novel metric <b>FGR = 100%</b> computes correctly on real output (every flagged error is mapped to its Arabic letter).</li>
+    <li>The binding constraint for the text-based rules is <b>ASR quality</b>; we added a guard so a bad transcript causes <i>silence</i>, not false alarms.</li>
+  </ul>
+</div>
+
+<div class="grid" style="margin:14px 0">
+  <div class="card"><div class="kpi good">0.93</div>Ghunnah F1 (test)</div>
+  <div class="card"><div class="kpi good">0.87</div>Madd F1 (test)</div>
+  <div class="card"><div class="kpi">100%</div>FGR (grounding)</div>
+  <div class="card"><div class="kpi">25/25</div>unit tests pass</div>
+</div>
+
+<!-- WHAT -->
+<h2>1. What this project is (plain version)</h2>
+<p>Millions of people learn to recite the Qur'an, governed by <b>Tajweed</b> rules. Existing
+research systems can detect mispronunciations at the <i>phoneme</i> level but cannot tell a
+learner <i>which Arabic letter</i> they got wrong — so the feedback isn't usable. <b>Bayaan</b>
+fixes that with a <b>hybrid</b> design and reports a new metric, <b>Feedback Grounding Rate
+(FGR)</b>: the share of detected errors that are mapped to a specific Arabic letter with a
+correction. Existing systems score FGR = 0%; Bayaan is built to score ~100%.</p>
+
+<p>The key idea: split Tajweed rules into two classes and use the cheapest correct tool for each.</p>
+
+<h3>Class A vs Class B</h3>
+<table>
+  <tr><th>Class</th><th>How detected</th><th>Rules</th><th>Why</th></tr>
+  <tr>
+    <td><b>A — text-determinable</b></td>
+    <td>Deterministic rule engine: compares the ASR transcript to the expected text. <b>No ML.</b></td>
+    <td>Idgham, Iqlab, Ikhfaa, Izhar</td>
+    <td>Exact when the transcript is right; ML would only add noise.</td>
+  </tr>
+  <tr>
+    <td><b>B — acoustically-dependent</b></td>
+    <td>Small binary classifier on the audio (frozen wav2vec2 + 2-layer head).</td>
+    <td>Ghunnah, Madd <span class="sub">(this report)</span></td>
+    <td>Duration / nasality is only measurable from the audio signal.</td>
+  </tr>
+</table>
+<p class="sub">The rule engine always localizes <i>where</i> a rule occurs (from text), so every
+violation — Class A or B — carries its Arabic character + position. That is what makes FGR ≈ 100%.</p>
+
+<!-- ARCHITECTURE -->
+<h2>2. Pipeline</h2>
+<figure>
+<svg viewBox="0 0 860 200" width="100%" role="img" aria-label="Bayaan pipeline">
+  <style>
+    .b{fill:#fff;stroke:#1f7a8c;stroke-width:1.5;rx:8}
+    .t{font:13px Segoe UI,Arial;fill:#1d2733}
+    .s{font:11px Segoe UI,Arial;fill:#5b6b7b}
+    .a{stroke:#5b6b7b;stroke-width:1.5;fill:none;marker-end:url(#ah)}
+    .bB{fill:#eef9f2;stroke:#2e8b57}
+  </style>
+  <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 z" fill="#5b6b7b"/></marker></defs>
+
+  <rect class="b" x="10" y="70" width="120" height="56"/>
+  <text class="t" x="70" y="92" text-anchor="middle">Audio</text>
+  <text class="s" x="70" y="110" text-anchor="middle">recitation</text>
+
+  <rect class="b" x="160" y="70" width="130" height="56"/>
+  <text class="t" x="225" y="92" text-anchor="middle">Whisper ASR</text>
+  <text class="s" x="225" y="110" text-anchor="middle">+ word timings</text>
+
+  <rect class="b" x="320" y="70" width="140" height="56"/>
+  <text class="t" x="390" y="90" text-anchor="middle">Tajweed Engine</text>
+  <text class="s" x="390" y="108" text-anchor="middle">localizes rules (text)</text>
+
+  <rect class="b" x="500" y="14" width="150" height="50"/>
+  <text class="t" x="575" y="34" text-anchor="middle">Class A engine</text>
+  <text class="s" x="575" y="51" text-anchor="middle">rules vs transcript</text>
+
+  <rect class="b bB" x="500" y="132" width="150" height="50"/>
+  <text class="t" x="575" y="152" text-anchor="middle">Class B classifiers</text>
+  <text class="s" x="575" y="169" text-anchor="middle">ONNX, P(correct)</text>
+
+  <rect class="b" x="690" y="70" width="160" height="56"/>
+  <text class="t" x="770" y="90" text-anchor="middle">Hybrid + FGR</text>
+  <text class="s" x="770" y="108" text-anchor="middle">char-mapped report</text>
+
+  <path class="a" d="M130,98 L158,98"/>
+  <path class="a" d="M290,98 L318,98"/>
+  <path class="a" d="M460,90 L500,55"/>
+  <path class="a" d="M460,106 L500,150"/>
+  <path class="a" d="M650,42 L690,88"/>
+  <path class="a" d="M650,156 L690,108"/>
+</svg>
+<figcaption>Figure 1 — One ASR pass feeds a deterministic engine; Class A judges the text, Class B judges the audio; results merge into one character-mapped report. This report covers the <b>Class B</b> training (green) plus the engine/Class A/hybrid integration.</figcaption>
+</figure>
+
+<!-- METHOD -->
+<h2>3. Methodology — what we did, step by step</h2>
+<ol>
+  <li><b>Environment.</b> Python 3.13 venv; PyTorch 2.6 + CUDA on an RTX 3050 (4 GB) GPU.</li>
+  <li><b>Data prep.</b> Downloaded <b>QDAT</b> (<code>obadx/qdat</code>, MIT licence), decoded all 1,505 clips
+      to 16 kHz mono WAV, and built a labelled table (<code>labels.csv</code>) with a stratified
+      train / val / test split per rule. Label meaning: <code>1 = correct</code>, <code>0 = incorrect</code>.</li>
+  <li><b>Feature caching.</b> The wav2vec2 backbone is <b>frozen</b>, so we ran it once over each clip
+      (at its true length) and cached the 1024-dim embedding. Training the small head on cached
+      vectors then takes seconds and fits the 4 GB GPU.</li>
+  <li><b>Training.</b> One binary classifier per rule = frozen <code>wav2vec2-large-xlsr-53-arabic</code>
+      backbone + a 2-layer head (1024 → 256 → 1). Class imbalance handled with <code>pos_weight</code>;
+      early stopping on validation F1.</li>
+  <li><b>Export.</b> Both classifiers exported to <b>ONNX</b> and numerically verified against PyTorch
+      (match to ~1e-5) at two clip lengths.</li>
+  <li><b>Rule engine + hybrid (Class A).</b> Implemented the Arabic phonology + Tajweed engine,
+      deterministic Class A detection, the hybrid merge layer, and the <b>FGR</b> metric. 25 unit tests.</li>
+  <li><b>IQRA-comparable scoring.</b> Built a first-pass bridge that converts our character-level
+      violations into the phoneme-deviation scoring used by the IQRA benchmark.</li>
+  <li><b>Real-audio dry run.</b> Wired a real Whisper transcript into the pipeline and ran it on real
+      audio to validate the full chain.</li>
+  <li><b>Safety guard.</b> Added a transcript-reliability gate so a failed/garbage ASR output makes
+      Class A <b>abstain</b> instead of producing false positives.</li>
+</ol>
+
+<!-- DATA -->
+<h2>4. Data</h2>
+<table>
+  <tr><th>Rule</th><th>QDAT column</th><th>Correct</th><th>Incorrect</th><th>Train / Val / Test</th></tr>
+  <tr><td>Ghunnah <span class="ar">(الغُنّة)</span></td><td><code>the_tight_noon</code></td><td>1,215</td><td>289</td><td>1,052 / 226 / 226</td></tr>
+  <tr><td>Madd <span class="ar">(المدّ)</span></td><td><code>separate_tide</code></td><td>850</td><td>655</td><td>1,053 / 226 / 226</td></tr>
+</table>
+<p class="sub">1,505 total clips, 160 speakers, all reciting the <i>same single verse</i>
+(Al-Baqarah 2:32). This single-verse limitation is the main generalization risk (see §6).</p>
+
+<!-- RESULTS -->
+<h2>5. Results</h2>
+
+<h3>5.1 Classifier accuracy (held-out QDAT test set)</h3>
+<table>
+  <tr><th>Rule</th><th>F1 (error detection)</th><th>F1 (correct)</th><th>Precision</th><th>Recall</th><th>Best val F1</th><th>Target</th></tr>
+  <tr><td>Ghunnah</td><td><b>0.930</b></td><td>0.984</td><td>0.978</td><td>0.989</td><td>0.944</td><td><span class="ok">✔ ≥0.75</span></td></tr>
+  <tr><td>Madd</td><td><b>0.870</b></td><td>0.910</td><td>0.865</td><td>0.961</td><td>0.891</td><td><span class="ok">✔ ≥0.75</span></td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 520 260" width="100%" role="img" aria-label="F1 results">
+  <style>
+    .ax{stroke:#c8d2db;stroke-width:1}
+    .gl{stroke:#edf1f4;stroke-width:1}
+    .lab{font:12px Segoe UI,Arial;fill:#5b6b7b}
+    .val{font:13px Segoe UI,Arial;fill:#1d2733;font-weight:700}
+    .barG{fill:#2e8b57}.barM{fill:#1f7a8c}
+    .tline{stroke:#b45309;stroke-width:1.5;stroke-dasharray:5 4}
+    .tlab{font:11px Segoe UI,Arial;fill:#b45309}
+  </style>
+  <!-- gridlines 0,.25,.5,.75,1 ; baseline y=210 top y=30 (height 180) -->
+  <line class="gl" x1="60" y1="30" x2="500" y2="30"/>
+  <line class="gl" x1="60" y1="75" x2="500" y2="75"/>
+  <line class="gl" x1="60" y1="120" x2="500" y2="120"/>
+  <line class="gl" x1="60" y1="165" x2="500" y2="165"/>
+  <line class="ax" x1="60" y1="210" x2="500" y2="210"/>
+  <text class="lab" x="52" y="34" text-anchor="end">1.0</text>
+  <text class="lab" x="52" y="79" text-anchor="end">0.75</text>
+  <text class="lab" x="52" y="124" text-anchor="end">0.5</text>
+  <text class="lab" x="52" y="169" text-anchor="end">0.25</text>
+  <text class="lab" x="52" y="213" text-anchor="end">0</text>
+  <!-- target line at 0.75 -> y=75 -->
+  <line class="tline" x1="60" y1="75" x2="500" y2="75"/>
+  <text class="tlab" x="498" y="70" text-anchor="end">target 0.75</text>
+  <!-- Ghunnah 0.93 -> h=167.4 y=42.6 ; bar x=140 w=90 -->
+  <rect class="barG" x="140" y="42.6" width="90" height="167.4"/>
+  <text class="val" x="185" y="36" text-anchor="middle">0.93</text>
+  <text class="lab" x="185" y="228" text-anchor="middle">Ghunnah</text>
+  <!-- Madd 0.87 -> h=156.6 y=53.4 ; bar x=320 w=90 -->
+  <rect class="barM" x="320" y="53.4" width="90" height="156.6"/>
+  <text class="val" x="365" y="47" text-anchor="middle">0.87</text>
+  <text class="lab" x="365" y="228" text-anchor="middle">Madd</text>
+</svg>
+<figcaption>Figure 2 — Error-detection F1 on the held-out QDAT test set. Both classifiers clear the 0.75 target.</figcaption>
+</figure>
+
+<div class="note">
+  <b>Read this before quoting the numbers.</b> 0.93 / 0.87 are on QDAT's <b>own</b> test split —
+  same single verse, same recording pool (<i>in-distribution</i>). The IQRA 2026 leaderboard
+  (top F1 = 0.7201) is measured on a <b>different, harder benchmark (QuranMB.v2)</b> with many
+  verses and real mispronunciations. <b>Do not place 0.93 next to 0.72</b> — they are not the same
+  test. The apples-to-apples number comes from the Phase-9 QuranMB.v2 run.
+</div>
+
+<h3>5.2 Feedback Grounding Rate (the novel metric)</h3>
+<p><b>FGR = 100%</b> on all produced output: every flagged violation carried its Arabic character
+and an expected-pronunciation description. For comparison, every IQRA 2026 system scores FGR = 0%
+(they emit phonemes with no character mapping).</p>
+
+<h3>5.3 Safety guard — false positives on correct recitations</h3>
+<p>In a real-audio dry run, a weak ASR model (whisper-tiny) produced garbage transcripts, which made
+the rule engine wrongly flag errors. We added a reliability gate: if the transcript is too unlike
+the reference verse, Class A abstains. Effect on correct recitations:</p>
+
+<figure>
+<svg viewBox="0 0 520 240" width="100%" role="img" aria-label="False positive rate before/after guard">
+  <style>
+    .ax{stroke:#c8d2db;stroke-width:1}.gl{stroke:#edf1f4;stroke-width:1}
+    .lab{font:12px Segoe UI,Arial;fill:#5b6b7b}
+    .val{font:13px Segoe UI,Arial;fill:#1d2733;font-weight:700}
+    .bad{fill:#c0392b}.good{fill:#2e8b57}
+  </style>
+  <!-- baseline y=200 top y=30 height 170 for value 0..1 -->
+  <line class="gl" x1="70" y1="30" x2="500" y2="30"/>
+  <line class="gl" x1="70" y1="115" x2="500" y2="115"/>
+  <line class="ax" x1="70" y1="200" x2="500" y2="200"/>
+  <text class="lab" x="62" y="34" text-anchor="end">1.0</text>
+  <text class="lab" x="62" y="119" text-anchor="end">0.5</text>
+  <text class="lab" x="62" y="203" text-anchor="end">0</text>
+  <!-- before 1.0 -> h=170 y=30 -->
+  <rect class="bad" x="150" y="30" width="90" height="170"/>
+  <text class="val" x="195" y="24" text-anchor="middle">1.00</text>
+  <text class="lab" x="195" y="218" text-anchor="middle">before guard</text>
+  <!-- after 0.0 -> draw a thin marker at baseline -->
+  <rect class="good" x="330" y="197" width="90" height="3"/>
+  <text class="val" x="375" y="190" text-anchor="middle">0.00</text>
+  <text class="lab" x="375" y="218" text-anchor="middle">after guard</text>
+</svg>
+<figcaption>Figure 3 — False positives per clip on correct recitations (lower = better). The guard turns a
+garbage transcript into an abstention instead of a false alarm.</figcaption>
+</figure>
+
+<p class="sub">Takeaway: detection quality for Class A is bounded by the ASR — and now it fails in
+the <b>safe</b> direction (silence, not false accusations).</p>
+
+<!-- DEPLOYMENT NOTES / CAVEATS -->
+<h2>6. Honest status &amp; caveats</h2>
+<table>
+  <tr><th>Item</th><th>Status</th></tr>
+  <tr><td>Class B classifiers (Ghunnah, Madd) trained + exported to ONNX</td><td class="ok">Done</td></tr>
+  <tr><td>Tajweed engine, Class A rules, hybrid layer, FGR — 25 tests pass</td><td class="ok">Done</td></tr>
+  <tr><td>Phoneme-deviation bridge for IQRA-comparable F1</td><td class="ok">First pass + tested</td></tr>
+  <tr><td>Numbers comparable to IQRA 2026 (QuranMB.v2)</td><td class="no">Pending — Phase 9 (test set is locked)</td></tr>
+  <tr><td>Generalization beyond QDAT's single verse</td><td class="no">Unverified — needs EveryAyah augmentation</td></tr>
+  <tr><td>Real Quran-tuned ASR in the loop</td><td class="no">Pending — whisper-tiny is unusable for Arabic</td></tr>
+  <tr><td>"Lightweight / on-device" claim</td><td class="no">ONNX is ~1.26 GB each (full fp32) — needs int8 quantization</td></tr>
+</table>
+<ul>
+  <li><b>QDAT is one verse.</b> The classifier may partly key on verse-specific cues; mix in EveryAyah
+  professional recitations (correct examples) before trusting generalization.</li>
+  <li><b>Phoneme bridge is approximate.</b> IQRA phonemizes literally, not Tajweed-collapsed, so
+  Tajweed-rule violations don't map 1:1 to phoneme errors. Frame Bayaan as targeting a
+  <i>pedagogically meaningful subset</i> of errors with full character grounding (high FGR).</li>
+  <li><b>Madd leans to recall</b> (R 0.96, P 0.87): it occasionally flags correct audio. For a learner
+  app, tune the decision threshold to reduce false alarms before the user study.</li>
+</ul>
+
+<!-- REPRO -->
+<h2>7. How to reproduce</h2>
+<p>Code lives in <code>bayaan-ml/</code> (sibling of the <code>bayaan-research</code> docs repo).</p>
+<pre><span class="c"># 1. environment</span>
+python -m venv .venv &amp;&amp; .venv\Scripts\activate
+pip install -r requirements.txt
+
+<span class="c"># 2. data: QDAT -> 16 kHz WAVs + labels.csv</span>
+python -m src.dataset --hf-id obadx/qdat
+
+<span class="c"># 3. cache frozen-backbone embeddings, then train the head (per rule)</span>
+python -m src.extract_features --rule ghunnah
+python -m src.train --rule ghunnah --from-features --epochs 60
+python -m src.extract_features --rule madd
+python -m src.train --rule madd --from-features --epochs 60
+
+<span class="c"># 4. export + verify ONNX</span>
+python -m src.export_onnx --rule ghunnah --checkpoint checkpoints/ghunnah_best.pt --output models/ghunnah.onnx
+python -m src.export_onnx --rule madd    --checkpoint checkpoints/madd_best.pt    --output models/madd.onnx
+
+<span class="c"># 5. tests (no GPU / no download needed)</span>
+python -m pytest tests/ -q
+
+<span class="c"># 6. real-audio dry run on local clips</span>
+python -m src.dryrun_local --limit 5 --asr-model openai/whisper-tiny</pre>
+
+<!-- NEXT -->
+<h2>8. Recommended next steps</h2>
+<ol>
+  <li><b>Plug in a real Quran-tuned Whisper</b> — Groq <code>whisper-large-v3</code>
+      (set <code>GROQ_API_KEY</code>) or a Quranic LoRA model. This is the single biggest lever for the
+      text-based (Class A) rules. Harness already supports <code>--asr local|groq</code>.</li>
+  <li><b>Augment training data</b> with EveryAyah correct recitations to break the single-verse
+      dependency, then re-check val F1.</li>
+  <li><b>Threshold calibration</b> on the validation set (esp. Madd) to reduce false positives.</li>
+  <li><b>Phase 9 — QuranMB.v2 evaluation</b> (locked until then): produces the IQRA-comparable F1 and
+      the headline FGR number for the paper.</li>
+  <li><b>Quantize ONNX</b> (int8) if the on-device / lightweight claim is needed.</li>
+</ol>
+
+<footer>
+  Bayaan graduation project · research component. Implementation: <code>bayaan-ml/</code> ·
+  Docs/paper: <code>bayaan-research/</code>. Numbers reflect the state on 14 June 2026 and will change
+  after data augmentation and the QuranMB.v2 evaluation. Class B backbone:
+  <code>jonatasgrosman/wav2vec2-large-xlsr-53-arabic</code> (frozen) + 2-layer head.
+</footer>
+
+</div>
+</body>
+</html>

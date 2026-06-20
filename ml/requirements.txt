@@ -1,0 +1,24 @@
+# Core ML
+torch>=2.4
+transformers>=4.44
+datasets>=2.20
+torchaudio>=2.4
+soundfile>=0.12
+librosa>=0.10
+
+# ONNX
+onnx>=1.16
+onnxruntime>=1.18
+
+# Metrics / data
+scikit-learn>=1.4
+numpy>=1.26
+pandas>=2.2
+scipy>=1.11        # resample_poly in dataset.py — was only an undeclared transitive dep
+tqdm>=4.66
+
+# ASR (Groq Whisper) — optional, only needed for alignment
+groq>=0.11
+
+# Tests
+pytest>=8.0

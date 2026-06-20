@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Data & artifacts (large / regenerable)
+data/raw/
+data/processed/wav/
+data/processed/*.wav
+data/processed/*.npz
+data/processed/labels.csv
+checkpoints/
+models/
+*.onnx
+*.pt
+eval_quranmb_results.json
+*.log
+
+# Keep folder structure
+!data/processed/.gitkeep
+!data/raw/.gitkeep
+
+# Secrets
+.env
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
