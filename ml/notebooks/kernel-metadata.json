@@ -1,0 +1,11 @@
+{
+  "id": "alshaikhkhalil/bayaan-phoneme-recognizer-mvp",
+  "title": "Bayaan Phoneme Recognizer MVP",
+  "code_file": "phoneme_recognizer_training.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "enable_tpu": false
+}
