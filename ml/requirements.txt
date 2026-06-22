@@ -17,8 +17,15 @@ pandas>=2.2
 scipy>=1.11        # resample_poly in dataset.py — was only an undeclared transitive dep
 tqdm>=4.66
 
-# ASR (Groq Whisper) — optional, only needed for alignment
+# ASR (Groq Whisper) — optional, only needed for Class B's timing source
 groq>=0.11
+
+# Class A — phoneme recognizer (Phonemizer reference + edit-distance PER)
+quranic-phonemizer>=0.1
+editdistance>=0.6
+pyarrow>=14.0          # hf:// parquet reads in phoneme_dataset.py
+huggingface_hub>=0.20
+requests>=2.31
 
 # Tests
 pytest>=8.0

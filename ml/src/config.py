@@ -86,3 +86,61 @@ class TrainConfig:
 
 
 SPLITS = ("train", "val", "test")
+
+# --------------------------------------------------------------------------- #
+# Class A (phoneme recognizer) — replaces the old Whisper-transcript path.
+# Verified 2026-06-20 by phonemizing all 6,236 verses of the Quran via
+# `quranic_phonemizer` and collecting `get_mapping().phoneme_sequence` — do
+# not trust any other quoted vocab size (e.g. "71") without re-deriving this.
+# --------------------------------------------------------------------------- #
+MVP_SURAHS: tuple[int, ...] = (1, 98)  # Al-Fatihah + Al-Bayyinah
+
+PHONEMES: tuple[str, ...] = tuple(sorted([
+    "Q", "a", "a:", "aˤ", "aˤ:", "b", "bb", "d", "dd", "dˤ", "dˤdˤ",
+    "f", "ff", "h", "hh", "i", "i:", "j", "jj", "j̃", "k", "kk", "l", "ll", "lˤlˤ",
+    "m", "m̃", "n", "q", "qq", "r", "rr", "rˤ", "rˤrˤ", "s", "ss", "sˤ", "sˤsˤ",
+    "t", "tt", "tˤ", "tˤtˤ", "u", "u:", "w", "ww", "w̃", "x", "xx", "z", "zz",
+    "ð", "ðð", "ðˤ", "ðˤðˤ", "ñ", "ħ", "ħħ",
+    "ŋ", "ɣ", "ʃ", "ʃʃ", "ʒ", "ʒʒ", "ʔ", "ʕ", "ʕʕ",
+    "θ", "θθ",
+]))
+assert len(PHONEMES) == 69, f"expected 69 phonemes, got {len(PHONEMES)} — re-verify against the Phonemizer"
+
+PHONEME_BLANK_ID = 0  # reserved for CTC blank
+PHON_TO_ID: dict[str, int] = {p: i + 1 for i, p in enumerate(PHONEMES)}
+ID_TO_PHON: dict[int, str] = {i: p for p, i in PHON_TO_ID.items()}
+PHONEME_VOCAB_SIZE = len(PHONEMES) + 1  # 70, incl. blank
+
+# Class A's declared scope: exactly the four Tajweed rule families
+# (Idgham-with-ghunnah, Iqlab, Ikhfaa, Qalqala) — keyed by the Phonemizer's
+# own `TajweedRule.value` strings. Deliberately excludes default Arabic
+# phonological rules the Phonemizer also tags (hamza al-wasl, lam shamsiyah,
+# etc.) -- those are normal speech, not Tajweed mistakes, and belong to the
+# separate Arabic-learning track, not this model. Also excludes `tafkheem`,
+# explicitly out of MVP scope per the project's own prior research (listed as
+# "unexplored future work", not part of the four declared families).
+# phoneme_diff.diff() filters every mismatch position against this set before
+# treating it as a violation.
+CLASS_A_RULE_TAGS: frozenset[str] = frozenset({
+    "iqlab_noon", "iqlab_tanween",
+    "idgham_ghunnah_noon", "idgham_ghunnah_tanween",
+    "ikhfaa_noon", "ikhfaa_tanween", "ikhfaa_shafawi",
+    "qalqala_sughra", "qalqala_kubra",
+})
+
+# Severity for a phoneme-diff mismatch, keyed the same way. Mirrors
+# CLASS_B_RULES' "in-scope subset only" shape -- every tag here is also in
+# CLASS_A_RULE_TAGS, so DEFAULT_RULE_SEVERITY is unreachable in practice
+# (kept only as a defensive fallback, not because anything currently maps to it).
+SEVERITY_BY_RULE_TAG: dict[str, str] = {
+    "iqlab_noon": "major",
+    "iqlab_tanween": "major",
+    "idgham_ghunnah_noon": "major",
+    "idgham_ghunnah_tanween": "major",
+    "ikhfaa_noon": "major",
+    "ikhfaa_tanween": "major",
+    "ikhfaa_shafawi": "major",
+    "qalqala_sughra": "major",
+    "qalqala_kubra": "major",
+}
+DEFAULT_RULE_SEVERITY = "minor"

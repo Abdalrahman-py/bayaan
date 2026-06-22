@@ -1,19 +1,28 @@
 """Hybrid Decision Layer — merges Class A + Class B into one report and
 computes Feedback Grounding Rate (FGR).
 
-    Engine localizes  ->  Class A rules judge text  +  Class B classifiers judge audio
-                       ->  unified, character-mapped violation report.
+    Phonemizer reference  ->  Class A diffs the recognizer's phoneme output
+                           +  Class B classifiers judge audio quality
+                           ->  unified, character-mapped violation report.
 
-Every violation carries char + char_index (engine-derived), so FGR is high by
-construction — this is the paper's core contribution.
+Every violation carries char + char_index (Phonemizer-derived for Class A,
+same as before for Class B), so FGR is high by construction — this is the
+paper's core contribution, unchanged by the Class A rebuild below.
+
+BREAKING CHANGE (2026-06-21): Class A now requires `waveform` (it runs the
+phoneme recognizer over audio, replacing the old Whisper-word-transcript
+diff). A `waveform=None` call now yields zero violations from BOTH classes,
+not just Class B -- there is no text-only Class A path anymore. Class B
+still needs `word_timings` (from Whisper) for audio-slicing; Class A no
+longer takes a `transcript` argument at all.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .tajweed import phonology as P
-from .tajweed.engine import TajweedEngine
-from .tajweed.rules_class_a import MIN_TRANSCRIPT_RELIABILITY, RuleEngine, Violation
+from .tajweed.phoneme_diff import Violation, diff
+from .tajweed.phoneme_reference import ghunnah_madd_expectations, reference_for
+from .tajweed.phonology import char_to_word_index
 
 
 @dataclass
@@ -35,19 +44,17 @@ class AnalysisResult:
 
 
 class HybridDetector:
-    def __init__(self, inference=None, thresholds: dict[str, float] | None = None,
-                 class_a_min_reliability: float = MIN_TRANSCRIPT_RELIABILITY):
-        """`inference` is a TajweedInference (Class B); None -> Class A only."""
-        self.rule_engine = RuleEngine()
-        self.engine = TajweedEngine()
+    def __init__(self, recognizer=None, inference=None, thresholds: dict[str, float] | None = None):
+        """`recognizer` is a PhonemeRecognizer (Class A); `inference` is a
+        TajweedInference (Class B). Either may be None -> that class is skipped."""
+        self.recognizer = recognizer
         self.inference = inference
         self.thresholds = thresholds or {}
-        self.class_a_min_reliability = class_a_min_reliability
 
     def analyze(
         self,
         verse_text: str,
-        transcript: str,
+        verse_ref: str,
         word_timings: list[dict] | None = None,
         waveform=None,
         sample_rate: int = 16_000,
@@ -55,33 +62,33 @@ class HybridDetector:
     ) -> AnalysisResult:
         violations: list[dict] = []
 
-        # Class A — deterministic (abstains if the transcript looks unreliable)
-        for v in self.rule_engine.analyze(
-            verse_text, transcript, word_timings, verse_id,
-            min_reliability=self.class_a_min_reliability,
-        ):
-            violations.append(v.to_dict())
-
-        # Class B — acoustic (only if classifiers + audio are available)
-        if self.inference is not None and waveform is not None:
-            violations.extend(
-                self._class_b(verse_text, word_timings, waveform, sample_rate, verse_id)
-            )
+        if waveform is not None:
+            if self.recognizer is not None:
+                violations.extend(self._class_a(verse_text, verse_ref, waveform, verse_id))
+            if self.inference is not None:
+                violations.extend(
+                    self._class_b(verse_text, verse_ref, word_timings, waveform, sample_rate, verse_id)
+                )
 
         return AnalysisResult(verse_id=verse_id, violations=violations)
 
-    def _class_b(self, verse_text, word_timings, waveform, sample_rate, verse_id) -> list[dict]:
+    def _class_a(self, verse_text, verse_ref, waveform, verse_id) -> list[dict]:
+        from .phoneme_inference import predict_phonemes
+
+        observed = predict_phonemes(self.recognizer, waveform)
+        reference = reference_for(verse_ref, verse_text)
+        return [v.to_dict() for v in diff(reference, observed, verse_id=verse_id)]
+
+    def _class_b(self, verse_text, verse_ref, word_timings, waveform, sample_rate, verse_id) -> list[dict]:
         from .asr.whisper_align import clip_for_position
 
         out: list[dict] = []
-        for exp in self.engine.expected(verse_text):
-            if exp.rule_class != "B":
-                continue
+        for exp in ghunnah_madd_expectations(verse_ref, verse_text):
             rule_key = exp.rule.lower()
             if rule_key not in getattr(self.inference, "sessions", {}):
                 continue
-            wi = P.char_to_word_index(verse_text, exp.char_index)
-            start_ms, end_ms = RuleEngine._timing(word_timings, wi)
+            wi = char_to_word_index(verse_text, exp.char_index)
+            start_ms, end_ms = self._timing(word_timings, wi)
             seg = clip_for_position(waveform, start_ms, end_ms, sample_rate)
             p_correct = self.inference.predict_array(rule_key, seg)
             thr = self.thresholds.get(rule_key, 0.5)
@@ -95,6 +102,16 @@ class HybridDetector:
                     ).to_dict()
                 )
         return out
+
+    @staticmethod
+    def _timing(word_timings: list[dict] | None, wi: int) -> tuple[int | None, int | None]:
+        if not word_timings or wi >= len(word_timings):
+            return None, None
+        w = word_timings[wi]
+        to_ms = lambda s: int(round(float(s) * 1000))
+        start = to_ms(w["start"]) if "start" in w else None
+        end = to_ms(w["end"]) if "end" in w else None
+        return start, end
 
 
 def corpus_fgr(results: list[AnalysisResult]) -> float:

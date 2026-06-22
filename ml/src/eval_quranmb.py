@@ -96,8 +96,15 @@ def run(
         else:
             transcript, word_timings = verse_text, None  # placeholder
 
+        # TODO (Phase 9): `transcript` is now unused -- Class A's diff is audio-driven
+        # (see hybrid.py's 2026-06-21 rebuild) and HybridDetector is never given a
+        # `recognizer=` here, so Class A is a no-op in this harness for now. Class B's
+        # localization also moved to phoneme_reference.ghunnah_madd_expectations(),
+        # which needs a Phonemizer-compatible "surah:ayah" verse_ref -- QuranMB.v2's
+        # schema doesn't expose one in this file's column discovery yet, so Class B
+        # is effectively disabled here too until that mapping is added.
         res = detector.analyze(
-            verse_text, transcript, word_timings=word_timings,
+            verse_text, verse_ref="", word_timings=word_timings,
             waveform=waveform, verse_id=str(i),
         )
         results.append(res)
