@@ -1,5 +1,7 @@
 # Team Roles & Ownership
 
+> ⚠️ **Partly outdated (pre-pivot).** The ownership table is still right, but the per-person duties that mention wav2vec2 training, ONNX, the `violations` table, and the Whisper/LLM/TTS pipeline are dead — see [`quran-muaalem-decision.md`](./quran-muaalem-decision.md) (2026-06-23). Recitation checking is now the off-the-shelf `obadx/quran-muaalem` engine.
+
 ## Who Owns What
 
 | Name | Module | Primary Responsibilities |
