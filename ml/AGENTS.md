@@ -6,9 +6,9 @@ You are working in the ML module of Bayaan. Read this file fully before making c
 
 ## What this module is
 
-The Bayaan Tajweed classification pipeline. Takes short audio clips (1–3 seconds, 16kHz mono PCM) of recited Arabic and outputs per-rule violation flags. For MVP, two rules: **Ghunnah** and **Madd**, each as a binary classifier (correct vs incorrect). Models are exported to ONNX and run on the backend for inference.
+> ⚠️ **Pivoted (2026-06-23): we no longer train our own model.** Everything below about training, ONNX export, QDAT, wav2vec2, F1 targets, and Kaggle is obsolete and kept only for history. See [`../docs/quran-muaalem-decision.md`](../docs/quran-muaalem-decision.md).
 
-Base model: **wav2vec2-base** (HuggingFace `facebook/wav2vec2-base`), frozen feature extractor + a 2-layer classifier head fine-tuned per rule.
+This module hosts the off-the-shelf **`obadx/quran-muaalem`** recitation engine on a Modal GPU. The engine takes a recorded ayah plus its phonetic reference and returns a structured list of Tajweed/recitation mistakes — no training on our side. The deployed service is [`muaalem_modal.py`](./muaalem_modal.py) (`POST /correct`); the de-risking spike lives in [`../spike/`](../spike/).
 
 ---
 
