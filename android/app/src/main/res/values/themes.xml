@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ponytail: launch/window theme only; real theming is in Compose Theme.kt.
+         Framework parent avoids pulling in com.google.android.material XML lib.
+         Ceiling: no themed splash/system-bar styling here. Upgrade path: add
+         com.google.android.material:material and restore a Theme.Material3.* parent. -->
+    <style name="Theme.Bayaan" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
