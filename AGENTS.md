@@ -17,9 +17,9 @@ If you cannot determine which module you are in, stop and ask the user.
 
 ## What Bayaan is
 
-Bayaan is an AI-powered Quran recitation coach for Android. It listens to the user's recitation, runs it through a fine-tuned wav2vec2 Tajweed classifier, and delivers real-time feedback via voice and on-screen annotations. The goal: help students improve Tajweed without needing a teacher present.
+Bayaan is an AI-powered Quran recitation coach for Android. The user picks an ayah, records their recitation, and the app flags Tajweed and recitation mistakes on the script so they can try again. Recitation checking is done by the off-the-shelf **`obadx/quran-muaalem`** engine (MIT-licensed) — we build the app around it, not the model. See [`docs/quran-muaalem-decision.md`](./docs/quran-muaalem-decision.md).
 
-**Stack at a glance:** Kotlin/Jetpack Compose (Android) · Ktor + Supabase Postgres (Backend) · Python/PyTorch (ML) · Firebase Auth · Railway hosting.
+**Stack at a glance:** Kotlin/Jetpack Compose (Android) · Ktor (Backend, thin proxy) · quran-muaalem on a Modal GPU (recitation engine) · Supabase (Auth + Postgres) · Railway hosting.
 
 ---
 

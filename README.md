@@ -6,9 +6,9 @@ Bayaan listens to your Quran recitation and gives you real-time Tajweed feedback
 
 ## Overview
 
-Bayaan combines speech recognition (Groq Whisper), a fine-tuned wav2vec2 Tajweed classifier, and an LLM-driven explanation layer to detect Tajweed errors (e.g., incorrect Madd, missed Ghunnah) as you recite. Feedback is delivered immediately through voice (ElevenLabs TTS) and visual cues in the app.
+Bayaan uses the off-the-shelf **`obadx/quran-muaalem`** recitation engine (MIT-licensed) to detect Tajweed and recitation mistakes as you recite. You pick an ayah, record, and see mistakes flagged on the script. We build the app around the engine — we don't train our own model. See [`docs/quran-muaalem-decision.md`](docs/quran-muaalem-decision.md).
 
-**Stack:** Kotlin · Jetpack Compose (Android) · Ktor (Backend) · PyTorch/wav2vec2 (ML) · Supabase (Auth + DB) · Railway
+**Stack:** Kotlin · Jetpack Compose (Android) · Ktor (Backend, thin proxy) · quran-muaalem on a Modal GPU · Supabase (Auth + DB) · Railway
 
 ---
 
@@ -37,13 +37,13 @@ Bayaan combines speech recognition (Groq Whisper), a fine-tuned wav2vec2 Tajweed
 ## Modules
 
 ### Android (`/android`)
-Jetpack Compose app. Records audio, streams it to the backend, and renders real-time Tajweed annotations. Targets Android 8.0+ (API 26+).
+Jetpack Compose app. Records an ayah, uploads it to the backend, and highlights flagged mistakes on the script. Targets Android 8.0+ (API 26+).
 
 ### Backend (`/backend`)
-Ktor REST API handling audio ingestion, the full ML/LLM/TTS pipeline, and user progress tracking. Deployed on Railway.
+Ktor REST API. Receives recorded audio, converts it to 16kHz WAV (ffmpeg), forwards it to the quran-muaalem engine, and returns the structured mistake list. Deployed on Railway.
 
 ### ML (`/ml`)
-Tajweed classification model. Takes user recitation audio and outputs rule-violation flags with confidence scores.
+Hosts the `obadx/quran-muaalem` recitation engine on a Modal GPU (`muaalem_modal.py`). No model training — the engine is used as-is.
 
 ---
 
@@ -78,42 +78,17 @@ The script asks which role you have and prints the next commands for your module
 
 ---
 
-## MVP Task List
+## MVP (demo) scope
 
-These are the foundational tasks each team member needs to complete to get to a working end-to-end demo. Start from the top of your list — later tasks depend on earlier ones.
+Per [`docs/quran-muaalem-decision.md`](docs/quran-muaalem-decision.md), the demo is **one loop**: pick an ayah → record → the engine flags mistakes → show them on the script → try again. Surahs: Al-Fatihah and Al-Bayyinah. Accounts, progress tracking, the Arabic-proficiency stage, and spoken feedback are deferred.
 
-### Ramzi — Backend Infrastructure
-- [ ] Create Supabase project, run the schema SQL from `docs/architecture.md`
-- [ ] Set up `.env` with `SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `DATABASE_URL`
-- [ ] Scaffold Ktor project in `backend/src` (Application.kt, routing, DI)
-- [ ] Implement Supabase JWT verification middleware
-- [ ] Implement `POST /auth/sync` endpoint
-- [ ] Write `UserRepository`, `SessionRepository`, `ViolationRepository`
-- [ ] Implement `GET /progress` and `GET /progress/sessions` endpoints
-- [ ] Deploy to Railway, confirm `/health` returns 200
+| Track | Next step |
+|-------|-----------|
+| Engine (`/ml`) | ✅ quran-muaalem deployed on Modal — `POST /correct` (see `ml/muaalem_modal.py`) |
+| Backend (`/backend`) | Thin Ktor slice: `POST /audio/analyze` → ffmpeg → Modal engine → mistakes JSON |
+| Android (`/android`) | Single screen: pick ayah → record → upload → highlight mistakes → retry |
 
-### Abdalrahman — Backend API + ML
-- [ ] Implement `POST /audio/analyze` endpoint (can return mock violations first)
-- [ ] Set up Python inference server in `ml/` that loads an ONNX model
-- [ ] Download QDAT dataset, run wav2vec2 fine-tuning on Kaggle (Ghunnah first)
-- [ ] Export trained model to ONNX, wire it into the inference server
-- [ ] Connect `POST /audio/analyze` to the real ML inference server
-- [ ] Repeat fine-tuning for Madd rule
-
-### Issa — Android UI
-- [ ] Add Supabase Android SDK dependency, configure with project URL + anon key
-- [ ] Build sign-in screen (email + password, calls Supabase Auth)
-- [ ] Build recitation screen scaffold (verse display, record button, loading state)
-- [ ] Build violation feedback overlay (highlights words, shows rule name)
-- [ ] Build progress screen (session list, per-rule accuracy)
-- [ ] Wire Supabase Auth session so JWT is attached to every HTTP request
-
-### Osama — Android Audio + Networking
-- [ ] Implement audio recording with `MediaRecorder` (output: M4A or WAV)
-- [ ] Add HTTP client (Retrofit or Ktor client), configure base URL from `.env`
-- [ ] Implement `POST /audio/analyze` call with audio file + JWT header
-- [ ] Parse violation response and pass data to Issa's UI layer
-- [ ] Test end-to-end: record → send → receive violations → render
+> The older per-person task lists (full auth/sessions/progress backend, 6 screens, training our own model) are pre-pivot. See the `⚠️ OUTDATED` banners in `docs/` for what still applies.
 
 ---
 
