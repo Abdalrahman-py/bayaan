@@ -7,6 +7,8 @@ tags: [bayaan, backend, architecture-review, harsh-review, ramzi]
 summary: "Harsh technical review of the Bayaan backend track — 8 critical issues found in the June 10 breakdown, with concrete fixes and a revised task list. Same treatment the ML track got on June 8."
 ---
 
+> ⚠️ **OUTDATED (pre-pivot, June 10).** Superseded by [`quran-muaalem-decision.md`](./quran-muaalem-decision.md) (2026-06-23). This review already cut Whisper/LLM/TTS/WebSocket down to an ML-only pipeline — and then the June-23 pivot cut training our own model too. Useful as a record of *why* those scope cuts were made; do not build from its task list.
+
 # Bayaan Backend — Harsh Review (June 10)
 
 Same treatment the ML track got on June 8. No sugarcoating. Here's what's wrong with the backend plan and how to fix it.
