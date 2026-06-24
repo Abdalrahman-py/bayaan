@@ -6,16 +6,16 @@ You are an AI coding agent operating inside the `/backend` directory of Bayaan. 
 
 ## What this module is
 
-The Bayaan backend. It owns the full audio pipeline:
+> ⚠️ **This module was specced for the pre-pivot pipeline (Whisper → ONNX → LLM → TTS over WebSocket). That pipeline is dropped** ([`../docs/quran-muaalem-decision.md`](../docs/quran-muaalem-decision.md), 2026-06-23). Sections below about external services (Groq/ElevenLabs/LLM), the streaming `Flow` pipeline, and the 800ms target are obsolete and pending rewrite. The "don't store raw audio" rule and the secrets/branch/PR rules still apply.
 
-1. Accept audio from the Android app over WebSocket.
-2. Stream the audio to Groq Whisper, get a partial Arabic transcript every ~50ms.
-3. Run the ONNX Tajweed classifier (exported by the ML team) over the audio to detect rule violations.
-4. Ask the LLM (Claude Sonnet or Gemini 2.5 Flash) to generate a correction + English explanation.
-5. Stream the correction text through ElevenLabs TTS, return the audio to the client.
-6. Persist the session, attempt, and progress in Supabase Postgres.
+The Bayaan backend is a **thin Ktor proxy** in front of the recitation engine:
 
-Target end-to-end latency: **under 800ms** for the full loop. Deployed on Railway.
+1. Accept a recorded ayah from the Android app over HTTP (multipart).
+2. Convert it to 16kHz mono WAV via ffmpeg.
+3. Forward it to the `obadx/quran-muaalem` engine deployed on Modal (`POST /correct`, see `../ml/muaalem_modal.py`).
+4. Return the engine's structured mistake list to the app as JSON.
+
+For the demo there is no auth, no database, and no STT/LLM/TTS. Deployed on Railway.
 
 ---
 
