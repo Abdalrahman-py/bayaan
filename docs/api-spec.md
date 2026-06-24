@@ -1,5 +1,7 @@
 # API Specification
 
+> ⚠️ **OUTDATED (pre-pivot).** Superseded by [`quran-muaalem-decision.md`](./quran-muaalem-decision.md) (2026-06-23). The `violations`/`word_index`/`confidence` response shapes describe a model we no longer build. The real engine contract is the `obadx/quran-muaalem` structured error diff (`uthmani_pos`, `error_type`, `speech_error_type`, AR/EN tajweed rule names) — see `ml/muaalem_modal.py`. Kept for history; the backend `/audio/analyze` spec will be rewritten against the real diff once the slice is built.
+
 Base URL: `https://bayaan.up.railway.app` (production) · `http://localhost:8080` (local)
 
 All protected endpoints require `Authorization: Bearer <supabase-jwt>` header.

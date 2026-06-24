@@ -1,5 +1,7 @@
 # Tajweed Rules
 
+> ℹ️ **Rule explanations and the Al-Fatihah verses below are still accurate domain reference and worth keeping.** But the model-specific sections ("What the model detects", "Evaluation Targets", "Dataset" — binary classifiers, ONNX, QDAT, wav2vec2, F1 ≥ 0.75, 800ms) are obsolete: recitation checking is now the `obadx/quran-muaalem` engine, which covers far more than these two rules and isn't trained by us. See [`quran-muaalem-decision.md`](./quran-muaalem-decision.md) (2026-06-23).
+
 Bayaan's MVP focuses on two Tajweed rules: **Ghunnah** and **Madd**. These were chosen because they are common, clearly audible, and can be reliably classified by a binary ML model without needing multi-word context.
 
 ---

@@ -7,6 +7,8 @@ tags: [bayaan, backend, ramzi, tasks, implementation]
 summary: "Ramzi's complete backend implementation guide — context, tech decisions, 12 tasks with exact specifications, Supabase setup, database schema, API contracts, testing expectations, and what NOT to build. Self-contained — no questions needed."
 ---
 
+> ⚠️ **OUTDATED (pre-pivot, June 10).** Superseded by [`quran-muaalem-decision.md`](./quran-muaalem-decision.md) (2026-06-23). This guide builds a full auth + sessions + violations backend around a model we no longer train. The demo backend is a thin proxy to the `obadx/quran-muaalem` engine on Modal (no auth/DB for the demo). The Supabase/Ktor/ffmpeg/Railway mechanics here are still good reference. Kept for history; do not execute top-to-bottom.
+
 # Ramzi — Bayaan Backend Implementation Guide
 
 Everything you need to build the Bayaan backend. Read this once, then start from R1 and work down. If a question isn't answered here, ask Abdalrahman. Otherwise, just build.

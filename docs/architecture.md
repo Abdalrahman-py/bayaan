@@ -1,5 +1,7 @@
 # Architecture
 
+> ⚠️ **OUTDATED (pre-pivot).** Superseded by [`quran-muaalem-decision.md`](./quran-muaalem-decision.md) (2026-06-23). Bayaan no longer trains its own wav2vec2 classifier or runs a Whisper→ML→LLM→TTS pipeline, and the `violations`/`word_index`/`confidence` schema below is dead — recitation checking is now done by the off-the-shelf `obadx/quran-muaalem` engine (deployed on Modal, returns a structured tajweed error diff). The Supabase/Railway/ffmpeg pieces still apply. Kept for history; do not build from this. A revised architecture doc will land with the new backend slice.
+
 ## System Overview
 
 Bayaan is a three-tier system: an Android app, a Ktor REST API, and a Python ML service. The Android app never touches the database directly — everything flows through the backend.

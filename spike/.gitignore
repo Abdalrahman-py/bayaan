@@ -1,0 +1,5 @@
+# spike audio clips — user recordings, never commit
+*.wav
+*.m4a
+*.mp3
+*.ogg
