@@ -7,6 +7,8 @@ tags: [bayaan, android, compose, architecture-review, issa, osama]
 summary: "Complete Android track for Bayaan — harsh technology review, crash course explaining every decision, and 15-task implementation guide for Issa and Osama."
 ---
 
+> ⚠️ **Partly outdated (pre-pivot, June 10).** Superseded in scope by [`quran-muaalem-decision.md`](./quran-muaalem-decision.md) (2026-06-23). The Compose/Ktor-client/MediaRecorder **tech decisions and crash course below are still valid and useful.** But the *scope* (6 screens, word-recognition, Arabic gate, sign-in, progress dashboard, `violations` response shape) is not the demo: the demo is one screen — pick ayah → record → highlight mistakes → retry. Build the tech the way this doc says; build only the demo loop.
+
 # Bayaan Android — Harsh Review, Crash Course & Implementation Guide
 
 Same treatment the backend got on June 10. Technology decisions researched, terms explained from zero, and a task list Issa and Osama can execute without asking questions.
