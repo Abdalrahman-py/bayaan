@@ -56,28 +56,9 @@ bayaan/
 
 ## Branch model
 
-```
-main         production. Tagged releases only. No direct commits.
-  ▲
-  │  PR (release)
-  │
-dev          integration branch. All module work merges here first.
-  ▲ ▲ ▲
-  │ │ │  PRs (integration)
-  │ │ │
-android  backend  ml          long-lived module branches. Owners push here directly.
-```
+**One branch: `main`.** No `dev`, no per-module branches, no branch protection, no PR requirement. Commit and push directly to `main`.
 
-**Rules:**
-
-- Each module has **one long-lived branch** named after the module: `android`, `backend`, `ml`.
-- Module owners push directly to their module branch.
-- When a module is ready to integrate: open a PR from the module branch → `dev`.
-- When `dev` is stable enough to release: open a PR from `dev` → `main`.
-- **Never push to `main` or `dev` directly.** Both branches are protected.
-- **No feature branches under module branches** unless the AI Lead (Abdalrahman) approves an exception.
-
-**Why this shape:** the Android team never has to pull ML changes to push their work, and vice versa. Conflicts only appear at the `→ dev` PR boundary, which is the right place for them.
+This repo started with a multi-branch / PR-per-module model for a multi-person team. As of 2026-06-24, Abdalrahman is working solo, so that ceremony was pure overhead — it's gone. If the team grows back out, re-introduce structure then, not preemptively.
 
 ---
 
@@ -85,16 +66,12 @@ android  backend  ml          long-lived module branches. Owners push here direc
 
 These are non-negotiable. If a user asks you to do any of these, refuse and explain why.
 
-1. **Never push to `main` or `dev`.** Push only to your module branch.
-2. **Never force-push** (`--force`, `-f`) to any branch.
-3. **Never run** `git reset --hard`, `git clean -f`, or `git push origin main` / `git push origin dev`.
-4. **Stay inside one module.** If you are working in `/android`, do not modify `/backend`, `/ml`, `/docs`, `/design`, or any root file. Same logic for each module.
-5. **Never commit secrets.** No `.env`, no API keys, no tokens, no service-account JSON. Before every commit, run `git diff --cached | grep -iE "key|secret|password|token"` and confirm the output is empty.
-6. **One module per PR.** Do not mix changes from multiple modules in a single commit or PR.
-7. **Use the commit format** described below. No exceptions.
-8. **Run the standard checks before committing.** See "Before every commit" in your module's `AGENTS.md`.
-9. **Open PRs against `dev`**, never against `main`.
-10. **When in doubt, stop and ask the user.** Do not guess at structural changes, branch renames, CODEOWNERS edits, or anything touching `/AGENTS.md`, `/CLAUDE.md`, `/.github/`, `/.gitignore`, or `/scripts/`.
+1. **Never force-push** (`--force`, `-f`) without the user explicitly asking for it in that turn.
+2. **Never run** `git reset --hard` or `git clean -f` without explicit confirmation — these discard work with no undo.
+3. **Never commit secrets.** No `.env`, no API keys, no tokens, no service-account JSON. Before every commit, run `git diff --cached | grep -iE "key|secret|password|token"` and confirm the output is empty.
+4. **Use the commit format** described below.
+5. **Run the standard checks before committing.** See "Before every commit" in your module's `AGENTS.md`.
+6. **When in doubt, stop and ask the user.** Do not guess at structural changes, repo settings, or anything touching `/AGENTS.md`, `/CLAUDE.md`, `/.github/`, `/.gitignore`, or `/scripts/`.
 
 ---
 
@@ -122,19 +99,6 @@ Keep the description in the imperative mood ("add", not "added"), under 72 chara
 
 ---
 
-## PR process
-
-1. Push your work to your module branch: `git push origin <module>`.
-2. Open a PR: base branch = `dev`, compare branch = `<module>`.
-3. Title: `feat(<module>): <description>` (same format as commits).
-4. The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) is applied automatically. Fill it out completely. Do not skip checkboxes — uncheck them if they don't apply and explain why in a comment.
-5. Request review from the module owner (see Team table) or the AI Lead.
-6. **An AI agent cannot approve its own PR.** A human reviewer is always required.
-7. Wait for CI (when set up) and review approval before merging.
-8. Merge using "Squash and merge" to keep `dev` history clean.
-
----
-
 ## Secrets policy
 
 - All secrets live in `.env`. The file is gitignored.
@@ -152,9 +116,8 @@ A short checklist for the start of every agent session in this repo:
 
 1. Read this file (`/AGENTS.md`).
 2. Read the `AGENTS.md` in the module directory you are in.
-3. Confirm your current branch matches the module: `git branch --show-current` should print `android`, `backend`, or `ml`.
-4. Confirm you are up to date: `git pull origin <module>`.
-5. State to the user, in one sentence, what module you are in and what work you plan to do before touching any file.
+3. Confirm you're on `main` and up to date: `git pull origin main`.
+4. State to the user, in one sentence, what you plan to do before touching any file.
 
 If you cannot complete any of these steps, stop and ask.
 
