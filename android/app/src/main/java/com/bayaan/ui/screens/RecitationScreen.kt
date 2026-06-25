@@ -157,9 +157,7 @@ fun RecitationScreen(
 
             // Dynamic State Control Section
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f, fill = false),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 when (state) {
