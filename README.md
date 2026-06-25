@@ -34,7 +34,7 @@ The backend doesn't run its own model — it converts the uploaded audio to the 
 | Android | Kotlin, Jetpack Compose, Material 3 |
 | Backend | Kotlin, Ktor |
 | Audio conversion | ffmpeg |
-| Recitation analysis | Third-party pretrained model, deployed on a serverless GPU |
+| Recitation analysis | Pretrained model, deployed on a serverless GPU |
 | Backend hosting | Render |
 
 ## Getting started
@@ -86,8 +86,5 @@ The current build is deliberately a single, well-tested loop rather than a broad
 - Wider Quran coverage beyond the two demo surahs
 - An Arabic-proficiency placement step ahead of recitation practice
 - Accounts and per-user progress tracking
-- Spoken (TTS) feedback instead of text-only
+- Spoken (TTS) feedback instead of text-only (later)
 
-## Development
-
-This repo is set up for AI coding agents (Claude Code, Cursor, Codex, etc.) — see [`AGENTS.md`](AGENTS.md) for the rules they (and human contributors) follow: commit format, secrets policy, and module conventions.
