@@ -1,3 +1,3 @@
 # Backend
 
-Server-side API for Bayaan — handles audio processing, Tajweed evaluation, and user data.
+Thin Ktor proxy: receives a recorded ayah, converts it to WAV, forwards it to the recitation engine, returns the result. No user data — see [`AGENTS.md`](./AGENTS.md).

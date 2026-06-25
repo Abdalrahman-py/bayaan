@@ -17,22 +17,15 @@ If you cannot determine which module you are in, stop and ask the user.
 
 ## What Bayaan is
 
-Bayaan is an AI-powered Quran recitation coach for Android. The user picks an ayah, records their recitation, and the app flags Tajweed and recitation mistakes on the script so they can try again. Recitation checking is done by the off-the-shelf **`obadx/quran-muaalem`** engine (MIT-licensed) — we build the app around it, not the model. See [`docs/quran-muaalem-decision.md`](./docs/quran-muaalem-decision.md).
+Bayaan is an AI-powered Quran recitation coach for Android. The user picks an ayah, records their recitation, and the app flags Tajweed and recitation mistakes on the script so they can try again. Recitation checking is done by an off-the-shelf, MIT-licensed third-party recitation-analysis engine — we build the app and the thin backend around it, not the model itself. See [`docs/architecture.md`](./docs/architecture.md).
 
-**Stack at a glance:** Kotlin/Jetpack Compose (Android) · Ktor (Backend, thin proxy) · quran-muaalem on a Modal GPU (recitation engine) · Supabase (Auth + Postgres) · Railway hosting.
+**Stack at a glance:** Kotlin/Jetpack Compose (Android) · Ktor (Backend, thin proxy) · a third-party recitation engine on a serverless GPU (Modal) · Render hosting.
 
 ---
 
 ## Team
 
-| Name        | Role                              | Modules       | GitHub Handle   |
-| ----------- | --------------------------------- | ------------- | --------------- |
-| Abdalrahman | AI & Backend Lead                 | /backend, /ml | @Abdalrahman-py |
-| Issa        | Android — Screens & Navigation    | /android      | TBD             |
-| Ramzi       | Backend + Infra                   | /backend      | TBD             |
-| Osama       | Android — Voice & Core Recitation | /android      | TBD             |
-
-When you need to assign a code reviewer, the matching owner from this table is the default.
+Solo project — Abdalrahman (@Abdalrahman-py) is the sole developer and reviewer. No module split, no other reviewers to assign.
 
 ---
 
@@ -42,11 +35,10 @@ When you need to assign a code reviewer, the matching owner from this table is t
 bayaan/
 ├── android/      Jetpack Compose Android app
 ├── backend/      Ktor REST API + audio pipeline
-├── ml/           PyTorch Tajweed classifier (wav2vec2)
+├── ml/           Deployment script for the recitation engine
 ├── design/       Figma exports, icons, color tokens
 ├── docs/         Architecture, API spec, Tajweed rule definitions
 ├── scripts/      Developer tooling (setup.sh, etc.)
-├── plans/        AI construction plans (not shipped)
 ├── AGENTS.md     This file
 ├── CLAUDE.md     Pointer to AGENTS.md
 └── .github/      PR template, issue templates, CODEOWNERS
@@ -89,10 +81,10 @@ type(module): short description
 
 ```
 feat(android): add waveform visualizer to recording screen
-fix(backend): handle empty audio payload in /attempts endpoint
-experiment(ml): try wav2vec2-large for Ghunnah classifier
+fix(backend): handle empty audio payload in /audio/analyze
+experiment(ml): try min_containers=1 to avoid cold starts
 chore(infra): bump gradle wrapper to 8.10
-docs(backend): document /sessions endpoint contract
+docs(backend): document /audio/analyze error responses
 ```
 
 Keep the description in the imperative mood ("add", not "added"), under 72 characters. If you need more detail, add a body after a blank line.
@@ -103,10 +95,9 @@ Keep the description in the imperative mood ("add", not "added"), under 72 chara
 
 - All secrets live in `.env`. The file is gitignored.
 - `.env.example` is the canonical template. Add every required key there with an empty value.
-- If you need a new secret, add it to `.env.example` (with empty value) in the same PR and tell the AI Lead so the value can be distributed.
-- If a secret is ever committed by accident: rotate the key immediately, then ask the AI Lead to scrub git history. Do not attempt history rewrite yourself.
+- If a secret is ever committed by accident: rotate the key immediately, then scrub git history.
 
-**Current secrets used:** Groq, ElevenLabs, Claude/Gemini API key, Supabase URL + anon key, Firebase project ID, Railway project ID. See `.env.example` for the full list.
+**Current secrets used:** none. The app and backend run without any required environment variables — the recitation engine's URL has a working default baked into the backend. If you add a service that needs a key, add it to `.env.example` with an empty value in the same commit.
 
 ---
 

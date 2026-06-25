@@ -1,8 +1,8 @@
 # Tajweed Rules
 
-> ℹ️ **Rule explanations and the Al-Fatihah verses below are still accurate domain reference and worth keeping.** But the model-specific sections ("What the model detects", "Evaluation Targets", "Dataset" — binary classifiers, ONNX, QDAT, wav2vec2, F1 ≥ 0.75, 800ms) are obsolete: recitation checking is now the `obadx/quran-muaalem` engine, which covers far more than these two rules and isn't trained by us. See [`quran-muaalem-decision.md`](./quran-muaalem-decision.md) (2026-06-23).
+Domain reference for the two rules most worth knowing while testing the app. The recitation engine itself detects far more than these two — this page exists so the explanations and examples below are easy to check against what you hear, not because the engine is limited to them.
 
-Bayaan's MVP focuses on two Tajweed rules: **Ghunnah** and **Madd**. These were chosen because they are common, clearly audible, and can be reliably classified by a binary ML model without needing multi-word context.
+Bayaan's demo focuses attention on two Tajweed rules: **Ghunnah** and **Madd**. They're common, clearly audible, and easy to verify by ear against the examples below.
 
 ---
 
@@ -21,11 +21,6 @@ Bayaan's MVP focuses on two Tajweed rules: **Ghunnah** and **Madd**. These were 
 **Examples in Al-Fatihah:**
 - `الرَّحْمَٰنِ` — the meem here does NOT have shadda, so no Ghunnah applies
 - Look for نّ / مّ patterns across recitation for clear Ghunnah cases
-
-**What the model detects:**
-- Input: audio segment around a noon/meem with shadda
-- Output: binary — Ghunnah correctly applied (true) or violated (false)
-- Confidence threshold: ≥ 0.75 F1 on test set
 
 ---
 
@@ -47,16 +42,11 @@ Bayaan's MVP focuses on two Tajweed rules: **Ghunnah** and **Madd**. These were 
 - `بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ` — the `ي` in `الرَّحِيمِ` is a Madd Asli (2 counts)
 - `مَالِكِ يَوْمِ الدِّينِ` — the `ا` in `مَالِكِ` is Madd Asli (2 counts)
 
-**What the model detects:**
-- Input: audio segment containing a Madd letter
-- Output: binary — elongation is within acceptable range (true) or violated (false)
-- Duration is measured from the raw audio waveform; confidence threshold ≥ 0.75 F1
-
 ---
 
-## Stretch Goal Rules (Post-MVP)
+## Other rules (not the demo's focus)
 
-These were descoped from MVP because they require context from surrounding words, making binary classification harder.
+These aren't specifically called out in the demo flow, but the recitation engine isn't limited to Ghunnah and Madd — it's worth knowing them if you're checking results by ear.
 
 | Rule | Arabic | Why Descoped |
 |------|--------|-------------|
@@ -68,7 +58,7 @@ These were descoped from MVP because they require context from surrounding words
 
 ## Surah Coverage
 
-MVP is restricted to **Surah Al-Fatihah** (7 verses). Every Muslim recites it in every prayer, making it the highest-value target for a learning tool.
+The app currently covers **Al-Fatihah** (7 verses) and **Al-Bayyinah** (8 verses). Al-Fatihah is recited in every prayer, making it the highest-value target for a learning tool.
 
 | Verse | Arabic text |
 |-------|------------|
@@ -79,23 +69,3 @@ MVP is restricted to **Surah Al-Fatihah** (7 verses). Every Muslim recites it in
 | 5 | إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ |
 | 6 | اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ |
 | 7 | صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ |
-
----
-
-## Evaluation Targets
-
-The ML classifier must meet these targets before the backend integrates it:
-
-| Metric | Target | Notes |
-|--------|--------|-------|
-| F1 score per rule | ≥ 0.75 | Measured on held-out test split |
-| Inference latency | ≤ 800ms | 20-trial average on Railway free tier |
-| Model format | ONNX | Required for embedding outside PyTorch |
-
----
-
-## Dataset
-
-**QDAT (Quran Dataset for Arabic Tajweed)** — labeled audio segments with rule annotations. Training uses wav2vec2 transfer learning (pre-trained on Arabic speech). One binary classifier is trained per rule.
-
-Training runs on Kaggle free GPU (T4 / P100). Expected training time: 2–4 hours per rule.

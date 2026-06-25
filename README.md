@@ -1,158 +1,93 @@
-# Bayaan — AI-Powered Quran Recitation Coach
+# Bayaan
 
-Bayaan listens to your Quran recitation and gives you real-time Tajweed feedback through voice. Built for students who want to improve their recitation without always having a teacher present.
+Bayaan listens to a Quran recitation and flags Tajweed and pronunciation mistakes on the spot, so a student can correct them without a teacher in the room.
 
----
-
-## Overview
-
-Bayaan uses the off-the-shelf **`obadx/quran-muaalem`** recitation engine (MIT-licensed) to detect Tajweed and recitation mistakes as you recite. You pick an ayah, record, and see mistakes flagged on the script. We build the app around the engine — we don't train our own model. See [`docs/quran-muaalem-decision.md`](docs/quran-muaalem-decision.md).
-
-**Stack:** Kotlin · Jetpack Compose (Android) · Ktor (Backend, thin proxy) · quran-muaalem on a Modal GPU · Supabase (Auth + DB) · Railway
+**Status: working prototype.** One loop is fully built end to end — pick an ayah, record it, get mistakes highlighted on the script, try again. Accounts, progress tracking, and broader Quran coverage are deliberately out of scope for now; see [Roadmap](#roadmap).
 
 ---
 
-## Team
+## How it works
 
-| Name | Module | Role |
-|------|--------|------|
-| Abdalrahman | `/backend` + `/ml` | Backend API, ML classifier, architecture |
-| Ramzi | `/backend` | Supabase JWT middleware, database schema, Railway deployment |
-| Issa | `/android` | Compose UI, navigation, Supabase Auth SDK |
-| Osama | `/android` | Audio recording, HTTP client, recitation loop |
+1. Pick a verse from Al-Fatihah or Al-Bayyinah.
+2. Tap record and recite it.
+3. The app uploads the recording to the backend.
+4. The backend converts it and forwards it to a recitation-analysis engine, which returns a structured list of mistakes (mispronunciations and Tajweed-rule violations, each tied to a position in the verse).
+5. The app highlights the mistaken text and shows what went wrong — which rule, what was expected, what was recited.
+6. Try again, or move to the next ayah.
 
----
+No sign-in, no stored history — every attempt is self-contained.
 
-## Documentation
+## Architecture
 
-| Doc | What's in it |
-|-----|-------------|
-| [Architecture](docs/architecture.md) | System diagram, data flows, database schema, env vars |
-| [API Spec](docs/api-spec.md) | All backend endpoints with request/response shapes |
-| [Team Roles](docs/team-roles.md) | Who owns what — especially useful for new team members |
-| [Tajweed Rules](docs/tajweed-rules.md) | The rules Bayaan teaches: Ghunnah + Madd, with examples |
+```
+Android app  --(record + upload)-->  Ktor backend  --(audio)-->  Recitation engine
+   (Compose)                         (thin proxy,                (pretrained model,
+                                       ffmpeg conversion)          serverless GPU)
+```
 
----
+The backend doesn't run its own model — it converts the uploaded audio to the format the engine expects and relays the result. There's no database and no auth layer in the current build. Full breakdown: [`docs/architecture.md`](docs/architecture.md).
 
-## Modules
+## Tech stack
 
-### Android (`/android`)
-Jetpack Compose app. Records an ayah, uploads it to the backend, and highlights flagged mistakes on the script. Targets Android 8.0+ (API 26+).
-
-### Backend (`/backend`)
-Ktor REST API. Receives recorded audio, converts it to 16kHz WAV (ffmpeg), forwards it to the quran-muaalem engine, and returns the structured mistake list. Deployed on Railway.
-
-### ML (`/ml`)
-Hosts the `obadx/quran-muaalem` recitation engine on a Modal GPU (`muaalem_modal.py`). No model training — the engine is used as-is.
-
----
+| Layer | Technology |
+|---|---|
+| Android | Kotlin, Jetpack Compose, Material 3 |
+| Backend | Kotlin, Ktor |
+| Audio conversion | ffmpeg |
+| Recitation analysis | Third-party pretrained model, deployed on a serverless GPU |
+| Backend hosting | Render |
 
 ## Getting started
 
 ### Prerequisites
-- Android Studio (Ladybug or later)
-- JDK 17+ (for the Ktor backend)
-- Python 3.11+ (for the ML module)
-- A [Supabase](https://supabase.com) project (free tier is enough for development)
-- API keys — copy `.env.example` to `.env` and fill in the values
 
-- **Android team:** Android Studio (Ladybug or later)
-- **Backend team:** JDK 17+, Gradle 8+
-- **ML team:** Python 3.11+, a Kaggle account (for GPU training)
-- A Supabase project (shared — get URL/keys from the AI Lead)
-- API keys: copy `.env.example` to `.env` and fill the values you need
+- Android Studio (Ladybug or later) — for the app
+- JDK 21 — for the backend
+- ffmpeg installed locally if you want to run the backend outside Docker
 
-### Clone
+No API keys or `.env` values are required to run either side — the backend talks to a working default recitation-engine URL out of the box, and the Android app points at the deployed backend by default.
+
+### Run it
 
 ```bash
 git clone https://github.com/Abdalrahman-py/bayaan.git
 cd bayaan
-cp .env.example .env
-# Fill in .env, then:
-# Android → open android/ in Android Studio
-# Backend → cd backend && ./gradlew run
-# ML      → cd ml && pip install -r requirements.txt
+bash scripts/setup.sh
 ```
 
-The script asks which role you have and prints the next commands for your module.
+- **Android:** open `android/` in Android Studio, run on a device or emulator.
+- **Backend:** `cd backend && ./gradlew run` (serves on `localhost:8080`).
 
----
-
-## MVP (demo) scope
-
-Per [`docs/quran-muaalem-decision.md`](docs/quran-muaalem-decision.md), the demo is **one loop**: pick an ayah → record → the engine flags mistakes → show them on the script → try again. Surahs: Al-Fatihah and Al-Bayyinah. Accounts, progress tracking, the Arabic-proficiency stage, and spoken feedback are deferred.
-
-| Track | Next step |
-|-------|-----------|
-| Engine (`/ml`) | ✅ quran-muaalem deployed on Modal — `POST /correct` (see `ml/muaalem_modal.py`) |
-| Backend (`/backend`) | Thin Ktor slice: `POST /audio/analyze` → ffmpeg → Modal engine → mistakes JSON |
-| Android (`/android`) | Single screen: pick ayah → record → upload → highlight mistakes → retry |
-
-> The older per-person task lists (full auth/sessions/progress backend, 6 screens, training our own model) are pre-pivot. See the `⚠️ OUTDATED` banners in `docs/` for what still applies.
-
----
-
-## Branch Strategy
+### Project layout
 
 ```
-main         production. Tagged releases only.
-  ▲
-  │  PR
-  │
-dev          integration. Module branches merge here.
-  ▲ ▲ ▲
-  │ │ │
-android  backend  ml          long-lived module branches. Owners push here.
+bayaan/
+├── android/   Jetpack Compose app
+├── backend/   Ktor API (audio proxy)
+├── ml/        Deployment script for the recitation engine
+├── design/    UI/UX assets
+├── docs/      Architecture, API spec, Tajweed reference
+└── scripts/   Dev tooling
 ```
 
-**One branch per module.** Android team pushes to `android`. Backend team pushes to `backend`. ML pushes to `ml`. When work is ready to integrate: open a PR from your module branch → `dev`. Releases go `dev` → `main`.
+## Documentation
 
-**Never push to `main` or `dev` directly.**
+| Doc | What's in it |
+|---|---|
+| [Architecture](docs/architecture.md) | System design, data flow, what's deferred |
+| [API Spec](docs/api-spec.md) | The backend's two endpoints, request/response shapes |
+| [Tajweed Rules](docs/tajweed-rules.md) | The rules covered in the demo, with examples |
+| [AGENTS.md](AGENTS.md) | Contributing rules, commit format (also read by AI coding agents) |
 
-Full rules, commit format, and PR process: see [`AGENTS.md`](./AGENTS.md).
+## Roadmap
 
----
+The current build is deliberately a single, well-tested loop rather than a broad feature set. Next, in rough order:
 
-## AI-assisted development
+- Wider Quran coverage beyond the two demo surahs
+- An Arabic-proficiency placement step ahead of recitation practice
+- Accounts and per-user progress tracking
+- Spoken (TTS) feedback instead of text-only
 
-This repo is set up for AI coding agents (Claude Code, Cursor, Codex, Cline, Continue, Aider, etc.). Each module has its own `AGENTS.md` that scopes the AI's knowledge and authority to that module.
+## Development
 
-### How to use it
-
-1. **Clone the repo and check out your module branch.**
-   ```bash
-   git clone https://github.com/Abdalrahman-py/bayaan.git
-   cd bayaan
-   git checkout android        # or backend, or ml
-   git pull origin android
-   ```
-
-2. **Open *only your module folder* in your AI tool.**
-   - Android team → open `bayaan/android/` as the workspace root
-   - Backend team → open `bayaan/backend/`
-   - ML team → open `bayaan/ml/`
-
-   The agent will read `AGENTS.md` (and `CLAUDE.md` if it uses that) from the folder you opened. It will also read the root `AGENTS.md` for project-wide rules.
-
-3. **Run setup.**
-   ```bash
-   bash scripts/setup.sh
-   ```
-
-4. **Start working.** The agent already knows what your module does, which commands are safe, and where to push work.
-
-### Rules for AI-generated PRs
-
-- The PR template auto-applies — fill it out completely.
-- An AI cannot approve its own PR. A human reviewer is always required.
-- Module boundaries are enforced by `AGENTS.md`. Agents working in `/android` will refuse to edit `/backend`, and so on.
-- PRs target `dev`, never `main`.
-
----
-
-## Project documents
-
-- [`AGENTS.md`](./AGENTS.md) — Agent rules, branch model, commit format, PR process
-- [`docs/architecture.md`](./docs/architecture.md) — System architecture
-- [`docs/api-spec.md`](./docs/api-spec.md) — Backend API
-- [`docs/tajweed-rules.md`](./docs/tajweed-rules.md) — Tajweed rules in scope for MVP
+This repo is set up for AI coding agents (Claude Code, Cursor, Codex, etc.) — see [`AGENTS.md`](AGENTS.md) for the rules they (and human contributors) follow: commit format, secrets policy, and module conventions.
