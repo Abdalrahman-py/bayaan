@@ -28,10 +28,7 @@ android {
             useSupportLibrary = true
         }
 
-        // Backend isn't deployed publicly yet — this is the dev machine's LAN IP.
-        // Phone and computer must be on the same WiFi. Update if the IP changes,
-        // or once the backend has a real (Railway) URL.
-        buildConfigField("String", "BACKEND_URL", "\"http://10.2.255.116:8080\"")
+        buildConfigField("String", "BACKEND_URL", "\"https://bayaan-backend.onrender.com\"")
     }
 
     buildTypes {
