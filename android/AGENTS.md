@@ -120,7 +120,7 @@ test(android): add unit test for RecitationViewModel
 
 ## Boundaries
 
-You may modify files inside `/android/`. For changes to `/backend/`, `/ml/`, `/docs/`, `/design/`, or root config, say so and let the user decide whether to switch context — there's no other team member to hand off to, so this is a heads-up, not a refusal.
+You may modify files inside `/android/`. For changes to `/backend/`, `/ml/`, `/docs/`, or root config, say so and let the user decide whether to switch context — there's no other team member to hand off to, so this is a heads-up, not a refusal.
 
 ---
 

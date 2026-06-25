@@ -36,7 +36,6 @@ bayaan/
 ├── android/      Jetpack Compose Android app
 ├── backend/      Ktor REST API + audio pipeline
 ├── ml/           Deployment script for the recitation engine
-├── design/       Figma exports, icons, color tokens
 ├── docs/         Architecture, API spec, Tajweed rule definitions
 ├── scripts/      Developer tooling (setup.sh, etc.)
 ├── AGENTS.md     This file

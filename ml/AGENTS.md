@@ -60,7 +60,7 @@ For a live demo, pin a warm instance with `min_containers=1` so users don't eat 
 
 ## Boundaries
 
-You may modify files inside `/ml/`. For changes to `/android/`, `/backend/`, `/docs/`, `/design/`, or root config, say so and let the user decide — there's no other team member to hand off to, so this is a heads-up, not a refusal.
+You may modify files inside `/ml/`. For changes to `/android/`, `/backend/`, `/docs/`, or root config, say so and let the user decide — there's no other team member to hand off to, so this is a heads-up, not a refusal.
 
 You may read `/backend/src/main/kotlin/com/bayaan/Routing.kt` to confirm the request/response shape the backend expects from the engine.
 

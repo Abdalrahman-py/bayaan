@@ -118,7 +118,7 @@ chore(backend): bump Ktor version
 
 ## Boundaries
 
-You may modify files inside `/backend/`. For changes to `/android/`, `/ml/`, `/docs/`, `/design/`, or root config, say so and let the user decide — there's no other team member to hand off to, so this is a heads-up, not a refusal.
+You may modify files inside `/backend/`. For changes to `/android/`, `/ml/`, `/docs/`, or root config, say so and let the user decide — there's no other team member to hand off to, so this is a heads-up, not a refusal.
 
 ---
 

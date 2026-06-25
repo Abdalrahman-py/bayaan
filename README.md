@@ -65,7 +65,6 @@ bayaan/
 ├── android/   Jetpack Compose app
 ├── backend/   Ktor API (audio proxy)
 ├── ml/        Deployment script for the recitation engine
-├── design/    UI/UX assets
 ├── docs/      Architecture, API spec, Tajweed reference
 └── scripts/   Dev tooling
 ```
