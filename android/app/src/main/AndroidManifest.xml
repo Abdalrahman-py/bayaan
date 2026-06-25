@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- ponytail: cleartext allowed so the phone can hit the backend over plain
+         http:// on the local LAN during dev. Ceiling: remove once the backend is
+         deployed behind HTTPS (e.g. Railway) before any release build. -->
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.Bayaan">
         <activity
             android:name=".MainActivity"

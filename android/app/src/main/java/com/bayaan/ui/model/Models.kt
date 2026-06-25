@@ -55,6 +55,14 @@ val BAYYINAH = "البينة" to listOf(
     /* 8 */ "جَزَآؤُهُمْ عِندَ رَبِّهِمْ جَنَّـٰتُ عَدْنٍۢ تَجْرِى مِن تَحْتِهَا ٱلْأَنْهَـٰرُ خَـٰلِدِينَ فِيهَآ أَبَدًۭا رَّضِىَ ٱللَّهُ عَنْهُمْ وَرَضُوا۟ عَنْهُ ذَٰلِكَ لِمَنْ خَشِىَ رَبَّهُۥ",
 )
 
+/** Looks up the canonical Verse for (sura, aya) from the hardcoded demo data. */
+fun verseFor(sura: Int, aya: Int): Verse {
+    val (surahNameAr, verses) = if (sura == 98) BAYYINAH else FATIHAH
+    val surahNameEn = if (sura == 98) "Al-Bayyinah" else "Al-Fatihah"
+    val uthmani = verses.getOrElse(aya - 1) { verses[0] }
+    return Verse(sura, aya, surahNameEn, surahNameAr, uthmani)
+}
+
 val previewVerse = Verse(
     sura = 1, aya = 2,
     surahNameEn = "Al-Fatihah", surahNameAr = "الفاتحة",

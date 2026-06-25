@@ -17,6 +17,10 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
     }
+    versionCatalogs {
+        // Same catalog + version the backend uses (backend/settings.gradle.kts).
+        create("ktorLibs").from("io.ktor:ktor-version-catalog:3.5.0")
+    }
 }
 
 rootProject.name = "bayaan"

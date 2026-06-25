@@ -1,7 +1,15 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 android {
@@ -19,6 +27,11 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Backend isn't deployed publicly yet — this is the dev machine's LAN IP.
+        // Phone and computer must be on the same WiFi. Update if the IP changes,
+        // or once the backend has a real (Railway) URL.
+        buildConfigField("String", "BACKEND_URL", "\"http://10.2.255.116:8080\"")
     }
 
     buildTypes {
@@ -34,11 +47,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -60,6 +71,11 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
+
+    // HTTP client to the Bayaan backend's /audio/analyze — same client + engine
+    // the backend itself uses to call the muaalem engine (Routing.kt).
+    implementation(ktorLibs.client.core)
+    implementation(ktorLibs.client.cio)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
