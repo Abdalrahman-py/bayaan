@@ -11,6 +11,7 @@ import com.bayaan.ui.model.BAYYINAH
 import com.bayaan.ui.model.FATIHAH
 import com.bayaan.ui.model.Mistake
 import com.bayaan.ui.model.RecitationUiState
+import com.bayaan.ui.model.SifatError
 import com.bayaan.ui.model.Verse
 import com.bayaan.ui.model.verseFor
 import io.ktor.client.HttpClient
@@ -161,9 +162,14 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
         val json = JSONObject(text)
         val errors = json.getJSONArray("errors")
         val mistakes = (0 until errors.length()).map { i -> errors.getJSONObject(i).toMistake() }
+        val sifatArr = json.optJSONArray("sifat_errors")
+        val sifatErrors = if (sifatArr != null) {
+            (0 until sifatArr.length()).map { i -> sifatArr.getJSONObject(i).toSifatError() }
+        } else emptyList()
         return RecitationUiState.Result(
             verse = verse,
             mistakes = mistakes,
+            sifatErrors = sifatErrors,
             allCorrect = json.getBoolean("all_correct"),
         )
     }
@@ -184,6 +190,14 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
             gotLen = intOrNull("predicted_len"),
         )
     }
+
+    private fun JSONObject.toSifatError() = SifatError(
+        phonemesGroup = getString("phonemes_group"),
+        attribute     = getString("attribute"),
+        predicted     = getString("predicted"),
+        expected      = getString("expected"),
+        confidence    = if (has("confidence") && !isNull("confidence")) getDouble("confidence").toFloat() else null,
+    )
 
     private fun JSONObject.intOrNull(key: String): Int? =
         if (has(key) && !isNull(key)) getInt(key) else null

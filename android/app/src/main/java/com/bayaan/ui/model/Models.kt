@@ -20,6 +20,15 @@ data class Mistake(
     val gotLen: Int?,           // e.g. 2  — may be null
 )
 
+/** One letter-characteristic error detected by Muaalem's Sifat heads. */
+data class SifatError(
+    val phonemesGroup: String,  // the Arabic phoneme group, e.g. "قَ"
+    val attribute: String,      // e.g. "qalqla"
+    val predicted: String,      // e.g. "not_moqalqal"
+    val expected: String,       // e.g. "moqalqal"
+    val confidence: Float?,     // model confidence 0..1, may be null
+)
+
 sealed interface RecitationUiState {
     val verse: Verse
     data class Ready(override val verse: Verse) : RecitationUiState
@@ -28,6 +37,7 @@ sealed interface RecitationUiState {
     data class Result(
         override val verse: Verse,
         val mistakes: List<Mistake>,
+        val sifatErrors: List<SifatError>,
         val allCorrect: Boolean,
     ) : RecitationUiState
     data class Error(override val verse: Verse, val message: String) : RecitationUiState
@@ -67,6 +77,16 @@ val previewVerse = Verse(
     sura = 1, aya = 2,
     surahNameEn = "Al-Fatihah", surahNameAr = "الفاتحة",
     uthmani = "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ",
+)
+
+val previewSifatErrors = listOf(
+    SifatError(
+        phonemesGroup = "قَ",
+        attribute = "qalqla",
+        predicted = "not_moqalqal",
+        expected = "moqalqal",
+        confidence = 0.94f,
+    ),
 )
 
 val previewMistakes = listOf(

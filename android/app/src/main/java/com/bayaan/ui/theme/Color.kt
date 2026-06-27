@@ -23,3 +23,7 @@ val TerracottaBackgroundDark = Color(0xFF3B1E19)
 val PlainErrorHighlight = Color(0xFFC084FC) // Muted purple for plain misreads
 val PlainErrorBackgroundLight = Color(0xFFF3E8FF)
 val PlainErrorBackgroundDark = Color(0xFF2E1C3F)
+
+val SifatHighlight = Color(0xFF2B7AB3)        // Calm blue for letter-characteristic errors
+val SifatBackgroundLight = Color(0xFFE8F2FA)
+val SifatBackgroundDark = Color(0xFF0E1E2D)

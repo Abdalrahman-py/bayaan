@@ -80,9 +80,12 @@ class Muaalem:
     def _correct(self, wav_bytes, sura, aya, madd):
         """Pure logic: audio bytes + ayah -> structured errors. No HTTP here."""
         import dataclasses
+        import json
 
+        import diff_match_patch as dmp_module
         import librosa
         import soundfile as sf
+        from quran_muaalem.explain import expalin_sifat
         from quran_transcript import Aya, quran_phonetizer, explain_error
         from quran_transcript.phonetics.moshaf_attributes import MoshafAttributes
 
@@ -111,16 +114,63 @@ class Muaalem:
                 return sorted(o)
             return str(o)
 
-        import json
-
         errors_json = json.loads(
             json.dumps([dataclasses.asdict(e) for e in errors], default=_enc)
         )
+
+        # --- Sifat (letter characteristic) errors ---
+        # expalin_sifat aligns predicted vs reference sifat groups using the same
+        # diff already computed between phoneme strings.
+        _dmp = dmp_module.diff_match_patch()
+        _diffs = _dmp.diff_main(ref.phonemes, predicted)
+        _sifat_table = expalin_sifat(outs[0].sifat, ref.sifat, _diffs)
+
+        # Index by phoneme group so we can look up confidence scores.
+        _pred_by_group = {s.phonemes_group: s for s in outs[0].sifat}
+
+        _SIFAT_KEYS = (
+            "hams_or_jahr", "shidda_or_rakhawa", "tafkheem_or_taqeeq",
+            "itbaq", "safeer", "qalqla", "tikraar", "tafashie", "istitala", "ghonna",
+        )
+
+        def _sifa_str(v):
+            """Safely stringify a SifaOutput attribute (may be str, enum, or None)."""
+            if v is None:
+                return None
+            return v.value if hasattr(v, "value") else str(v)
+
+        sifat_errors = []
+        for row in _sifat_table:
+            if row.get("tag") == "insert":
+                continue
+            ph = row["phonemes"]
+            pred_obj = _pred_by_group.get(ph)
+            for key in _SIFAT_KEYS:
+                pred_val = row.get(key)
+                exp_val = _sifa_str(row.get(f"exp_{key}"))
+                if not pred_val or pred_val == "None" or exp_val is None:
+                    continue
+                if pred_val == exp_val:
+                    continue
+                confidence = None
+                if pred_obj:
+                    unit = getattr(pred_obj, key, None)
+                    if unit is not None:
+                        confidence = round(float(unit.prob), 3)
+                sifat_errors.append({
+                    "phonemes_group": ph,
+                    "attribute": key,
+                    "predicted": pred_val,
+                    "expected": exp_val,
+                    "confidence": confidence,
+                })
+
         return {
             "sura": sura,
             "aya": aya,
             "uthmani": uthmani,
             "errors": errors_json,
+            "sifat_errors": sifat_errors,
             "error_count": len(errors_json),
             "all_correct": len(errors_json) == 0,
             "audio_secs": round(len(wave) / 16000, 2),

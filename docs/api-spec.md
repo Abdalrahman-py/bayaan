@@ -45,9 +45,20 @@ Uploads a recitation recording for one ayah and returns the recitation engine's 
       "expected_len": 4,
       "predicted_len": 2
     }
+  ],
+  "sifat_errors": [
+    {
+      "phonemes_group": "قَ",
+      "attribute": "qalqla",
+      "predicted": "not_moqalqal",
+      "expected": "moqalqal",
+      "confidence": 0.94
+    }
   ]
 }
 ```
+
+**`errors` array** — phoneme-level mistakes from comparing the predicted phoneme sequence against the reference:
 
 - `uthmani_pos` — half-open `[start, end)` character range into the ayah's Uthmani text.
 - `error_type` — `"tajweed"` for a rule violation; anything else is treated as a plain mispronunciation.
@@ -55,7 +66,15 @@ Uploads a recitation recording for one ayah and returns the recitation engine's 
 - `ref_tajweed_rules[0].name` — Arabic/English rule name. Omitted (or empty) for plain mispronunciations.
 - `expected_len` / `predicted_len` — elongation count comparison, present for length-based rules (e.g. Madd), otherwise absent.
 
-If `all_correct` is `true`, `errors` is empty.
+**`sifat_errors` array** — letter-characteristic mistakes detected directly from audio by Muaalem's attribute heads (see [`tajweed-rules.md`](./tajweed-rules.md) for attribute definitions):
+
+- `phonemes_group` — the Arabic phoneme group where the error occurred.
+- `attribute` — one of the 10 Sifat attribute keys (e.g. `"qalqla"`, `"ghonna"`, `"tafkheem_or_taqeeq"`).
+- `predicted` — what the model detected (e.g. `"not_moqalqal"`).
+- `expected` — what the reference requires (e.g. `"moqalqal"`).
+- `confidence` — model confidence 0–1, or `null` if not available.
+
+If `all_correct` is `true`, `errors` is empty. `sifat_errors` may still be non-empty if the phoneme sequence was correct but letter characteristics were wrong.
 
 **Error responses** (backend's own validation, before the audio reaches the engine):
 

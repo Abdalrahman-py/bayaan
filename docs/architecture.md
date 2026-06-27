@@ -24,7 +24,7 @@ There is no database, no auth, and no user accounts. Every recitation attempt is
 3. **Upload.** The app POSTs a multipart request to `{BACKEND_URL}/audio/analyze` with the audio file plus `sura`/`aya` form fields.
 4. **Convert.** The backend shells out to `ffmpeg` to convert whatever format the phone sent into 16kHz mono WAV, which is what the recitation engine expects.
 5. **Analyze.** The backend forwards the WAV plus `sura`/`aya` (as query params) to the recitation engine, a pretrained model running on a serverless GPU. The backend does not interpret the result — it pipes the engine's JSON body and status code straight back to the app.
-6. **Render.** The app parses the response into a list of mistakes (character ranges into the verse's Uthmani text, tajweed rule name in Arabic/English, expected vs. recited length) and highlights them on the verse.
+6. **Render.** The app parses two result arrays from the response. `errors` maps to character-range highlights on the verse with Arabic/English rule names and length comparisons. `sifat_errors` maps to a separate "Letter Characteristics" section listing per-phoneme attribute mistakes (Qalqalah, Ghunnah, Tafkheem, etc.) detected directly from audio by Muaalem's attribute heads.
 7. **Retry or continue.** The user can try the same ayah again or move to the next one.
 
 ## Why an external engine instead of training one
@@ -42,6 +42,7 @@ Jetpack Compose, single Gradle module (`app/`), Kotlin. No KMP, no shared module
 | `VersePickerScreen` | Lists the two demo surahs and their ayat |
 | `RecitationScreen` + `RecitationViewModel` | Records audio, uploads it, renders Ready / Recording / Uploading / Result / Error states |
 | `VerseText` | Renders Uthmani Arabic text with arbitrary character ranges highlighted |
+| `SifatErrorCard` (in `RecitationScreen`) | Renders per-phoneme letter-characteristic errors from the `sifat_errors` response field |
 
 ### `/backend`
 

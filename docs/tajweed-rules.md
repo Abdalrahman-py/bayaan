@@ -44,15 +44,34 @@ Bayaan's demo focuses attention on two Tajweed rules: **Ghunnah** and **Madd**. 
 
 ---
 
-## Other rules (not the demo's focus)
+## Sifat (letter characteristics) — full attribute set
 
-These aren't specifically called out in the demo flow, but the recitation engine isn't limited to Ghunnah and Madd — it's worth knowing them if you're checking results by ear.
+The recitation engine predicts 10 letter-characteristic attributes directly from audio for each phoneme group. These appear in the `sifat_errors` array of the API response and are shown to the user as a separate "Letter Characteristics" section in the result screen.
 
-| Rule | Arabic | Why Descoped |
-|------|--------|-------------|
-| Ikhfaa | إخفاء | Requires detecting the consonant that follows noon/tanween — contextual |
-| Idgham | إدغام | Merging of noon sakinah/tanween into the next letter — needs phoneme sequence |
-| Qalb | قلب | Noon sakinah/tanween before ب converts to meem — contextual |
+| Attribute key | English name | Arabic | What it checks |
+|---|---|---|---|
+| `qalqla` | Qalqalah | قلقلة | Echo-bounce on sukoon letters (ق ط ب ج د) |
+| `ghonna` | Ghunnah | غنة | Nasal resonance on noon/meem (2 counts) |
+| `tafkheem_or_taqeeq` | Heavy/Light | تفخيم أو ترقيق | Whether the letter was pronounced heavy (mofakham) or light (moraqaq) |
+| `hams_or_jahr` | Breath | همس أو جهر | Voiced (jahr) vs. unvoiced/breathy (hams) |
+| `shidda_or_rakhawa` | Strength | شدة أو رخاوة | Plosive-strong (shadeed) vs. flowing (rikhw) vs. between |
+| `itbaq` | Elevation | إطباق | Tongue raised toward palate (motbaq) vs. open (monfateh) |
+| `safeer` | Whistle | صفير | Whistling quality on ص ز س |
+| `tikraar` | Repetition | تكرار | Vibration/trill on ر |
+| `tafashie` | Spreading | تفشي | Air spreading broadly for ش |
+| `istitala` | Elongation | استطالة | Tongue pressing along the upper molars for ض |
+
+Unlike Madd and Ghunnah (which are detected by counting phoneme repetitions in the output), Sifat attributes are classified directly from the audio waveform by Muaalem's multi-level CTC heads. This means the engine can flag that Qalqalah was absent even if the phoneme itself was recognised correctly.
+
+## Other rules (not surfaced yet)
+
+These are contextual rules that depend on what follows a phoneme — the engine's phoneme-diff handles some of them implicitly, but they don't appear as named attributes in the current output.
+
+| Rule | Arabic | Notes |
+|------|--------|-------|
+| Ikhfaa | إخفاء | Nasal concealment of noon/tanween before 15 letters |
+| Idgham | إدغام | Merging of noon sakinah/tanween into the next letter |
+| Qalb | قلب | Noon sakinah/tanween before ب converts to meem |
 
 ---
 

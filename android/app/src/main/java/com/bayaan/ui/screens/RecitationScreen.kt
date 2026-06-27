@@ -60,13 +60,18 @@ import androidx.compose.ui.unit.sp
 import com.bayaan.ui.components.VerseText
 import com.bayaan.ui.model.Mistake
 import com.bayaan.ui.model.RecitationUiState
+import com.bayaan.ui.model.SifatError
 import com.bayaan.ui.model.previewMistakes
+import com.bayaan.ui.model.previewSifatErrors
 import com.bayaan.ui.model.previewVerse
 import com.bayaan.ui.theme.BayaanTheme
 import com.bayaan.ui.theme.AmiriFontFamily
 import com.bayaan.ui.theme.PlainErrorBackgroundDark
 import com.bayaan.ui.theme.PlainErrorBackgroundLight
 import com.bayaan.ui.theme.PlainErrorHighlight
+import com.bayaan.ui.theme.SifatBackgroundDark
+import com.bayaan.ui.theme.SifatBackgroundLight
+import com.bayaan.ui.theme.SifatHighlight
 import com.bayaan.ui.theme.TerracottaBackgroundDark
 import com.bayaan.ui.theme.TerracottaBackgroundLight
 import com.bayaan.ui.theme.TerracottaHighlight
@@ -170,6 +175,7 @@ fun RecitationScreen(
                     is RecitationUiState.Result -> ResultControls(
                         verse = state.verse,
                         mistakes = state.mistakes,
+                        sifatErrors = state.sifatErrors,
                         allCorrect = state.allCorrect,
                         onTryAgain = onTryAgain,
                         onNextAyah = onNextAyah
@@ -316,6 +322,7 @@ private fun UploadingControls() {
 private fun ResultControls(
     verse: com.bayaan.ui.model.Verse,
     mistakes: List<Mistake>,
+    sifatErrors: List<SifatError>,
     allCorrect: Boolean,
     onTryAgain: () -> Unit,
     onNextAyah: () -> Unit
@@ -338,9 +345,25 @@ private fun ResultControls(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                
                 mistakes.forEach { mistake ->
                     MistakeCard(mistake = mistake, verseText = verse.uthmani)
+                }
+            }
+        }
+
+        // Sifat (letter characteristics) errors from Muaalem's attribute heads
+        if (sifatErrors.isNotEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Letter Characteristics",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                sifatErrors.forEach { error ->
+                    SifatErrorCard(error = error)
                 }
             }
         }
@@ -525,6 +548,77 @@ private fun MistakeCard(mistake: Mistake, verseText: String) {
     }
 }
 
+private val SIFAT_DISPLAY_NAMES = mapOf(
+    "hams_or_jahr"       to ("Breath" to "همس أو جهر"),
+    "shidda_or_rakhawa"  to ("Strength" to "شدة أو رخاوة"),
+    "tafkheem_or_taqeeq" to ("Heavy/Light" to "تفخيم أو ترقيق"),
+    "itbaq"              to ("Elevation" to "إطباق"),
+    "safeer"             to ("Whistle" to "صفير"),
+    "qalqla"             to ("Qalqalah" to "قلقلة"),
+    "tikraar"            to ("Repetition" to "تكرار"),
+    "tafashie"           to ("Spreading" to "تفشي"),
+    "istitala"           to ("Elongation" to "استطالة"),
+    "ghonna"             to ("Ghunnah" to "غنة"),
+)
+
+@Composable
+private fun SifatErrorCard(error: SifatError) {
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val cardBg = if (isDark) SifatBackgroundDark else SifatBackgroundLight
+    val (nameEn, nameAr) = SIFAT_DISPLAY_NAMES[error.attribute] ?: (error.attribute to "")
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = nameEn,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = SifatHighlight
+                )
+                Text(
+                    text = nameAr,
+                    fontFamily = AmiriFontFamily,
+                    fontSize = 18.sp,
+                    color = SifatHighlight
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "On: ${error.phonemesGroup}",
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "Expected: ${error.expected}  ·  Detected: ${error.predicted}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+
+            if (error.confidence != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Confidence: ${(error.confidence * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun ErrorControls(message: String, onRetry: () -> Unit) {
     Column(
@@ -606,7 +700,7 @@ fun RecitationScreenUploadingPreview() {
 fun RecitationScreenResultPreview() {
     BayaanTheme {
         RecitationScreen(
-            state = RecitationUiState.Result(previewVerse, previewMistakes, allCorrect = false),
+            state = RecitationUiState.Result(previewVerse, previewMistakes, previewSifatErrors, allCorrect = false),
             onRecord = {}, onStop = {}, onTryAgain = {}, onNextAyah = {}, onRetry = {}, onPickAyah = {}
         )
     }
@@ -617,7 +711,7 @@ fun RecitationScreenResultPreview() {
 fun RecitationScreenResultPerfectPreview() {
     BayaanTheme {
         RecitationScreen(
-            state = RecitationUiState.Result(previewVerse, emptyList(), allCorrect = true),
+            state = RecitationUiState.Result(previewVerse, emptyList(), emptyList(), allCorrect = true),
             onRecord = {}, onStop = {}, onTryAgain = {}, onNextAyah = {}, onRetry = {}, onPickAyah = {}
         )
     }
