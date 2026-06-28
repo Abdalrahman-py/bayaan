@@ -1,8 +1,9 @@
 package com.bayaan.ui.viewmodel
 
 import android.app.Application
+import android.media.AudioFormat
+import android.media.AudioRecord
 import android.media.MediaRecorder
-import android.os.Build
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,12 +26,14 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import java.io.File
+import java.io.ByteArrayOutputStream
 
 /**
  * Drives the recitation demo loop: mic recording, uploading to the backend's
@@ -41,12 +44,11 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
 
     val uiStates = mutableStateMapOf<Pair<Int, Int>, RecitationUiState>()
 
-    private var recorder: MediaRecorder? = null
-    private var audioFile: File? = null
+    private var audioRecord: AudioRecord? = null
+    private var recordingJob: Job? = null
     private var timerJob: Job? = null
+    private val pcmBuffer = ByteArrayOutputStream()
 
-    // Same client + engine the backend uses to call the muaalem engine
-    // (backend/.../Routing.kt) — long timeout for the same cold-start reason.
     private val client = HttpClient(CIO) {
         engine { requestTimeout = 60_000 }
     }
@@ -64,30 +66,44 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
     fun record(sura: Int, aya: Int) {
         val key = sura to aya
         val verse = verseFor(sura, aya)
-        val context = getApplication<Application>()
-        val file = File(context.cacheDir, "recitation_${System.currentTimeMillis()}.m4a")
 
-        val mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            MediaRecorder(context)
-        } else {
-            @Suppress("DEPRECATION")
-            MediaRecorder()
-        }
-        try {
-            mediaRecorder.apply {
-                setAudioSource(MediaRecorder.AudioSource.MIC)
-                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                setOutputFile(file.absolutePath)
-                prepare()
-                start()
-            }
-        } catch (e: Exception) {
+        val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        if (minBuf <= 0) {
             uiStates[key] = RecitationUiState.Error(verse, "Couldn't start recording. Try again.")
             return
         }
-        recorder = mediaRecorder
-        audioFile = file
+
+        val ar = AudioRecord(
+            MediaRecorder.AudioSource.MIC,
+            SAMPLE_RATE,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_16BIT,
+            minBuf * 4,
+        )
+        if (ar.state != AudioRecord.STATE_INITIALIZED) {
+            ar.release()
+            uiStates[key] = RecitationUiState.Error(verse, "Couldn't start recording. Try again.")
+            return
+        }
+
+        try {
+            ar.startRecording()
+        } catch (e: Exception) {
+            ar.release()
+            uiStates[key] = RecitationUiState.Error(verse, "Couldn't start recording. Try again.")
+            return
+        }
+
+        audioRecord = ar
+        pcmBuffer.reset()
+
+        recordingJob = viewModelScope.launch(Dispatchers.IO) {
+            val chunk = ByteArray(minBuf)
+            while (isActive) {
+                val n = ar.read(chunk, 0, chunk.size)
+                if (n > 0) pcmBuffer.write(chunk, 0, n)
+            }
+        }
 
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
@@ -106,29 +122,27 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
         timerJob?.cancel()
         timerJob = null
 
-        val file = audioFile
-        val mediaRecorder = recorder
-        recorder = null
-        audioFile = null
-        if (mediaRecorder == null || file == null) return // wasn't recording
+        val job = recordingJob
+        recordingJob = null
+        val ar = audioRecord ?: return
+        audioRecord = null
 
-        try {
-            mediaRecorder.stop()
-        } catch (e: Exception) {
-            mediaRecorder.release()
-            uiStates[key] = RecitationUiState.Error(verse, "Recording was too short. Try again.")
-            return
-        }
-        mediaRecorder.release()
-
-        uiStates[key] = RecitationUiState.Uploading(verse)
         viewModelScope.launch {
-            uiStates[key] = analyze(file, sura, aya, verse)
-            file.delete()
+            job?.cancelAndJoin()
+            ar.stop()
+            ar.release()
+            val pcm = pcmBuffer.toByteArray()
+            pcmBuffer.reset()
+            if (pcm.isEmpty()) {
+                uiStates[key] = RecitationUiState.Error(verse, "Recording was too short. Try again.")
+                return@launch
+            }
+            uiStates[key] = RecitationUiState.Uploading(verse)
+            uiStates[key] = analyze(buildWav(pcm), sura, aya, verse)
         }
     }
 
-    private suspend fun analyze(file: File, sura: Int, aya: Int, verse: Verse): RecitationUiState =
+    private suspend fun analyze(wav: ByteArray, sura: Int, aya: Int, verse: Verse): RecitationUiState =
         try {
             val response = client.post("${BuildConfig.BACKEND_URL}/audio/analyze") {
                 setBody(
@@ -136,8 +150,8 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
                         formData {
                             append(
                                 "audio",
-                                file.readBytes(),
-                                Headers.build { append(HttpHeaders.ContentDisposition, "filename=\"recitation.m4a\"") },
+                                wav,
+                                Headers.build { append(HttpHeaders.ContentDisposition, "filename=\"recitation.wav\"") },
                             )
                             append("sura", sura.toString())
                             append("aya", aya.toString())
@@ -170,7 +184,7 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
             verse = verse,
             mistakes = mistakes,
             sifatErrors = sifatErrors,
-            allCorrect = json.getBoolean("all_correct"),
+            allCorrect = json.getBoolean("all_correct") && sifatErrors.isEmpty(),
         )
     }
 
@@ -216,7 +230,33 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     override fun onCleared() {
-        recorder?.release()
+        audioRecord?.release()
         client.close()
+    }
+
+    private fun buildWav(pcm: ByteArray): ByteArray {
+        val out = ByteArrayOutputStream(44 + pcm.size)
+        out.write("RIFF".toByteArray())
+        out.write(le32(36 + pcm.size))
+        out.write("WAVE".toByteArray())
+        out.write("fmt ".toByteArray())
+        out.write(le32(16))
+        out.write(le16(1))               // PCM
+        out.write(le16(1))               // mono
+        out.write(le32(SAMPLE_RATE))
+        out.write(le32(SAMPLE_RATE * 2)) // byteRate = sampleRate * blockAlign
+        out.write(le16(2))               // blockAlign = channels * bitsPerSample/8
+        out.write(le16(16))              // bitsPerSample
+        out.write("data".toByteArray())
+        out.write(le32(pcm.size))
+        out.write(pcm)
+        return out.toByteArray()
+    }
+
+    private fun le32(v: Int) = byteArrayOf(v.toByte(), (v shr 8).toByte(), (v shr 16).toByte(), (v shr 24).toByte())
+    private fun le16(v: Int) = byteArrayOf(v.toByte(), (v shr 8).toByte())
+
+    companion object {
+        private const val SAMPLE_RATE = 16_000
     }
 }

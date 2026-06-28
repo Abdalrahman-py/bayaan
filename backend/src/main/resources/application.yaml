@@ -3,4 +3,4 @@ ktor:
     port: ${PORT:8080}
   application:
     modules:
-      - com.bayaan.RoutingKt.configureRouting
+      - com.bayaan.ApplicationKt.module

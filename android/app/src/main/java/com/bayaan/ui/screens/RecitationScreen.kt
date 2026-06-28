@@ -332,7 +332,7 @@ private fun ResultControls(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // Verdict Card
-        VerdictHeader(allCorrect = allCorrect, mistakeCount = mistakes.size)
+        VerdictHeader(allCorrect = allCorrect, mistakeCount = mistakes.size + sifatErrors.size)
 
         // Mistakes list if they exist
         if (!allCorrect && mistakes.isNotEmpty()) {

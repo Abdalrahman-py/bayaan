@@ -6,16 +6,19 @@ You are an AI coding agent operating inside the `/backend` directory of Bayaan. 
 
 ## What this module is
 
-A thin Ktor proxy in front of a third-party recitation-analysis engine:
+A Ktor backend that handles auth, audio analysis, and persistence for the Bayaan Android app:
 
-1. Accept a recorded ayah from the Android app over HTTP (multipart).
-2. Convert it to 16kHz mono WAV via `ffmpeg`.
-3. Forward it to the recitation engine (an external pretrained model on a serverless GPU).
-4. Pipe the engine's response straight back to the app — no interpretation, no persistence.
+1. Verify the Supabase JWT sent by the Android app (`Authorization: Bearer`).
+2. Accept a recorded ayah over HTTP multipart. Android sends 16kHz mono WAV directly — no server-side conversion needed.
+3. Forward the audio to the Muaalem recitation engine (Modal serverless GPU).
+4. Persist the session and any detected mistakes to Supabase Postgres (via Exposed + HikariCP).
+5. Return the engine's JSON response to the app.
 
-There is no auth, no database, and no STT/LLM/TTS. The whole implementation is `Application.kt` + `Routing.kt`. An earlier draft of this file planned a much larger system (Supabase auth/DB, Whisper, LLM, TTS, WebSocket streaming) — none of that was built; this file now describes what actually exists.
+**Auth:** Supabase JWT (HS256), verified locally using `SUPABASE_JWT_SECRET`.  
+**Database:** Supabase Postgres — tables `users`, `sessions`, `mistakes`. Direct JDBC connection via HikariCP.  
+**ML engine:** `obadx/quran-muaalem` deployed on Modal.  
 
-Deployed on **Render** (Docker, free tier), not Railway.
+Deployed on **Render** (Docker, free tier).
 
 ---
 
@@ -29,8 +32,9 @@ Solo project — Abdalrahman (@Abdalrahman-py).
 
 - **Language:** Kotlin
 - **Framework:** Ktor (server + client)
-- **Audio conversion:** shells out to `ffmpeg` (must be on `PATH` — the Dockerfile installs it)
-- **External service:** the recitation engine, called over HTTP. URL has a working default in `Routing.kt`, overridable via env var for local/staging swaps.
+- **Auth:** Supabase JWT verified locally (`ktor-server-auth-jwt`)
+- **Database:** Exposed ORM + HikariCP → Supabase Postgres
+- **External service:** Muaalem recitation engine on Modal, called over HTTP. URL defaults to the live endpoint in `Routing.kt`, overridable via `MUAALEM_URL` env var.
 - **Build:** Gradle (Kotlin DSL)
 - **Hosting:** Render
 
@@ -42,13 +46,21 @@ Solo project — Abdalrahman (@Abdalrahman-py).
 backend/
 ├── src/
 │   ├── main/kotlin/com/bayaan/
-│   │   ├── Application.kt   Entry point (EngineMain)
-│   │   └── Routing.kt       /health, /audio/analyze, ffmpeg conversion
-│   └── test/kotlin/         Tests
+│   │   ├── Application.kt          Entry point — wires JWT, DB, routes
+│   │   ├── Routing.kt              /health, /audio/analyze
+│   │   ├── plugins/
+│   │   │   └── JwtPlugin.kt        Supabase JWT verification
+│   │   ├── routes/
+│   │   │   └── AuthRoutes.kt       POST /auth/sync
+│   │   └── data/
+│   │       ├── DatabaseFactory.kt  HikariCP pool + dbQuery helper
+│   │       ├── tables/             Exposed table objects (Users, Sessions, Mistakes)
+│   │       └── repositories/       UserRepository, SessionRepository, MistakeRepository
+│   └── test/kotlin/                Tests
 ├── build.gradle.kts
-├── Dockerfile                Multi-stage build, installs ffmpeg in the runtime image
-├── AGENTS.md                 This file
-└── CLAUDE.md                 Pointer to this file
+├── Dockerfile                      Multi-stage build (JDK build → JRE runtime)
+├── AGENTS.md                       This file
+└── CLAUDE.md                       Pointer to this file
 ```
 
 ---
@@ -60,7 +72,15 @@ cd backend
 ./gradlew run
 ```
 
-Boots the server on `localhost:8080`. No `.env` is required to run it — the recitation engine's default URL is baked in.
+Boots the server on `localhost:8080`. Requires three env vars — without them the server will not start:
+
+```
+SUPABASE_DB_URL=jdbc:postgresql://db.djcuxaziipgjlmdfkeqz.supabase.co:5432/postgres?user=postgres.djcuxaziipgjlmdfkeqz&password=...
+SUPABASE_JWT_SECRET=<from Supabase dashboard → Settings → API → JWT Secret>
+SUPABASE_PROJECT_REF=djcuxaziipgjlmdfkeqz
+```
+
+`MUAALEM_URL` is optional — the live Modal endpoint is the default.
 
 ---
 
@@ -83,7 +103,7 @@ Boots the server on `localhost:8080`. No `.env` is required to run it — the re
 
 - Don't block the event loop (`Thread.sleep`, blocking IO without a dispatcher).
 - Don't store raw audio — it's processed in-memory per request and discarded.
-- Don't add auth, a database, or new external services without a real need; this module is intentionally minimal right now.
+- Don't store raw audio — it's processed in-memory per request and discarded.
 
 ---
 
