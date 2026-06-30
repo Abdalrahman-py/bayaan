@@ -1,76 +1,97 @@
 # Architecture
 
-Current state of the system as built, not as originally planned. This replaces an earlier draft that described a Whisper → ML classifier → LLM → TTS pipeline with Supabase auth and a Postgres database — none of that was built. What exists today is a much smaller working loop.
+Current state of the system as built. This replaces an earlier draft that described a no-auth, no-DB proxy — that was the initial prototype; auth, persistence, and progress tracking have since been added.
 
 ## System overview
 
-Two services: an Android app and a Ktor backend. The backend is a thin proxy in front of a third-party recitation-analysis model — Bayaan doesn't train or host its own model; it sends audio to an existing pretrained engine and relays the structured result back to the app.
+Three services: an Android app, a Ktor backend, and a serverless GPU recitation engine. The backend handles auth verification, audio forwarding, and persistence.
 
 ```mermaid
 graph LR
-    A["Android App\n(Compose)"] -- "1 · record + POST\naudio, sura, aya" --> B["Ktor Backend\n(Render)"]
-    B -- "2 · ffmpeg\nM4A/AAC -> 16kHz WAV" --> B
-    B -- "3 · forward audio\n+ sura/aya" --> C["Recitation Engine\n(serverless GPU)"]
-    C -- "4 · structured mistake list" --> B
-    B -- "5 · JSON, passed through" --> A
+    A["Android App\n(Compose)"] -- "Bearer JWT\n+ audio/sura/aya" --> B["Ktor Backend\n(Render)"]
+    B -- "verify JWT" --> B
+    B -- "ffmpeg\nM4A/AAC → 16kHz WAV" --> B
+    B -- "forward audio\n+ sura/aya" --> C["Recitation Engine\n(serverless GPU)"]
+    C -- "structured mistake list" --> B
+    B -- "persist session\n+ mistakes" --> D["Supabase Postgres"]
+    B -- "JSON response" --> A
 ```
-
-There is no database, no auth, and no user accounts. Every recitation attempt is stateless — nothing is persisted server-side.
 
 ## Data flow: one recitation attempt
 
-1. **Pick a verse.** The app's verse picker lists Al-Fatihah and Al-Bayyinah (the only two surahs with hardcoded Uthmani text in the app right now).
-2. **Record.** Tapping record starts `MediaRecorder` capturing M4A/AAC. Tapping stop ends it.
-3. **Upload.** The app POSTs a multipart request to `{BACKEND_URL}/audio/analyze` with the audio file plus `sura`/`aya` form fields.
-4. **Convert.** The backend shells out to `ffmpeg` to convert whatever format the phone sent into 16kHz mono WAV, which is what the recitation engine expects.
-5. **Analyze.** The backend forwards the WAV plus `sura`/`aya` (as query params) to the recitation engine, a pretrained model running on a serverless GPU. The backend does not interpret the result — it pipes the engine's JSON body and status code straight back to the app.
-6. **Render.** The app parses two result arrays from the response. `errors` maps to character-range highlights on the verse with Arabic/English rule names and length comparisons. `sifat_errors` maps to a separate "Letter Characteristics" section listing per-phoneme attribute mistakes (Qalqalah, Ghunnah, Tafkheem, etc.) detected directly from audio by Muaalem's attribute heads.
-7. **Retry or continue.** The user can try the same ayah again or move to the next one.
-
-## Why an external engine instead of training one
-
-Training a Tajweed classifier from scratch (the original plan: wav2vec2 fine-tuning on a small labeled dataset) was dropped in favor of an existing, more capable, MIT-licensed recitation-analysis model. It already detects pronunciation and Tajweed mistakes with enough accuracy for the demo loop, which let the project's own work focus on the app and the integration around it rather than on training and evaluating a classifier. The tradeoff: the engine is a third-party dependency, runs on a scale-to-zero serverless GPU, and the first request after idle has a multi-second cold start. The app's UI accounts for this with an explicit "uploading / analyzing" state rather than expecting an instant response.
+1. **Pick a verse.** The app calls `GET /surahs` to get the available list, then the user picks a surah and ayah.
+2. **Record.** Tapping record starts `MediaRecorder` capturing M4A/AAC.
+3. **Upload.** The app POSTs `multipart/form-data` to `/audio/analyze` with a `Authorization: Bearer <supabase-jwt>` header. The backend verifies the JWT locally against `SUPABASE_JWT_SECRET`.
+4. **Convert.** The backend shells out to `ffmpeg` to convert the audio to 16kHz mono WAV.
+5. **Analyze.** The backend forwards the WAV to the recitation engine (serverless GPU). The engine returns structured JSON with phoneme-level errors (`errors`) and letter-characteristic errors (`sifat_errors`).
+6. **Persist.** The backend inserts a row into `sessions` and batch-inserts one row per mistake into `mistakes` (via HikariCP → Supabase Postgres).
+7. **Render.** The app parses the response. `errors` maps to character-range highlights on the verse text. `sifat_errors` maps to a "Letter Characteristics" section.
+8. **Progress.** The user can check `GET /progress` to see aggregate stats and `GET /progress/sessions` for a paginated history.
 
 ## Module responsibilities
 
 ### `/android`
 
-Jetpack Compose, single Gradle module (`app/`), Kotlin. No KMP, no shared module — that was planned, never built.
+Jetpack Compose, single Gradle module (`app/`), Kotlin.
 
 | Component | What it does |
 |---|---|
-| `VersePickerScreen` | Lists the two demo surahs and their ayat |
-| `RecitationScreen` + `RecitationViewModel` | Records audio, uploads it, renders Ready / Recording / Uploading / Result / Error states |
-| `VerseText` | Renders Uthmani Arabic text with arbitrary character ranges highlighted |
-| `SifatErrorCard` (in `RecitationScreen`) | Renders per-phoneme letter-characteristic errors from the `sifat_errors` response field |
+| `VersePickerScreen` | Fetches `/surahs`, lists available surahs and ayat |
+| `RecitationScreen` + `RecitationViewModel` | Records audio, uploads, renders Ready / Recording / Uploading / Result / Error states |
+| `VerseText` | Renders Uthmani Arabic with arbitrary character ranges highlighted |
+| `SifatErrorCard` | Renders per-phoneme letter-characteristic errors from `sifat_errors` |
 
 ### `/backend`
 
-Ktor server, two endpoints, no framework-level auth or persistence layer (`Application.kt` + `Routing.kt`, nothing else).
+Ktor server. Six endpoints; all except `/health` and `/surahs` require a Supabase JWT.
 
-| Endpoint | What it does |
-|---|---|
-| `GET /health` | Liveness check |
-| `POST /audio/analyze` | Multipart audio + sura/aya in → ffmpeg conversion → forwarded to the recitation engine → engine's response passed through |
+| Endpoint | Auth | What it does |
+|---|---|---|
+| `GET /health` | No | Liveness check |
+| `GET /surahs` | No | Hardcoded list of available surahs |
+| `POST /auth/sync` | Yes | Upsert user into `users` table on first login |
+| `POST /audio/analyze` | Yes | ffmpeg + engine call + persist session/mistakes |
+| `GET /progress` | Yes | Aggregate stats for the authenticated user |
+| `GET /progress/sessions` | Yes | Paginated session history |
+| `GET /progress/sessions/{id}` | Yes | Full session detail with all mistakes |
 
 ### `/ml`
 
-Hosts the deployment script for the recitation engine (a pretrained model, not something trained in this repo) on a serverless GPU platform. No training code runs here currently.
+Deployment script for the recitation engine (a pretrained model, not trained here) on a serverless GPU platform. No training code.
+
+## Database schema
+
+Three tables in Supabase Postgres. Managed via Exposed table objects; the live DDL is in Supabase directly.
+
+| Table | Key columns |
+|---|---|
+| `users` | `id uuid PK` |
+| `sessions` | `id uuid PK`, `user_id → users.id`, `sura`, `aya`, `all_correct`, `created_at` |
+| `mistakes` | `id uuid PK`, `session_id → sessions.id CASCADE`, `char_start`, `char_end`, `error_type`, `speech_error_type`, `rule_name_en`, `rule_name_ar`, `expected_len`, `predicted_len`, `created_at` |
 
 ## Technology choices
 
 | Layer | Technology | Why |
 |---|---|---|
-| Android | Kotlin + Jetpack Compose, Material 3 | Modern Android UI, single module is enough for two screens |
-| Backend | Ktor (Kotlin) | Lightweight, coroutine-native, same language as Android |
-| Audio conversion | ffmpeg (shelled out from the backend) | Converts the phone's M4A/AAC to the 16kHz mono WAV the engine expects |
-| Recitation analysis | External pretrained model on a serverless GPU | Avoids training/maintaining an in-house classifier; tradeoff is a cold-start latency on first request |
-| Backend hosting | Render (Docker, free tier) | Single Dockerfile deploy, free tier is enough for a prototype; cold starts after idle |
-
-## What's deferred
-
-No accounts, no progress tracking, no Arabic-proficiency placement stage, no spoken feedback, no surahs beyond the two demo ones. These are out of scope for the current prototype, not abandoned — see the root [`README.md`](../README.md) for what's next.
+| Android | Kotlin + Jetpack Compose, Material 3 | Modern Android UI |
+| Backend | Ktor (Kotlin) | Lightweight, coroutine-native |
+| Auth | Supabase JWT (HS256), verified locally | No round-trip to Supabase on every request |
+| Database | Exposed ORM + HikariCP → Supabase Postgres | Type-safe queries; Supabase provides managed Postgres |
+| Audio conversion | ffmpeg (shelled out) | Converts phone audio to the 16kHz mono WAV the engine expects |
+| Recitation analysis | External pretrained model (serverless GPU) | Avoids training/maintaining an in-house classifier |
+| Backend hosting | Render (Docker, free tier) | Single Dockerfile deploy; cold starts after idle are acceptable for a prototype |
 
 ## Environment variables
 
-None are required to run the backend locally — the recitation engine's URL has a working default baked into `Routing.kt`, overridable via an environment variable if you need to point at a different deployment. The Android app's backend URL is set at build time via `BuildConfig`. There is currently no `.env` content the app or backend strictly needs to function; `.env.example` lists nothing because nothing is required.
+| Variable | Where used | Required |
+|---|---|---|
+| `SUPABASE_DB_URL` | Backend — HikariCP JDBC URL | Yes, for any DB-touching endpoint |
+| `SUPABASE_JWT_SECRET` | Backend — JWT verification | Yes |
+| `SUPABASE_PROJECT_REF` | Backend — JWT issuer check | Yes |
+| `MUAALEM_URL` | Backend — recitation engine URL | No; defaults to the live Modal endpoint |
+
+The DB connection is initialized lazily on the first DB-touching request, so `/health` and `/surahs` start without `SUPABASE_DB_URL` being set.
+
+## What's deferred
+
+No Arabic-proficiency placement stage, no spoken feedback, no surahs beyond the two demo ones, no offline mode. Out of scope for the current prototype, not abandoned.

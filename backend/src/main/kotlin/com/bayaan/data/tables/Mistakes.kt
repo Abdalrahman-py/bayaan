@@ -1,12 +1,13 @@
 package com.bayaan.data.tables
 
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 object Mistakes : Table("mistakes") {
     val id = uuid("id")
-    val sessionId = reference("session_id", Sessions.id)
+    val sessionId = reference("session_id", Sessions.id, onDelete = ReferenceOption.CASCADE)
     val charStart = integer("char_start")
     val charEnd = integer("char_end")
     val errorType = text("error_type")

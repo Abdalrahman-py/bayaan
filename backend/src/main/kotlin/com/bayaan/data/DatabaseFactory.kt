@@ -21,10 +21,10 @@ object DatabaseFactory {
         HikariDataSource(config)
     }
 
-    fun connect() {
-        Database.connect(dataSource)
-    }
+    private val db by lazy { Database.connect(dataSource) }
 
-    suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO) { block() }
+    suspend fun <T> dbQuery(block: suspend () -> T): T {
+        db // trigger lazy init on first real DB call
+        return newSuspendedTransaction(Dispatchers.IO) { block() }
+    }
 }
