@@ -60,7 +60,7 @@ Uploads a recitation recording for one ayah and returns the engine's mistake ana
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `audio` | file | Yes | Any audio format ffmpeg can decode (Android sends M4A/AAC) |
+| `audio` | file | Yes | 16kHz mono WAV — the Android app encodes this directly, no server-side conversion |
 | `sura` | string (int) | No | Surah number. Defaults to `1`. |
 | `aya` | string (int) | No | Ayah number. Defaults to `1`. |
 
@@ -96,14 +96,14 @@ Uploads a recitation recording for one ayah and returns the engine's mistake ana
 - `errors` — phoneme-level mistakes. `uthmani_pos` is `[start, end)` into the ayah's Uthmani text. `error_type` is `"tajweed"` for a rule violation; anything else is a plain mispronunciation. `ref_tajweed_rules[0].name` omitted for plain mispronunciations.
 - `sifat_errors` — letter-characteristic mistakes from Muaalem's attribute heads. See [`tajweed-rules.md`](./tajweed-rules.md) for attribute keys.
 
-**Error responses (backend validation, before the engine is called):**
+**Error responses:**
 
 | Status | `error` code | Meaning |
 |---|---|---|
 | 400 | `bad_request` | No `audio` field |
 | 413 | `payload_too_large` | Audio exceeds 10 MB |
-| 422 | `unprocessable_audio` | ffmpeg could not decode the audio |
-| 503 | `ml_unavailable` | Engine unreachable or timed out |
+| 503 | `ml_unavailable` | Engine unreachable, timed out, or returned an unparseable response |
+| 500 | `persistence_error` | Engine call succeeded but saving the session/mistakes failed |
 
 ```json
 { "error": "bad_request", "message": "missing audio field" }

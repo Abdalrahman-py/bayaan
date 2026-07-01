@@ -1,3 +1,3 @@
 # Backend
 
-Thin Ktor proxy: receives a recorded ayah, converts it to WAV, forwards it to the recitation engine, returns the result. No user data — see [`AGENTS.md`](./AGENTS.md).
+Ktor backend: verifies the Supabase JWT, forwards a recorded ayah (already WAV) to the recitation engine, and persists the session and mistakes to Postgres. See [`AGENTS.md`](./AGENTS.md).

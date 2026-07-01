@@ -48,7 +48,7 @@ Ktor server. Six endpoints; all except `/health` and `/surahs` require a Supabas
 | `GET /health` | No | Liveness check |
 | `GET /surahs` | No | Hardcoded list of available surahs |
 | `POST /auth/sync` | Yes | Upsert user into `users` table on first login |
-| `POST /audio/analyze` | Yes | ffmpeg + engine call + persist session/mistakes |
+| `POST /audio/analyze` | Yes | Engine call + persist session/mistakes |
 | `GET /progress` | Yes | Aggregate stats for the authenticated user |
 | `GET /progress/sessions` | Yes | Paginated session history |
 | `GET /progress/sessions/{id}` | Yes | Full session detail with all mistakes |

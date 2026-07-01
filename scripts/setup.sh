@@ -9,7 +9,7 @@ echo ""
 
 if [ ! -f "$REPO_ROOT/.env" ] && [ -f "$REPO_ROOT/.env.example" ]; then
   cp "$REPO_ROOT/.env.example" "$REPO_ROOT/.env"
-  echo "[OK] Copied .env.example -> .env (nothing required to fill in right now)."
+  echo "[OK] Copied .env.example -> .env — fill in the Supabase keys before running the backend."
 else
   echo "[OK] .env already exists or no template found."
 fi

@@ -96,7 +96,7 @@ Keep the description in the imperative mood ("add", not "added"), under 72 chara
 - `.env.example` is the canonical template. Add every required key there with an empty value.
 - If a secret is ever committed by accident: rotate the key immediately, then scrub git history.
 
-**Current secrets used:** none. The app and backend run without any required environment variables — the recitation engine's URL has a working default baked into the backend. If you add a service that needs a key, add it to `.env.example` with an empty value in the same commit.
+**Current secrets used:** `SUPABASE_DB_URL`, `SUPABASE_JWT_SECRET`, `SUPABASE_PROJECT_REF` — required for the backend to serve any DB-touching route (see [`backend/AGENTS.md`](./backend/AGENTS.md)). `MUAALEM_URL` is optional; the recitation engine's URL has a working default baked into the backend. If you add a service that needs a key, add it to `.env.example` with an empty value in the same commit.
 
 ---
 
