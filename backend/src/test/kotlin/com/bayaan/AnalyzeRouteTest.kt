@@ -49,6 +49,29 @@ class AnalyzeRouteTest {
         assertEquals("""{"error":"unprocessable"}""", resp.bodyAsText())
     }
 
+    // ── engine response unparseable ─────────────────────────────────────────
+
+    @Test
+    fun `unparseable engine response returns 503 ml_unavailable`() = testApplication {
+        install(ContentNegotiation) { json() }
+        application {
+            configureJwt()
+            routing {
+                authenticate("auth-jwt") {
+                    analyzeRoute(RecitationAnalysis(engine = { _, _, _ ->
+                        EngineResponse(200, "not-json-at-all")
+                    }))
+                }
+            }
+        }
+        val resp = client.post("/audio/analyze") {
+            header(HttpHeaders.Authorization, "Bearer $testJwt")
+            setBody(audioMultipart())
+        }
+        assertEquals(HttpStatusCode.ServiceUnavailable, resp.status)
+        assertContains(resp.bodyAsText(), "ml_unavailable")
+    }
+
     // ── engine unreachable ───────────────────────────────────────────────────
 
     @Test

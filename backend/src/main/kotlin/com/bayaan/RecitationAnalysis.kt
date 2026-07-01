@@ -59,8 +59,14 @@ class RecitationAnalysis(private val engine: EngineAdapter = defaultEngineAdapte
             return AnalysisResult.EngineError(engineResp.statusCode, engineResp.body)
         }
 
+        val (allCorrect, mistakes) = try {
+            EngineResponseParser.parse(engineResp.body)
+        } catch (e: Exception) {
+            log.error("Engine response unparseable (sura=$sura aya=$aya): ${e.message}")
+            return AnalysisResult.EngineFailed
+        }
+
         return try {
-            val (allCorrect, mistakes) = EngineResponseParser.parse(engineResp.body)
             val sessionId = SessionRepository.insert(userId, sura, aya, allCorrect)
             MistakeRepository.insertBatch(sessionId, mistakes)
             AnalysisResult.Success(engineResp.body)

@@ -6,7 +6,7 @@ You are an AI coding agent operating inside the `/android` directory of Bayaan. 
 
 ## What this module is
 
-The Bayaan Android app: pick an ayah, record your recitation, upload it, and see mistakes highlighted on the Arabic script. Two screens, no login, no accounts, no progress tracking — see [`UI_BRIEF.md`](./UI_BRIEF.md) for the original UI spec (still accurate to what's built) and [`../docs/architecture.md`](../docs/architecture.md) for the full system picture.
+The Bayaan Android app: pick an ayah, record your recitation, upload it, and see mistakes highlighted on the Arabic script. Sign-in/sign-up (Supabase Auth) is within the MVP scope but not yet implemented — every `/audio/analyze` call currently 401s until auth is wired. See [`UI_BRIEF.md`](./UI_BRIEF.md) for the original UI spec and [`../docs/architecture.md`](../docs/architecture.md) for the full system picture.
 
 **Plain Android, single Gradle module (`app/`).** Not Kotlin Multiplatform — there is no `shared/` module. An earlier draft of this file planned for KMP and WebSocket audio streaming; neither was built.
 

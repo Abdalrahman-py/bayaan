@@ -10,7 +10,6 @@ Three services: an Android app, a Ktor backend, and a serverless GPU recitation 
 graph LR
     A["Android App\n(Compose)"] -- "Bearer JWT\n+ audio/sura/aya" --> B["Ktor Backend\n(Render)"]
     B -- "verify JWT" --> B
-    B -- "ffmpeg\nM4A/AAC → 16kHz WAV" --> B
     B -- "forward audio\n+ sura/aya" --> C["Recitation Engine\n(serverless GPU)"]
     C -- "structured mistake list" --> B
     B -- "persist session\n+ mistakes" --> D["Supabase Postgres"]
@@ -20,13 +19,12 @@ graph LR
 ## Data flow: one recitation attempt
 
 1. **Pick a verse.** The app calls `GET /surahs` to get the available list, then the user picks a surah and ayah.
-2. **Record.** Tapping record starts `MediaRecorder` capturing M4A/AAC.
+2. **Record.** Tapping record captures 16kHz mono PCM via `AudioRecord` and wraps it as WAV in-memory — no server-side conversion needed.
 3. **Upload.** The app POSTs `multipart/form-data` to `/audio/analyze` with a `Authorization: Bearer <supabase-jwt>` header. The backend verifies the JWT locally against `SUPABASE_JWT_SECRET`.
-4. **Convert.** The backend shells out to `ffmpeg` to convert the audio to 16kHz mono WAV.
-5. **Analyze.** The backend forwards the WAV to the recitation engine (serverless GPU). The engine returns structured JSON with phoneme-level errors (`errors`) and letter-characteristic errors (`sifat_errors`).
-6. **Persist.** The backend inserts a row into `sessions` and batch-inserts one row per mistake into `mistakes` (via HikariCP → Supabase Postgres).
-7. **Render.** The app parses the response. `errors` maps to character-range highlights on the verse text. `sifat_errors` maps to a "Letter Characteristics" section.
-8. **Progress.** The user can check `GET /progress` to see aggregate stats and `GET /progress/sessions` for a paginated history.
+4. **Analyze.** The backend forwards the WAV to the recitation engine (serverless GPU). The engine returns structured JSON with phoneme-level errors (`errors`) and letter-characteristic errors (`sifat_errors`).
+5. **Persist.** The backend inserts a row into `sessions` and batch-inserts one row per mistake into `mistakes` (via HikariCP → Supabase Postgres).
+6. **Render.** The app parses the response. `errors` maps to character-range highlights on the verse text. `sifat_errors` maps to a "Letter Characteristics" section.
+7. **Progress.** The user can check `GET /progress` to see aggregate stats and `GET /progress/sessions` for a paginated history.
 
 ## Module responsibilities
 
@@ -77,7 +75,6 @@ Three tables in Supabase Postgres. Managed via Exposed table objects; the live D
 | Backend | Ktor (Kotlin) | Lightweight, coroutine-native |
 | Auth | Supabase JWT (HS256), verified locally | No round-trip to Supabase on every request |
 | Database | Exposed ORM + HikariCP → Supabase Postgres | Type-safe queries; Supabase provides managed Postgres |
-| Audio conversion | ffmpeg (shelled out) | Converts phone audio to the 16kHz mono WAV the engine expects |
 | Recitation analysis | External pretrained model (serverless GPU) | Avoids training/maintaining an in-house classifier |
 | Backend hosting | Render (Docker, free tier) | Single Dockerfile deploy; cold starts after idle are acceptable for a prototype |
 
