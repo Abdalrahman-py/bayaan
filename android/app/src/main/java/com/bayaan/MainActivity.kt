@@ -14,10 +14,12 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.bayaan.ui.navigation.BayaanNavGraph
 import com.bayaan.ui.theme.BayaanTheme
+import com.bayaan.ui.viewmodel.AuthViewModel
 import com.bayaan.ui.viewmodel.RecitationViewModel
 
 class MainActivity : ComponentActivity() {
 
+    private lateinit var authViewModel: AuthViewModel
     private lateinit var viewModel: RecitationViewModel
     private var pendingRecord: Pair<Int, Int>? = null
 
@@ -32,7 +34,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(this)[RecitationViewModel::class.java]
+        authViewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+        viewModel = ViewModelProvider(
+            this,
+            RecitationViewModel.Factory(application, { authViewModel.currentAccessToken() })
+        )[RecitationViewModel::class.java]
 
         setContent {
             BayaanTheme {
@@ -41,6 +47,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     BayaanNavGraph(
+                        authViewModel = authViewModel,
                         currentScreenState = { sura, aya -> viewModel.stateFor(sura, aya) },
                         onRecord = { sura, aya -> onRecordTapped(sura, aya) },
                         onStop = { sura, aya -> viewModel.stop(sura, aya) },

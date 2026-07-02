@@ -43,13 +43,20 @@ import com.bayaan.ui.model.BAYYINAH
 import com.bayaan.ui.model.FATIHAH
 import com.bayaan.ui.theme.BayaanTheme
 import com.bayaan.ui.theme.AmiriFontFamily
+import com.bayaan.ui.components.BayaanHeader
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.TextButton
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VersePickerScreen(
     onPickAyah: (sura: Int, aya: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expandedSurah by remember { mutableStateOf<Int?>(1) } // Default Al-Fatihah expanded
+    var selectedAyah by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    var showMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -64,7 +71,7 @@ fun VersePickerScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(24.dp))
-                HeaderSection()
+                BayaanHeader()
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -77,7 +84,10 @@ fun VersePickerScreen(
                     verses = FATIHAH.second,
                     isExpanded = expandedSurah == 1,
                     onExpandToggle = { expandedSurah = if (expandedSurah == 1) null else 1 },
-                    onPickAyah = onPickAyah
+                    onPickAyah = { sura, aya ->
+                        selectedAyah = sura to aya
+                        showMenu = true
+                    }
                 )
             }
 
@@ -90,7 +100,10 @@ fun VersePickerScreen(
                     verses = BAYYINAH.second,
                     isExpanded = expandedSurah == 98,
                     onExpandToggle = { expandedSurah = if (expandedSurah == 98) null else 98 },
-                    onPickAyah = onPickAyah
+                    onPickAyah = { sura, aya ->
+                        selectedAyah = sura to aya
+                        showMenu = true
+                    }
                 )
             }
 
@@ -98,44 +111,64 @@ fun VersePickerScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
+
+        if (showMenu && selectedAyah != null) {
+            val (sura, aya) = selectedAyah!!
+            ModalBottomSheet(
+                onDismissRequest = { showMenu = false },
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                ) {
+                    Text(
+                        text = "Surah $sura, Ayah $aya",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    TextButton(
+                        onClick = {
+                            showMenu = false
+                            onPickAyah(sura, aya)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Analyze Tajweed",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextButton(
+                        onClick = {},
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Memorize (Coming Soon)",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
+        }
     }
 }
 
-@Composable
-private fun HeaderSection() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "بَيَان",
-            fontFamily = AmiriFontFamily,
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = "Bayaan",
-            style = MaterialTheme.typography.displayLarge.copy(
-                fontSize = 28.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 1.sp
-            ),
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Your AI Tajweed Recitation Coach",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-            textAlign = TextAlign.Center
-        )
-    }
-}
 
 @Composable
 private fun SurahCard(

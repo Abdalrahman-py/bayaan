@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -29,6 +30,17 @@ android {
         }
 
         buildConfigField("String", "BACKEND_URL", "\"https://bayaan-backend.onrender.com\"")
+
+        val localProperties = Properties().apply {
+            val file = rootProject.file("local.properties")
+            if (file.exists()) {
+                file.inputStream().use { load(it) }
+            }
+        }
+        val supabaseUrl = localProperties.getProperty("SUPABASE_URL", "")
+        val supabaseAnonKey = localProperties.getProperty("SUPABASE_ANON_KEY", "")
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
     }
 
     buildTypes {
@@ -68,6 +80,13 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
+
+    // Supabase Auth
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth)
+
+    // Coil Image Loader
+    implementation(libs.coil.compose)
 
     // HTTP client to the Bayaan backend's /audio/analyze — same client + engine
     // the backend itself uses to call the muaalem engine (Routing.kt).

@@ -7,6 +7,8 @@ import android.media.MediaRecorder
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.bayaan.BuildConfig
 import com.bayaan.ui.model.BAYYINAH
 import com.bayaan.ui.model.FATIHAH
@@ -22,6 +24,7 @@ import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
@@ -40,7 +43,23 @@ import java.io.ByteArrayOutputStream
  * /audio/analyze, and mapping its response into RecitationUiState. One state
  * per (sura, aya) so revisiting an ayah doesn't lose its result.
  */
-class RecitationViewModel(application: Application) : AndroidViewModel(application) {
+class RecitationViewModel(
+    application: Application,
+    private val tokenProvider: () -> String?
+) : AndroidViewModel(application) {
+
+    class Factory(
+        private val application: Application,
+        private val tokenProvider: () -> String?
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(RecitationViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return RecitationViewModel(application, tokenProvider) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
+    }
 
     val uiStates = mutableStateMapOf<Pair<Int, Int>, RecitationUiState>()
 
@@ -142,9 +161,14 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    private suspend fun analyze(wav: ByteArray, sura: Int, aya: Int, verse: Verse): RecitationUiState =
-        try {
+    private suspend fun analyze(wav: ByteArray, sura: Int, aya: Int, verse: Verse): RecitationUiState {
+        val token = tokenProvider()
+        if (token.isNullOrBlank()) {
+            return RecitationUiState.Error(verse, "Please log in again.")
+        }
+        return try {
             val response = client.post("${BuildConfig.BACKEND_URL}/audio/analyze") {
+                header(HttpHeaders.Authorization, "Bearer $token")
                 setBody(
                     MultiPartFormDataContent(
                         formData {
@@ -163,6 +187,7 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
         } catch (e: Exception) {
             RecitationUiState.Error(verse, "Couldn't reach the coach. Check your connection and try again.")
         }
+    }
 
     private suspend fun parseResponse(response: HttpResponse, verse: Verse): RecitationUiState {
         val text = response.bodyAsText()
@@ -180,8 +205,16 @@ class RecitationViewModel(application: Application) : AndroidViewModel(applicati
         val sifatErrors = if (sifatArr != null) {
             (0 until sifatArr.length()).map { i -> sifatArr.getJSONObject(i).toSifatError() }
         } else emptyList()
+        
+        val engineUthmani = json.optString("uthmani")
+        val resolvedVerse = if (!engineUthmani.isNullOrBlank()) {
+            verse.copy(uthmani = engineUthmani)
+        } else {
+            verse
+        }
+
         return RecitationUiState.Result(
-            verse = verse,
+            verse = resolvedVerse,
             mistakes = mistakes,
             sifatErrors = sifatErrors,
             allCorrect = json.getBoolean("all_correct") && sifatErrors.isEmpty(),
