@@ -1,42 +1,33 @@
 package com.bayaan.plugins
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwk.JwkProviderBuilder
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
-import java.util.Base64
+import java.net.URI
+import java.util.concurrent.TimeUnit
 
 fun Application.configureJwt() {
-    val secret = System.getenv("SUPABASE_JWT_SECRET")
-        ?: throw IllegalStateException("SUPABASE_JWT_SECRET env var is required")
     val projectRef = System.getenv("SUPABASE_PROJECT_REF")
         ?: throw IllegalStateException("SUPABASE_PROJECT_REF env var is required")
     val issuer = "https://$projectRef.supabase.co/auth/v1"
 
-    // Supabase's new JWT signing keys store the HS256 secret as base64-encoded key
-    // material — the token is signed with the DECODED bytes, not the base64 string.
-    // Decode when the secret is valid base64; fall back to raw bytes for a legacy
-    // plain-string secret.
-    // ponytail: heuristic — a legacy secret that happens to be valid base64 would be
-    // decoded too. Fine for this single Supabase project; revisit if the secret format
-    // is ever ambiguous (then key off the token header `kid`).
-    val secretBytes = try {
-        Base64.getDecoder().decode(secret)
-    } catch (e: IllegalArgumentException) {
-        secret.toByteArray(Charsets.UTF_8)
-    }
+    // Verify tokens against the project's asymmetric signing key (ES256) via the public
+    // JWKS endpoint — no shared secret to manage. Ktor resolves the key by the token's
+    // `kid` and picks the algorithm automatically. Requires the ECC key to be the
+    // *current* signing key in Supabase (Settings → JWT Keys → Rotate keys).
+    val jwkProvider = JwkProviderBuilder(URI("$issuer/.well-known/jwks.json").toURL())
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
 
     authentication {
         jwt("auth-jwt") {
-            verifier(
-                JWT.require(Algorithm.HMAC256(secretBytes))
-                    .withIssuer(issuer)
-                    .withAudience("authenticated")
-                    .build()
-            )
+            verifier(jwkProvider, issuer) {
+                withAudience("authenticated")
+            }
             validate { credential ->
                 val sub = credential.payload.subject
                 if (sub.isNullOrBlank()) null else JWTPrincipal(credential.payload)
