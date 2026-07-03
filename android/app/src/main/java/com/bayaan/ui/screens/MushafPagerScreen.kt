@@ -123,7 +123,7 @@ fun MushafPagerScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Page $pageNum JSON or fonts not loaded.\n(Phase 1 Spike includes Page 1 only)",
+                        text = "Page $pageNum is outside this build.\n(Showcase bundles Surahs 1-5 + Juz Amma)",
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                     )

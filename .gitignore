@@ -63,3 +63,16 @@ Thumbs.db
 .claude/*
 !.claude/settings.json
 .mcp.json
+
+# Full QCF v4 mushaf (all 604 pages / 48 fonts) — kept locally, showcase bundles a subset
+/qcf4-full/
+
+# QCF4 font files (Uthman Taha / King Fahd Quran Complex) — redistribution not
+# permitted without explicit rights-holder permission. Keep on disk locally for
+# the app to build/run, never commit. See assets/ATTRIBUTION.md.
+android/app/src/main/assets/qcf4/fonts/QCF4_*.ttf
+
+# QCF4 mushaf page data + index — bundled into the showcase APK from disk, but
+# not committed to keep the repo small (full 604-page set is large JSON).
+android/app/src/main/assets/qcf4/pages/*.json
+android/app/src/main/assets/qcf4/index.json
