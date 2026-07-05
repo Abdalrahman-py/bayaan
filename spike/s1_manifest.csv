@@ -1,0 +1,21 @@
+audio,text,expect,note
+s1_recordings/baa_correct.wav,بَا,correct,say "baa" (long a) — qaida style
+s1_recordings/baa_short.wav,بَا,wrong,say short "ba" — planted length error
+s1_recordings/bii_correct.wav,بِي,correct,say "bii"
+s1_recordings/bii_as_baa.wav,بِي,wrong,say "baa" — planted vowel error
+s1_recordings/buu_correct.wav,بُو,correct,say "buu"
+s1_recordings/saad_correct.wav,صَا,correct,say heavy "Saa" (ص)
+s1_recordings/saad_as_siin.wav,صَا,wrong,say light "saa" (س) — planted consonant error
+s1_recordings/siin_correct.wav,سَا,correct,say light "saa" (س)
+s1_recordings/taa_heavy_correct.wav,طَا,correct,say heavy "Taa" (ط)
+s1_recordings/taa_heavy_as_light.wav,طَا,wrong,say light "taa" (ت) — planted consonant error
+s1_recordings/haa_7_correct.wav,حَا,correct,say "7aa" (ح)
+s1_recordings/haa_7_as_h.wav,حَا,wrong,say soft "haa" (هـ) — planted consonant error
+s1_recordings/bismi_correct.wav,بِسْمِ,correct,say "bismi" (final vowel will drop at waqf — expect "bism")
+s1_recordings/bismi_as_basmi.wav,بِسْمِ,wrong,say "basmi" — planted vowel error
+s1_recordings/qul_correct.wav,قُلْ,correct,say "qul"
+s1_recordings/qul_as_kul.wav,قُلْ,wrong,say "kul" (ك) — planted consonant error
+s1_recordings/allah_correct.wav,ٱللَّهُ,correct,say "Allah" (heavy lam; final damma drops at waqf)
+s1_recordings/allah_light_lam.wav,ٱللَّهُ,wrong,say "Allah" with light lam — planted tafkheem error
+s1_recordings/ba_raw_correct.wav,بَ,correct,say plain "ba" — measures the waqf/qalqalah gotcha (reference is bڇ)
+s1_recordings/ba_raw_stopped.wav,بَ,correct,say "b" stopped with qalqalah bounce — the waqf-correct form

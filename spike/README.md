@@ -1,4 +1,23 @@
-# Modal de-risk spike — recitation engine
+# Modal de-risk spikes
+
+## Spike S1 — arbitrary-text grading (`s1_grade_text_spike.py`)
+
+Decides Path A vs B for the Arabic track's echo grading (`docs/PRODUCTION_PLAN.md`
+§3.3, §11). Already known without GPU: `quran_phonetizer` accepts arbitrary Uthmani
+text but applies **waqf rules** to word-final position (final short vowel dropped,
+qalqalah added: `بَ` → `بڇ`) — so the manifest uses qaida-style long forms (بَا بِي بُو).
+
+To run:
+1. Record the ~20 clips listed in `s1_manifest.csv` into `s1_recordings/`
+   (phone mic, **spoken plainly like a learner** — not recited; 16kHz mono WAV).
+   Get at least one genuinely non-native speaker for a subset.
+2. `modal run spike/s1_grade_text_spike.py --manifest spike/s1_manifest.csv`
+3. Pass criteria are in the script header (≥80% both directions, zero crashes).
+   Commit the summary + verdict to `docs/decisions/grading-tiers.md`.
+
+---
+
+# Original spike — recitation engine on Modal
 
 Throwaway experiment to answer two questions **before** building the app around the engine:
 
