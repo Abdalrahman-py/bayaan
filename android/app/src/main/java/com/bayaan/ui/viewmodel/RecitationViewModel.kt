@@ -63,6 +63,11 @@ class RecitationViewModel(
 
     val uiStates = mutableStateMapOf<Pair<Int, Int>, RecitationUiState>()
 
+    init {
+        // Load the full-Quran Uthmani text once so verseFor() resolves any ayah.
+        com.bayaan.ui.model.QuranText.ensureLoaded(application)
+    }
+
     private var audioRecord: AudioRecord? = null
     private var recordingJob: Job? = null
     private var timerJob: Job? = null
@@ -254,10 +259,13 @@ class RecitationViewModel(
     }
 
     fun nextAyah(sura: Int, aya: Int, onNavigate: (Int, Int) -> Unit) {
-        val (_, verses) = if (sura == 98) BAYYINAH else FATIHAH
+        // Real per-surah verse counts from the loaded Quran; fall back to the
+        // hardcoded demo counts only if assets aren't loaded (e.g. previews).
+        val count = com.bayaan.ui.model.QuranText.verseCount(sura).takeIf { it > 0 }
+            ?: (if (sura == 98) BAYYINAH else FATIHAH).second.size
         when {
-            aya < verses.size -> onNavigate(sura, aya + 1)
-            sura == 1 -> onNavigate(98, 1)
+            aya < count -> onNavigate(sura, aya + 1)
+            sura < 114 -> onNavigate(sura + 1, 1)
             else -> onNavigate(1, 1)
         }
     }

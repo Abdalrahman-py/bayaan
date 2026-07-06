@@ -65,8 +65,14 @@ val BAYYINAH = "البينة" to listOf(
     /* 8 */ "جَزَآؤُهُمْ عِندَ رَبِّهِمْ جَنَّـٰتُ عَدْنٍۢ تَجْرِى مِن تَحْتِهَا ٱلْأَنْهَـٰرُ خَـٰلِدِينَ فِيهَآ أَبَدًۭا رَّضِىَ ٱللَّهُ عَنْهُمْ وَرَضُوا۟ عَنْهُ ذَٰلِكَ لِمَنْ خَشِىَ رَبَّهُۥ",
 )
 
-/** Looks up the canonical Verse for (sura, aya) from the hardcoded demo data. */
+/**
+ * The canonical Verse for (sura, aya). Prefers the full bundled Uthmani text
+ * (all 114 surahs, loaded via [QuranText.ensureLoaded]); falls back to the
+ * hardcoded Fatihah/Bayyinah demo data when assets aren't loaded (e.g. Compose
+ * previews) or the ref is out of range.
+ */
 fun verseFor(sura: Int, aya: Int): Verse {
+    QuranText.verse(sura, aya)?.let { return it }
     val (surahNameAr, verses) = if (sura == 98) BAYYINAH else FATIHAH
     val surahNameEn = if (sura == 98) "Al-Bayyinah" else "Al-Fatihah"
     val uthmani = verses.getOrElse(aya - 1) { verses[0] }
