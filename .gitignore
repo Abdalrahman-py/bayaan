@@ -76,3 +76,6 @@ android/app/src/main/assets/qcf4/fonts/QCF4_*.ttf
 # not committed to keep the repo small (full 604-page set is large JSON).
 android/app/src/main/assets/qcf4/pages/*.json
 android/app/src/main/assets/qcf4/index.json
+
+# Large local spike test audio (not for the repo)
+spike/audio/
