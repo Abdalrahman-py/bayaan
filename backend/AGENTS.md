@@ -14,7 +14,7 @@ A Ktor backend that handles auth, audio analysis, and persistence for the Bayaan
 4. Persist the session and any detected mistakes to Supabase Postgres (via Exposed + HikariCP).
 5. Return the engine's JSON response to the app.
 
-**Auth:** Supabase JWT (HS256), verified locally using `SUPABASE_JWT_SECRET`.  
+**Auth:** Supabase JWT verified via **JWKS/ES256** (keys fetched from Supabase's JWKS endpoint — no shared secret). An older revision of this file said HS256/`SUPABASE_JWT_SECRET`; that is obsolete.  
 **Database:** Supabase Postgres — tables `users`, `sessions`, `mistakes`. Direct JDBC connection via HikariCP.  
 **ML engine:** `obadx/quran-muaalem` deployed on Modal.  
 
