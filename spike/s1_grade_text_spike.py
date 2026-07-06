@@ -56,6 +56,7 @@ image = (
     .pip_install(
         "quran-muaalem==0.1.0",
         "quran-transcript==0.5.2",
+        "diff-match-patch==20241021",
         "librosa==0.11.0",
         "soundfile==0.14.0",
         "numba>=0.61.2",
@@ -87,8 +88,10 @@ class GradeTextSpike:
         import dataclasses
         import json
 
+        import diff_match_patch as dmp_module
         import librosa
         import soundfile as sf
+        from quran_muaalem.explain import expalin_sifat
         from quran_transcript import explain_error, quran_phonetizer
         from quran_transcript.phonetics.moshaf_attributes import MoshafAttributes
 
@@ -119,12 +122,40 @@ class GradeTextSpike:
                 default=lambda o: sorted(o) if isinstance(o, set) else str(o),
             )
         )
+        # Sifat errors too — some planted mistakes (e.g. light lam in ٱللَّهُ =
+        # tafkheem) live in the sifat heads, not the phoneme diff. Same logic
+        # as production ml/muaalem_modal.py.
+        _dmp = dmp_module.diff_match_patch()
+        _sifat_table = expalin_sifat(
+            outs[0].sifat, ref.sifat, _dmp.diff_main(ref.phonemes, predicted)
+        )
+        _SIFAT_KEYS = (
+            "hams_or_jahr", "shidda_or_rakhawa", "tafkheem_or_taqeeq",
+            "itbaq", "safeer", "qalqla", "tikraar", "tafashie", "istitala", "ghonna",
+        )
+        sifat_errors = []
+        for row in _sifat_table:
+            if row.get("tag") == "insert":
+                continue
+            for key in _SIFAT_KEYS:
+                pred_val = row.get(key)
+                exp_val = row.get(f"exp_{key}")
+                exp_val = exp_val.value if hasattr(exp_val, "value") else (str(exp_val) if exp_val is not None else None)
+                if not pred_val or pred_val == "None" or exp_val is None or pred_val == exp_val:
+                    continue
+                sifat_errors.append(
+                    {"phonemes_group": row["phonemes"], "attribute": key,
+                     "predicted": pred_val, "expected": exp_val}
+                )
+
         return {
             "text": text,
             "reference_phonemes": ref.phonemes,
             "predicted_phonemes": predicted,
             "errors": errors_json,
             "error_count": len(errors_json),
+            "sifat_errors": sifat_errors,
+            "sifat_error_count": len(sifat_errors),
             "audio_secs": round(len(wave) / 16000, 2),
             "infer_secs": round(infer_secs, 3),
         }
@@ -145,6 +176,7 @@ def main(manifest: str = "", audio: str = "", text: str = ""):
         print(f"reference: {r['reference_phonemes']}")
         print(f"predicted: {r['predicted_phonemes']}")
         print(f"errors ({r['error_count']}): {r['errors']}")
+        print(f"sifat errors ({r['sifat_error_count']}): {r['sifat_errors']}")
         print(f"audio {r['audio_secs']}s, inference {r['infer_secs']}s")
         return
 
@@ -162,7 +194,7 @@ def main(manifest: str = "", audio: str = "", text: str = ""):
             print(f"CRASH {row['audio']}: {type(e).__name__}: {e}")
             results.append({**row, "crash": True, "error_count": -1})
             continue
-        flagged = r["error_count"] > 0
+        flagged = r["error_count"] > 0 or r["sifat_error_count"] > 0
         ok = (row["expect"] == "wrong") == flagged
         results.append({**row, "crash": False, "error_count": r["error_count"], "ok": ok})
         mark = "✓" if ok else "✗"
@@ -172,6 +204,7 @@ def main(manifest: str = "", audio: str = "", text: str = ""):
         print(f"  predicted: {r['predicted_phonemes']}")
         if flagged:
             print(f"  errors ({r['error_count']}): {r['errors']}")
+            print(f"  sifat errors ({r['sifat_error_count']}): {r['sifat_errors']}")
 
     graded = [r for r in results if not r["crash"]]
     correct = [r for r in graded if r["expect"] == "correct"]

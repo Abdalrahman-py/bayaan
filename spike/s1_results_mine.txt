@@ -1,0 +1,168 @@
+✓ Initialized. View run at 
+https://modal.com/apps/abdalrahman-py/main/ap-4Oq8RBS58rpM3D732NwMGX
+✓ Created objects.
+├── 🔨 Created mount /home/jade/bayaan/spike/s1_grade_text_spike.py
+└── 🔨 Created function GradeTextSpike.*.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+[1ALoading weights:   0%|          | 0/816 [00:00<?, ?it/s]
+[1ALoading weights:   7%|▋         | 55/816 [00:00<00:01, 504.50it/s]
+[1ALoading weights:  13%|█▎        | 106/816 [00:00<00:01, 376.65it/s]
+[1ALoading weights:  18%|█▊        | 146/816 [00:00<00:01, 376.16it/s]
+[1ALoading weights:  23%|██▎       | 189/816 [00:00<00:01, 394.59it/s]
+[1ALoading weights:  29%|██▉       | 240/816 [00:00<00:01, 426.88it/s]
+[1ALoading weights:  36%|███▌      | 291/816 [00:00<00:01, 451.92it/s]
+[1ALoading weights:  41%|████▏     | 337/816 [00:00<00:01, 442.61it/s]
+[1ALoading weights:  47%|████▋     | 382/816 [00:00<00:00, 438.82it/s]
+[1ALoading weights:  52%|█████▏    | 427/816 [00:00<00:00, 440.10it/s]
+[1ALoading weights:  59%|█████▊    | 478/816 [00:01<00:00, 460.81it/s]
+[1ALoading weights:  64%|██████▍   | 525/816 [00:01<00:00, 460.27it/s]
+[1ALoading weights: 100%|██████████| 816/816 [00:01<00:00, 628.29it/s]
+[load] muaalem ready in 4.1s
+
+✗ s1_recordings/allah_correct.wav  [correct]  heavy lam
+  text:      ٱللَّهُ
+  reference: ءَللََه
+  predicted: ءَللَااه
+  errors (1): [{'uthmani_pos': [4, 4], 'ph_pos': [5, 5], 'error_type': 'normal', 'speech_error_type': 'insert', 'expected_ph': '', 'preditected_ph': 'اا', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (1): [{'phonemes_group': 'للَ', 'attribute': 'tafkheem_or_taqeeq', 'predicted': 'mofakham', 'expected': 'moraqaq'}]
+
+✓ s1_recordings/allah_light_lam.wav  [wrong]  light lam — tafkheem, sifat-only signal
+  text:      ٱللَّهُ
+  reference: ءَللََه
+  predicted: لَه
+  errors (2): [{'uthmani_pos': [0, 1], 'ph_pos': [0, 2], 'error_type': 'normal', 'speech_error_type': 'delete', 'expected_ph': 'ءَ', 'preditected_ph': '', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}, {'uthmani_pos': [1, 4], 'ph_pos': [2, 5], 'error_type': 'tashkeel', 'speech_error_type': 'delete', 'expected_ph': 'للَ', 'preditected_ph': 'لَ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (1): [{'phonemes_group': 'ه', 'attribute': 'hams_or_jahr', 'predicted': 'jahr', 'expected': 'hams'}]
+
+✗ s1_recordings/ba_raw_waqf.wav  [correct]  waqf probe: stopped b vs reference بڇ
+  text:      بَ
+  reference: بڇ
+  predicted: بَ
+  errors (1): [{'uthmani_pos': [0, 1], 'ph_pos': [0, 2], 'error_type': 'tajweed', 'speech_error_type': 'replace', 'expected_ph': 'بڇ', 'preditected_ph': 'بَ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': [{'name': {'ar': 'قلقة', 'en': 'Qalqalah'}, 'golden_len': 0, 'correctness_type': 'match', 'tag': None, 'available_tags': None}], 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': [{'name': {'ar': 'قلقة', 'en': 'Qalqalah'}, 'golden_len': 0, 'correctness_type': 'match', 'tag': None, 'available_tags': None}]}]
+  sifat errors (0): []
+
+✗ s1_recordings/ba_raw_with_qalqalah.wav  [correct]  waqf probe: qalqalah bounce
+  text:      بَ
+  reference: بڇ
+  predicted: بَ
+  errors (1): [{'uthmani_pos': [0, 1], 'ph_pos': [0, 2], 'error_type': 'tajweed', 'speech_error_type': 'replace', 'expected_ph': 'بڇ', 'preditected_ph': 'بَ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': [{'name': {'ar': 'قلقة', 'en': 'Qalqalah'}, 'golden_len': 0, 'correctness_type': 'match', 'tag': None, 'available_tags': None}], 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': [{'name': {'ar': 'قلقة', 'en': 'Qalqalah'}, 'golden_len': 0, 'correctness_type': 'match', 'tag': None, 'available_tags': None}]}]
+  sifat errors (0): []
+
+✗ s1_recordings/baa_correct_long.wav  [correct]  long baa
+  text:      بَا
+  reference: بَاا
+  predicted: عبَاا
+  errors (1): [{'uthmani_pos': [0, 0], 'ph_pos': [0, 0], 'error_type': 'normal', 'speech_error_type': 'insert', 'expected_ph': '', 'preditected_ph': 'ع', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (0): []
+
+✓ s1_recordings/baa_correct_short.wav  [wrong]  said short — planted length error (name says correct, treated as wrong)
+  text:      بَا
+  reference: بَاا
+  predicted: بَااه
+  errors (1): [{'uthmani_pos': [2, 2], 'ph_pos': [4, 4], 'error_type': 'normal', 'speech_error_type': 'insert', 'expected_ph': '', 'preditected_ph': 'ه', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (0): []
+
+✓ s1_recordings/bii_as_baa.wav  [wrong]  said baa — planted vowel error
+  text:      بِي
+  reference: بِۦۦ
+  predicted: مِمَاا
+  errors (3): [{'uthmani_pos': [0, 0], 'ph_pos': [0, 0], 'error_type': 'normal', 'speech_error_type': 'insert', 'expected_ph': '', 'preditected_ph': 'مِ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}, {'uthmani_pos': [0, 2], 'ph_pos': [0, 2], 'error_type': 'normal', 'speech_error_type': 'replace', 'expected_ph': 'بِ', 'preditected_ph': 'مَ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}, {'uthmani_pos': [2, 3], 'ph_pos': [2, 4], 'error_type': 'tajweed', 'speech_error_type': 'replace', 'expected_ph': 'ۦۦ', 'preditected_ph': 'اا', 'expected_len': 2, 'predicted_len': 2, 'ref_tajweed_rules': [{'name': {'ar': 'المد الطبيعي', 'en': 'Normal Madd'}, 'golden_len': 2, 'correctness_type': 'count', 'tag': 'yaa', 'available_tags': ['alif', 'waw', 'yaa']}], 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': [{'name': {'ar': 'المد الطبيعي', 'en': 'Normal Madd'}, 'golden_len': 2, 'correctness_type': 'count', 'tag': 'alif', 'available_tags': ['alif', 'waw', 'yaa']}], 'missing_tajweed_rules': None}]
+  sifat errors (0): []
+
+✓ s1_recordings/bii_correct-2.wav  [correct]  bii
+  text:      بِي
+  reference: بِۦۦ
+  predicted: بِۦۦ
+
+✗ s1_recordings/bii_correct.wav  [correct]  bii
+  text:      بِي
+  reference: بِۦۦ
+  predicted: بِۦ
+  errors (1): [{'uthmani_pos': [2, 3], 'ph_pos': [2, 4], 'error_type': 'tajweed', 'speech_error_type': 'replace', 'expected_ph': 'ۦۦ', 'preditected_ph': 'ۦ', 'expected_len': 2, 'predicted_len': 1, 'ref_tajweed_rules': [{'name': {'ar': 'المد الطبيعي', 'en': 'Normal Madd'}, 'golden_len': 2, 'correctness_type': 'count', 'tag': 'yaa', 'available_tags': ['alif', 'waw', 'yaa']}], 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (0): []
+
+✓ s1_recordings/bismi_as_basmi.wav  [wrong]  said basmi — planted vowel error
+  text:      بِسْمِ
+  reference: بِسم
+  predicted: بَسمِه
+  errors (3): [{'uthmani_pos': [0, 2], 'ph_pos': [0, 2], 'error_type': 'tashkeel', 'speech_error_type': 'replace', 'expected_ph': 'بِ', 'preditected_ph': 'بَ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}, {'uthmani_pos': [4, 5], 'ph_pos': [3, 4], 'error_type': 'tashkeel', 'speech_error_type': 'insert', 'expected_ph': 'م', 'preditected_ph': 'مِ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}, {'uthmani_pos': [4, 4], 'ph_pos': [4, 4], 'error_type': 'normal', 'speech_error_type': 'insert', 'expected_ph': '', 'preditected_ph': 'ه', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (0): []
+
+✗ s1_recordings/bismi_correct.wav  [correct]  bismi
+  text:      بِسْمِ
+  reference: بِسم
+  predicted: لِسمِ
+  errors (2): [{'uthmani_pos': [0, 2], 'ph_pos': [0, 2], 'error_type': 'normal', 'speech_error_type': 'replace', 'expected_ph': 'بِ', 'preditected_ph': 'لِ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}, {'uthmani_pos': [4, 5], 'ph_pos': [3, 4], 'error_type': 'tashkeel', 'speech_error_type': 'insert', 'expected_ph': 'م', 'preditected_ph': 'مِ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (0): []
+
+✗ s1_recordings/buu_correct.wav  [correct]  buu
+  text:      بُو
+  reference: بُۥۥ
+  predicted: َا
+  errors (2): [{'uthmani_pos': [0, 2], 'ph_pos': [0, 2], 'error_type': 'normal', 'speech_error_type': 'replace', 'expected_ph': 'بُ', 'preditected_ph': 'ا', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}, {'uthmani_pos': [2, 3], 'ph_pos': [2, 4], 'error_type': 'tajweed', 'speech_error_type': 'delete', 'expected_ph': 'ۥۥ', 'preditected_ph': '', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (0): []
+
+✓ s1_recordings/haa_7_as_h.wav  [wrong]  said soft haa — planted consonant error
+  text:      حَا
+  reference: حَاا
+  predicted: هَاا
+  errors (1): [{'uthmani_pos': [0, 2], 'ph_pos': [0, 2], 'error_type': 'normal', 'speech_error_type': 'replace', 'expected_ph': 'حَ', 'preditected_ph': 'هَ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (0): []
+
+✓ s1_recordings/haa_7_correct.wav  [correct]  7aa
+  text:      حَا
+  reference: حَاا
+  predicted: حَاا
+
+✓ s1_recordings/qul_as_kul.wav  [wrong]  said kul — planted consonant error
+  text:      قُلْ
+  reference: قُل
+  predicted: كُل
+  errors (1): [{'uthmani_pos': [0, 2], 'ph_pos': [0, 2], 'error_type': 'normal', 'speech_error_type': 'replace', 'expected_ph': 'قُ', 'preditected_ph': 'كُ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (0): []
+
+✓ s1_recordings/qul_correct.wav  [correct]  qul
+  text:      قُلْ
+  reference: قُل
+  predicted: قُل
+
+✓ s1_recordings/saad_as_siin.wav  [wrong]  said siin — planted consonant error
+  text:      صَا
+  reference: صَاا
+  predicted: سَاا
+  errors (1): [{'uthmani_pos': [0, 2], 'ph_pos': [0, 2], 'error_type': 'normal', 'speech_error_type': 'replace', 'expected_ph': 'صَ', 'preditected_ph': 'سَ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (1): [{'phonemes_group': 'اا', 'attribute': 'tafkheem_or_taqeeq', 'predicted': 'moraqaq', 'expected': 'mofakham'}]
+
+✓ s1_recordings/saad_correct.wav  [correct]  heavy Saa
+  text:      صَا
+  reference: صَاا
+  predicted: صَاا
+
+✓ s1_recordings/siin_correct.wav  [correct]  light saa
+  text:      سَا
+  reference: سَاا
+  predicted: سَاا
+
+✓ s1_recordings/taa_heavy_as_light.wav  [wrong]  said light taa — planted consonant error
+  text:      طَا
+  reference: طَاا
+  predicted: تَاا
+  errors (1): [{'uthmani_pos': [0, 2], 'ph_pos': [0, 2], 'error_type': 'normal', 'speech_error_type': 'replace', 'expected_ph': 'طَ', 'preditected_ph': 'تَ', 'expected_len': None, 'predicted_len': None, 'ref_tajweed_rules': None, 'inserted_tajweed_rules': None, 'replaced_tajweed_rules': None, 'missing_tajweed_rules': None}]
+  sifat errors (1): [{'phonemes_group': 'اا', 'attribute': 'tafkheem_or_taqeeq', 'predicted': 'moraqaq', 'expected': 'mofakham'}]
+
+✓ s1_recordings/taa_heavy_correct.wav  [correct]  heavy Taa
+  text:      طَا
+  reference: طَاا
+  predicted: طَاا
+
+=========== S1 SUMMARY ===========
+correct clips graded clean:   6/13  (need >=80%)
+wrong clips flagged:          8/8  (need >=80%)
+crashes:                      0  (need 0)
+
+S1 verdict: FAIL/INCONCLUSIVE — see rows above
+Eyeball wrong-clip errors: flagged AT the planted mistake, or random noise?
+Commit result + this output to docs/decisions/grading-tiers.md
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/abdalrahman-py/main/ap-4Oq8RBS58rpM3D732NwMGX

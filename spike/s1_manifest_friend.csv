@@ -1,0 +1,23 @@
+audio,text,expect,note
+s1_recordings/allah_correct_f.wav,ٱللَّهُ,correct,heavy lam
+s1_recordings/allah_light_lam_f.wav,ٱللَّهُ,wrong,"light lam — tafkheem, sifat-only signal"
+s1_recordings/ba_muqalqal_f.wav,بَ,correct,waqf probe: qalqalah bounce
+s1_recordings/ba_waqf_f.wav,بَ,correct,waqf probe: stopped b vs reference بڇ
+s1_recordings/baa_short_f-2.wav,بَا,wrong,said short — planted length error
+s1_recordings/baa_short_f.wav,بَا,wrong,said short — planted length error
+s1_recordings/bii_short_f.wav,بِي,wrong,said short bi — planted length error
+s1_recordings/bismi_as_basmu_f.wav,بِسْمِ,wrong,said basmu — planted vowel error
+s1_recordings/bismi_correct_f-2.wav,بِسْمِ,correct,bismi
+s1_recordings/bismi_correct_f.wav,بِسْمِ,correct,bismi
+s1_recordings/buu_correct_f.wav,بُو,correct,buu
+s1_recordings/haa_7_as_h_f.wav,حَا,wrong,said soft haa — planted consonant error
+s1_recordings/haa_7_correct_f.wav,حَا,correct,7aa
+s1_recordings/qul_as_kul_f.wav,قُلْ,wrong,said kul — planted consonant error
+s1_recordings/qul_correct_f.wav,قُلْ,correct,qul
+s1_recordings/qul_wrong_as_gul_f.wav,قُلْ,wrong,said gul — planted consonant error
+s1_recordings/saad_as_siin_f.wav,صَا,wrong,said siin — planted consonant error
+s1_recordings/saad_correct_f.wav,صَا,correct,heavy Saa
+s1_recordings/siin_correct_f.wav,سَا,correct,light saa
+s1_recordings/taa_heavy_as_light_f.wav,طَا,wrong,said light taa — planted consonant error
+s1_recordings/taa_heavy_correct_f-2.wav,طَا,correct,heavy Taa
+s1_recordings/taa_heavy_correct_f.wav,طَا,correct,heavy Taa
