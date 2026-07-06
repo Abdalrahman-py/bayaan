@@ -28,8 +28,13 @@ data class SessionWithCount(
 
 object SessionRepository {
 
-    suspend fun insert(userId: UUID, sura: Int, aya: Int, allCorrect: Boolean): UUID =
-        DatabaseFactory.dbQuery {
+    // Sessions.user_id is a hard FK to Users. If /auth/sync hasn't landed yet (e.g. it
+    // silently failed against a cold backend), this insert would otherwise throw — and
+    // the caller (RecitationAnalysis.analyze) would discard a real, already-computed
+    // ML result as PersistenceFailed. Upserting here removes that ordering dependency.
+    suspend fun insert(userId: UUID, sura: Int, aya: Int, allCorrect: Boolean): UUID {
+        UserRepository.upsert(userId)
+        return DatabaseFactory.dbQuery {
             val sessionId = UUID.randomUUID()
             Sessions.insert {
                 it[id] = sessionId
@@ -40,6 +45,7 @@ object SessionRepository {
             }
             sessionId
         }
+    }
 
     suspend fun findById(sessionId: UUID): Session? =
         DatabaseFactory.dbQuery {
