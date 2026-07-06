@@ -38,10 +38,17 @@ image = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("ffmpeg", "libsndfile1")
     .pip_install(
-        "quran-muaalem",
-        "quran-transcript",
-        "librosa",
-        "soundfile",
+        # Pinned deliberately: quran-muaalem/quran-transcript are single-maintainer
+        # and define the error/sifat schema the backend parser depends on — an
+        # unpinned upstream release could silently change it on the next cold build.
+        # diff-match-patch is used directly (see _correct) but only ships transitively
+        # via quran-muaalem, so pin it explicitly. Bump these deliberately, re-verify
+        # the /correct response shape, then update. (S1/M1: docs/decisions/grading-tiers.md)
+        "quran-muaalem==0.1.0",
+        "quran-transcript==0.5.2",
+        "diff-match-patch==20241021",
+        "librosa==0.11.0",
+        "soundfile==0.14.0",
         "numba>=0.61.2",
         "fastapi[standard]",
     )
