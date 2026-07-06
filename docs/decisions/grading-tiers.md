@@ -105,8 +105,10 @@ rate is ~10–11/13 (A) and ~8–10/12 (B) — above the 80% bar; wrong-clip det
 
 ## Open items
 
-- [ ] Confirm speaker B is a non-native/beginner speaker; if both speakers are
-  Arabic-fluent, rerun a 10-clip subset with a genuine beginner before M3 ships.
+- [ ] **Both speakers are native** (confirmed 2026-07-06) — rerun a 10-clip subset
+  with a genuine non-native beginner before M3 ships. This is now a hard M3
+  prerequisite, not a nice-to-have: the spike proves the mechanism, not the
+  beginner-audio domain.
 - [ ] `baa_correct_short.wav` label ambiguity (named "correct", treated as planted-
   wrong): confirm intent by ear; its flag came from a trailing breath ه, not madd
   length — so if it was a genuinely short take, the model heard it long (would be
