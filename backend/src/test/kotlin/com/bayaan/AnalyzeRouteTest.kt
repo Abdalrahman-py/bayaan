@@ -1,7 +1,5 @@
 package com.bayaan
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import com.bayaan.plugins.configureJwt
 import com.bayaan.routes.analyzeRoute
 import io.ktor.client.request.forms.MultiPartFormDataContent
@@ -18,8 +16,6 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
-import java.util.Date
-import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertContains
@@ -29,10 +25,10 @@ class AnalyzeRouteTest {
     // ── engine error statuses ────────────────────────────────────────────────
 
     @Test
-    fun `engine non-2xx status is forwarded unchanged`() = testApplication {
+    fun `engine non-2xx status is forwarded unchanged`() = TestJwks.withServer { issuer -> testApplication {
         install(ContentNegotiation) { json() }
         application {
-            configureJwt()
+            configureJwt(issuer)
             routing {
                 authenticate("auth-jwt") {
                     analyzeRoute(RecitationAnalysis(engine = { _, _, _ ->
@@ -42,20 +38,20 @@ class AnalyzeRouteTest {
             }
         }
         val resp = client.post("/audio/analyze") {
-            header(HttpHeaders.Authorization, "Bearer $testJwt")
+            header(HttpHeaders.Authorization, "Bearer ${TestJwks.token(issuer)}")
             setBody(audioMultipart())
         }
         assertEquals(422, resp.status.value)
         assertEquals("""{"error":"unprocessable"}""", resp.bodyAsText())
-    }
+    } }
 
     // ── engine response unparseable ─────────────────────────────────────────
 
     @Test
-    fun `unparseable engine response returns 503 ml_unavailable`() = testApplication {
+    fun `unparseable engine response returns 503 ml_unavailable`() = TestJwks.withServer { issuer -> testApplication {
         install(ContentNegotiation) { json() }
         application {
-            configureJwt()
+            configureJwt(issuer)
             routing {
                 authenticate("auth-jwt") {
                     analyzeRoute(RecitationAnalysis(engine = { _, _, _ ->
@@ -65,20 +61,20 @@ class AnalyzeRouteTest {
             }
         }
         val resp = client.post("/audio/analyze") {
-            header(HttpHeaders.Authorization, "Bearer $testJwt")
+            header(HttpHeaders.Authorization, "Bearer ${TestJwks.token(issuer)}")
             setBody(audioMultipart())
         }
         assertEquals(HttpStatusCode.ServiceUnavailable, resp.status)
         assertContains(resp.bodyAsText(), "ml_unavailable")
-    }
+    } }
 
     // ── engine unreachable ───────────────────────────────────────────────────
 
     @Test
-    fun `engine exception returns 503 ml_unavailable`() = testApplication {
+    fun `engine exception returns 503 ml_unavailable`() = TestJwks.withServer { issuer -> testApplication {
         install(ContentNegotiation) { json() }
         application {
-            configureJwt()
+            configureJwt(issuer)
             routing {
                 authenticate("auth-jwt") {
                     analyzeRoute(RecitationAnalysis(engine = { _, _, _ ->
@@ -88,20 +84,20 @@ class AnalyzeRouteTest {
             }
         }
         val resp = client.post("/audio/analyze") {
-            header(HttpHeaders.Authorization, "Bearer $testJwt")
+            header(HttpHeaders.Authorization, "Bearer ${TestJwks.token(issuer)}")
             setBody(audioMultipart())
         }
         assertEquals(HttpStatusCode.ServiceUnavailable, resp.status)
         assertContains(resp.bodyAsText(), "ml_unavailable")
-    }
+    } }
 
     // ── validation ───────────────────────────────────────────────────────────
 
     @Test
-    fun `missing audio field returns 400 bad_request`() = testApplication {
+    fun `missing audio field returns 400 bad_request`() = TestJwks.withServer { issuer -> testApplication {
         install(ContentNegotiation) { json() }
         application {
-            configureJwt()
+            configureJwt(issuer)
             routing {
                 authenticate("auth-jwt") {
                     analyzeRoute(RecitationAnalysis(engine = { _, _, _ ->
@@ -111,7 +107,7 @@ class AnalyzeRouteTest {
             }
         }
         val resp = client.post("/audio/analyze") {
-            header(HttpHeaders.Authorization, "Bearer $testJwt")
+            header(HttpHeaders.Authorization, "Bearer ${TestJwks.token(issuer)}")
             setBody(MultiPartFormDataContent(formData {
                 append("sura", "1")
                 append("aya", "1")
@@ -119,7 +115,7 @@ class AnalyzeRouteTest {
         }
         assertEquals(HttpStatusCode.BadRequest, resp.status)
         assertContains(resp.bodyAsText(), "bad_request")
-    }
+    } }
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -131,13 +127,4 @@ class AnalyzeRouteTest {
             append("sura", sura.toString())
             append("aya", aya.toString())
         })
-
-    companion object {
-        private val testJwt: String = JWT.create()
-            .withSubject(UUID.randomUUID().toString())
-            .withIssuer("https://test-project.supabase.co/auth/v1")
-            .withAudience("authenticated")
-            .withExpiresAt(Date(System.currentTimeMillis() + 3_600_000))
-            .sign(Algorithm.HMAC256("test-secret-for-bayaan-junit-testing-only-xx"))
-    }
 }

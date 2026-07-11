@@ -21,7 +21,7 @@ dependencies {
     implementation(ktorLibs.server.netty)
     implementation(libs.logback.classic)
 
-    // Auth + JWT (Supabase HS256)
+    // Auth + JWT (Supabase JWKS/ES256)
     implementation("io.ktor:ktor-server-auth-jvm")
     implementation("io.ktor:ktor-server-auth-jwt-jvm")
 
@@ -46,6 +46,5 @@ dependencies {
 }
 
 tasks.withType<Test> {
-    environment("SUPABASE_JWT_SECRET", "test-secret-for-bayaan-junit-testing-only-xx")
     environment("SUPABASE_PROJECT_REF", "test-project")
 }
