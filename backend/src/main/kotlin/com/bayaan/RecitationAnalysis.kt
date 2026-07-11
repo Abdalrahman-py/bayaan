@@ -2,6 +2,7 @@ package com.bayaan
 
 import com.bayaan.data.repositories.MistakeRepository
 import com.bayaan.data.repositories.SessionRepository
+import com.bayaan.data.repositories.SifatMistakeRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.forms.MultiPartFormDataContent
@@ -59,7 +60,7 @@ class RecitationAnalysis(private val engine: EngineAdapter = defaultEngineAdapte
             return AnalysisResult.EngineError(engineResp.statusCode, engineResp.body)
         }
 
-        val (allCorrect, mistakes) = try {
+        val parsed = try {
             EngineResponseParser.parse(engineResp.body)
         } catch (e: Exception) {
             log.error("Engine response unparseable (sura=$sura aya=$aya): ${e.message}")
@@ -67,8 +68,9 @@ class RecitationAnalysis(private val engine: EngineAdapter = defaultEngineAdapte
         }
 
         return try {
-            val sessionId = SessionRepository.insert(userId, sura, aya, allCorrect)
-            MistakeRepository.insertBatch(sessionId, mistakes)
+            val sessionId = SessionRepository.insert(userId, sura, aya, parsed.allCorrect)
+            MistakeRepository.insertBatch(sessionId, parsed.mistakes)
+            SifatMistakeRepository.insertBatch(sessionId, parsed.sifatErrors)
             AnalysisResult.Success(engineResp.body)
         } catch (e: Exception) {
             log.error("Persistence failed (sura=$sura aya=$aya): ${e.message}")

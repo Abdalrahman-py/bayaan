@@ -127,4 +127,66 @@ class EngineResponseParserTest {
         assertEquals(1, mistakes.size)
         assertEquals(0, mistakes[0].charStart)
     }
+
+    // ── sifat_errors array ───────────────────────────────────────────────────
+
+    @Test
+    fun `sifat_errors are parsed to SifatMistakeInput list`() {
+        val json = """
+            {
+              "all_correct": false,
+              "errors": [],
+              "sifat_errors": [
+                {"phonemes_group": "قل", "attribute": "qalqla", "predicted": "moqalqal", "expected": "not_moqalqal", "confidence": 0.83},
+                {"phonemes_group": "بّ", "attribute": "ghonna", "predicted": "maghnoon", "expected": "not_maghnoon", "confidence": null}
+              ]
+            }
+        """.trimIndent()
+
+        val parsed = EngineResponseParser.parse(json)
+
+        assertEquals(2, parsed.sifatErrors.size)
+        parsed.sifatErrors[0].apply {
+            assertEquals("قل", phonemesGroup)
+            assertEquals("qalqla", attribute)
+            assertEquals("moqalqal", predicted)
+            assertEquals("not_moqalqal", expected)
+            assertEquals(0.83, confidence)
+        }
+        assertNull(parsed.sifatErrors[1].confidence)
+    }
+
+    @Test
+    fun `missing sifat_errors key returns empty list`() {
+        val parsed = EngineResponseParser.parse("""{"all_correct":true,"errors":[]}""")
+        assertTrue(parsed.sifatErrors.isEmpty())
+    }
+
+    @Test
+    fun `malformed sifat entry is skipped, valid kept`() {
+        val json = """
+            {
+              "all_correct": false,
+              "errors": [],
+              "sifat_errors": [
+                {"attribute": "qalqla"},
+                {"phonemes_group": "قل", "attribute": "qalqla", "predicted": "a", "expected": "b", "confidence": 0.5}
+              ]
+            }
+        """.trimIndent()
+
+        val parsed = EngineResponseParser.parse(json)
+
+        assertEquals(1, parsed.sifatErrors.size)
+        assertEquals("قل", parsed.sifatErrors[0].phonemesGroup)
+    }
+
+    @Test
+    fun `legacy pair destructuring still works alongside sifat`() {
+        val (allCorrect, mistakes) = EngineResponseParser.parse(
+            """{"all_correct":true,"errors":[]}"""
+        )
+        assertTrue(allCorrect)
+        assertTrue(mistakes.isEmpty())
+    }
 }

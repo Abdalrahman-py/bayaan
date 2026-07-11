@@ -5,14 +5,23 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
+// allCorrect + mistakes stay componentN-destructurable (component1/2) so existing
+// `val (allCorrect, mistakes) = parse(...)` callers keep working; sifatErrors is component3.
+data class ParsedEngineResponse(
+    val allCorrect: Boolean,
+    val mistakes: List<MistakeInput>,
+    val sifatErrors: List<SifatMistakeInput>,
+)
+
 object EngineResponseParser {
 
-    fun parse(body: String): Pair<Boolean, List<MistakeInput>> {
+    fun parse(body: String): ParsedEngineResponse {
         val json = Json.parseToJsonElement(body).jsonObject
         val allCorrect = json["all_correct"]?.jsonPrimitive?.booleanOrNull ?: true
         val mistakes = json["errors"]?.jsonArray?.mapNotNull { el ->
@@ -33,7 +42,19 @@ object EngineResponseParser {
                 )
             } catch (_: Exception) { null }
         } ?: emptyList()
-        return allCorrect to mistakes
+        val sifatErrors = json["sifat_errors"]?.jsonArray?.mapNotNull { el ->
+            try {
+                val obj = el.jsonObject
+                SifatMistakeInput(
+                    phonemesGroup = obj["phonemes_group"]!!.jsonPrimitive.content,
+                    attribute = obj["attribute"]!!.jsonPrimitive.content,
+                    predicted = obj["predicted"]!!.jsonPrimitive.content,
+                    expected = obj["expected"]!!.jsonPrimitive.content,
+                    confidence = obj["confidence"]?.jsonPrimitive?.doubleOrNull,
+                )
+            } catch (_: Exception) { null }
+        } ?: emptyList()
+        return ParsedEngineResponse(allCorrect, mistakes, sifatErrors)
     }
 
     private fun JsonElement?.asString(): String? =

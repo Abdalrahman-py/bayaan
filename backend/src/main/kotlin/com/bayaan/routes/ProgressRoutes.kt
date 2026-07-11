@@ -3,6 +3,7 @@ package com.bayaan.routes
 import com.bayaan.ErrorResponse
 import com.bayaan.data.repositories.MistakeRepository
 import com.bayaan.data.repositories.SessionRepository
+import com.bayaan.data.repositories.SifatMistakeRepository
 import io.ktor.http.*
 import com.bayaan.plugins.userId
 import io.ktor.server.auth.*
@@ -18,7 +19,8 @@ data class ProgressSummaryResponse(
     val perfect_sessions: Long,
     val overall_accuracy: Double,
     val total_mistakes: Long,
-    val mistake_breakdown: Map<String, Long>
+    val mistake_breakdown: Map<String, Long>,
+    val sifat_breakdown: Map<String, Long>
 )
 
 @Serializable
@@ -69,6 +71,7 @@ fun Route.progressRoutes() {
         val totalSessions   = SessionRepository.countByUser(userId)
         val perfectSessions = SessionRepository.countPerfectByUser(userId)
         val breakdown       = MistakeRepository.countByRuleForUser(userId)
+        val sifatBreakdown  = SifatMistakeRepository.countByAttributeForUser(userId)
         val totalMistakes   = breakdown.values.sum()
         val accuracy        = if (totalSessions == 0L) 0.0
                               else perfectSessions.toDouble() / totalSessions
@@ -78,7 +81,8 @@ fun Route.progressRoutes() {
                 perfect_sessions  = perfectSessions,
                 overall_accuracy  = accuracy,
                 total_mistakes    = totalMistakes,
-                mistake_breakdown = breakdown
+                mistake_breakdown = breakdown,
+                sifat_breakdown   = sifatBreakdown
             )
         )
     }
