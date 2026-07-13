@@ -31,6 +31,10 @@ android {
 
         buildConfigField("String", "BACKEND_URL", "\"https://bayaan-backend.onrender.com\"")
 
+        // DEMO_MODE bypasses lesson locks (PRODUCTION_PLAN §4). Debug default true;
+        // release forces false below. §12 launch checklist verifies DEMO_MODE=false.
+        buildConfigField("boolean", "DEMO_MODE", "true")
+
         val localProperties = Properties().apply {
             val file = rootProject.file("local.properties")
             if (file.exists()) {
@@ -50,6 +54,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("boolean", "DEMO_MODE", "false")
         }
     }
     compileOptions {

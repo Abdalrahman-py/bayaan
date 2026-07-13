@@ -1,6 +1,6 @@
 # Bayaan — Android UI Build Brief (for the UI builder)
 
-> **Historical brief.** This is the original spec the two-screen UI was built to and is still accurate for those two screens. Supabase sign-in has since entered scope (see [`AGENTS.md`](./AGENTS.md)) and is not covered here — treat "no login" below as describing the state at the time this brief was written, not the app's current scope.
+> **Historical brief.** This is the original spec the two-screen UI was built to and is still accurate for those two screens. Supabase sign-in has since entered scope (see [`AGENTS.md`](./AGENTS.md)) and is not covered here — treat "no login" below as describing the state at the time this brief was written, not the app's current scope. **[`ui/model/Models.kt`](./app/src/main/java/com/bayaan/ui/model/Models.kt) is the live source of truth** for the data contract — it has already diverged additively from this brief (e.g. `SifatError`/`sifatErrors` were added, not covered below). Check the code, not just this doc.
 
 You are building **only the UI** for Bayaan, an Android Quran-recitation coach.
 Someone else wires the logic (recording, networking, state) afterwards. Your job

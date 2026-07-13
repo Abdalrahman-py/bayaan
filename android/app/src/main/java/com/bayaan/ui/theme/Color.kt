@@ -27,3 +27,16 @@ val PlainErrorBackgroundDark = Color(0xFF2E1C3F)
 val SifatHighlight = Color(0xFF2B7AB3)        // Calm blue for letter-characteristic errors
 val SifatBackgroundLight = Color(0xFFE8F2FA)
 val SifatBackgroundDark = Color(0xFF0E1E2D)
+
+// Gamification accents (M0, PRODUCTION_PLAN §7). Named constants, theme-agnostic —
+// same warmth reads in light and dark, like the mistake-highlight family above.
+val StreakFlame = Color(0xFFE8863C)           // streak flame
+val XpGold = Color(0xFFD9A441)                // XP / score ring
+val NodeLockedLight = Color(0xFFD8D3C4)       // locked lesson node (light)
+val NodeLockedDark = Color(0xFF39413A)        // locked lesson node (dark)
+
+// Harakat teaching tints (§7.5) — one consistent accent per short vowel, used
+// everywhere a harakah is taught so learners bind color→sound.
+val FathaAccent = Color(0xFFCB6D51)
+val KasraAccent = Color(0xFF4E86A8)
+val DammaAccent = Color(0xFF7C9A54)

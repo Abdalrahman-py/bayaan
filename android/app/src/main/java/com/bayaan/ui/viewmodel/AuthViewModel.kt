@@ -56,6 +56,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val session = supabaseClient.auth.currentSessionOrNull()
                 if (session != null) {
+                    persistToken(session.accessToken)
                     state.value = AuthUiState.LoggedIn
                     syncUserWithBackend(session.accessToken)
                 } else {
@@ -78,6 +79,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 val session = supabaseClient.auth.currentSessionOrNull()
                 if (session != null) {
+                    persistToken(session.accessToken)
                     state.value = AuthUiState.LoggedIn
                     syncUserWithBackend(session.accessToken)
                 } else {
@@ -102,6 +104,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 // With it ON, there's no session yet → show the confirm-your-email state.
                 val session = supabaseClient.auth.currentSessionOrNull()
                 if (session != null) {
+                    persistToken(session.accessToken)
                     state.value = AuthUiState.LoggedIn
                     syncUserWithBackend(session.accessToken)
                 } else {
@@ -117,6 +120,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     // calling this) never observes a stale LoggedIn and bounces back to home — that
     // was the "logout then instantly signed back in" bug.
     fun signOut() {
+        clearPersistedToken()
         state.value = AuthUiState.LoggedOut()
         viewModelScope.launch {
             try {
@@ -161,6 +165,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             raw.contains("Unable to validate email", ignoreCase = true) -> "That email address looks invalid."
             else -> fallback
         }
+    }
+
+    private fun persistToken(token: String) {
+        getApplication<Application>()
+            .getSharedPreferences("supabase_session", 0)
+            .edit().putString("access_token", token).apply()
+    }
+
+    private fun clearPersistedToken() {
+        getApplication<Application>()
+            .getSharedPreferences("supabase_session", 0)
+            .edit().remove("access_token").apply()
     }
 
     override fun onCleared() {

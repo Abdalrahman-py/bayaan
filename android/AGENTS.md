@@ -6,7 +6,7 @@ You are an AI coding agent operating inside the `/android` directory of Bayaan. 
 
 ## What this module is
 
-The Bayaan Android app: pick an ayah, record your recitation, upload it, and see mistakes highlighted on the Arabic script. Sign-in/sign-up (Supabase Auth) is within the MVP scope but not yet implemented — every `/audio/analyze` call currently 401s until auth is wired. See [`UI_BRIEF.md`](./UI_BRIEF.md) for the original UI spec and [`../docs/architecture.md`](../docs/architecture.md) for the full system picture.
+The Bayaan Android app: pick an ayah, record your recitation, upload it, and see mistakes highlighted on the Arabic script. Sign-in/sign-up (Supabase Auth) is implemented — see `AuthViewModel`. See [`UI_BRIEF.md`](./UI_BRIEF.md) for the original UI spec and [`../docs/CODEBASE_MAP.md`](../docs/CODEBASE_MAP.md) for the full system picture.
 
 **Plain Android, single Gradle module (`app/`).** Not Kotlin Multiplatform — there is no `shared/` module. An earlier draft of this file planned for KMP and WebSocket audio streaming; neither was built.
 
@@ -14,7 +14,9 @@ The Bayaan Android app: pick an ayah, record your recitation, upload it, and see
 
 ## Owner
 
-Solo project — Abdalrahman (@Abdalrahman-py).
+Team: Gemini builds screens/Compose code for the Arabic-track workstreams (scope in
+[`GEMINI.md`](./GEMINI.md)); Abdalrahman (@Abdalrahman-py) reviews every change and does
+final wiring. See [`../docs/TEAM_PLAN.md`](../docs/TEAM_PLAN.md) for the full team split.
 
 ---
 
@@ -38,12 +40,17 @@ Solo project — Abdalrahman (@Abdalrahman-py).
 android/
 ├── app/src/main/java/com/bayaan/
 │   ├── MainActivity.kt
-│   ├── ui/screens/        VersePickerScreen, RecitationScreen
-│   ├── ui/viewmodel/      RecitationViewModel
-│   ├── ui/components/     VerseText (highlightable Uthmani text)
-│   ├── ui/model/          Verse, Mistake, RecitationUiState, hardcoded demo verse data
+│   ├── ui/screens/        Splash, Onboarding, Login/Signup, Home, Profile, Settings,
+│   │                      SurahIndex, MushafPager, Recitation
+│   ├── ui/viewmodel/      AuthViewModel, RecitationViewModel
+│   ├── ui/navigation/     NavGraph (auth gate + 3-tab bottom nav)
+│   ├── ui/mushaf/         QcfRepository (QCF glyph-font page loader)
+│   ├── ui/components/     VerseText (highlightable Uthmani text), BayaanHeader
+│   ├── ui/model/          Verse, Mistake, RecitationUiState, QuranText (full Uthmani text)
 │   └── ui/theme/          Compose theme, colors, type
 ├── AGENTS.md              This file
+├── GEMINI.md              Scope/rulebook for Gemini as the screens/wiring builder
+├── UI_SPEC.md             Styling law — read before writing any screen
 ├── UI_BRIEF.md            Original UI build spec — data contract is still load-bearing
 └── CLAUDE.md              Pointer to this file
 ```
@@ -84,7 +91,7 @@ The backend URL the app talks to is set via `BuildConfig.BACKEND_URL` — check 
 
 - Don't call the backend directly from a composable — go through the ViewModel.
 - Don't use `runBlocking` outside of tests.
-- Don't add new dependencies without a real need; this is a two-screen app.
+- Don't add new dependencies without a real need — Compose already covers springs, canvas particle effects, etc.
 
 ---
 
@@ -120,7 +127,7 @@ test(android): add unit test for RecitationViewModel
 
 ## Boundaries
 
-You may modify files inside `/android/`. For changes to `/backend/`, `/ml/`, `/docs/`, or root config, say so and let the user decide whether to switch context — there's no other team member to hand off to, so this is a heads-up, not a refusal.
+You may modify files inside `/android/`. For changes to `/backend/`, `/ml/`, `/docs/`, or root config, say so and let Abdalrahman decide whether to switch context.
 
 ---
 
