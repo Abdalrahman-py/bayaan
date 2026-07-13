@@ -84,64 +84,33 @@ class Muaalem:
         self.model = _Muaalem(device="cuda")
         print(f"[load] muaalem ready in {time.perf_counter() - t0:.1f}s")
 
-    def _correct(self, wav_bytes, sura, aya, madd):
-        """Pure logic: audio bytes + ayah -> structured errors. No HTTP here."""
-        import dataclasses
-        import json
-
-        import diff_match_patch as dmp_module
+    def _decode_wave(self, wav_bytes):
+        """Decode upload -> 16kHz mono float32 (model requirement)."""
         import librosa
         import soundfile as sf
-        from quran_muaalem.explain import expalin_sifat
-        from quran_transcript import Aya, quran_phonetizer, explain_error
-        from quran_transcript.phonetics.moshaf_attributes import MoshafAttributes
 
-        # Decode upload -> 16kHz mono float32 (the model requires 16kHz).
         wave, sr = sf.read(io.BytesIO(wav_bytes), dtype="float32")
         if wave.ndim > 1:
             wave = wave.mean(axis=1)
         if sr != 16000:
             wave = librosa.resample(wave, orig_sr=sr, target_sr=16000)
+        return wave
 
-        # Reference for the target ayah (Hafs). Bismillah counts as aya 1.
-        uthmani = Aya(sura, aya).get().uthmani
-        moshaf = MoshafAttributes(rewaya="hafs", **madd)
-        ref = quran_phonetizer(uthmani, moshaf, remove_spaces=True)
+    def _sifat_errors(self, outs0, ref, predicted):
+        """Letter-characteristic mismatches vs reference (same shape as /correct)."""
+        import diff_match_patch as dmp_module
+        from quran_muaalem.explain import expalin_sifat
 
-        t0 = time.perf_counter()
-        outs = self.model([wave], [ref], sampling_rate=16000)
-        infer_secs = time.perf_counter() - t0
-
-        predicted = outs[0].phonemes.text
-        errors = explain_error(uthmani, ref.phonemes, predicted, ref.mappings)
-
-        # ReciterError is a dataclass; tajweed-rule fields are sets -> list-ify.
-        def _enc(o):
-            if isinstance(o, set):
-                return sorted(o)
-            return str(o)
-
-        errors_json = json.loads(
-            json.dumps([dataclasses.asdict(e) for e in errors], default=_enc)
-        )
-
-        # --- Sifat (letter characteristic) errors ---
-        # expalin_sifat aligns predicted vs reference sifat groups using the same
-        # diff already computed between phoneme strings.
         _dmp = dmp_module.diff_match_patch()
         _diffs = _dmp.diff_main(ref.phonemes, predicted)
-        _sifat_table = expalin_sifat(outs[0].sifat, ref.sifat, _diffs)
-
-        # Index by phoneme group so we can look up confidence scores.
-        _pred_by_group = {s.phonemes_group: s for s in outs[0].sifat}
-
+        _sifat_table = expalin_sifat(outs0.sifat, ref.sifat, _diffs)
+        _pred_by_group = {s.phonemes_group: s for s in outs0.sifat}
         _SIFAT_KEYS = (
             "hams_or_jahr", "shidda_or_rakhawa", "tafkheem_or_taqeeq",
             "itbaq", "safeer", "qalqla", "tikraar", "tafashie", "istitala", "ghonna",
         )
 
         def _sifa_str(v):
-            """Safely stringify a SifaOutput attribute (may be str, enum, or None)."""
             if v is None:
                 return None
             return v.value if hasattr(v, "value") else str(v)
@@ -171,17 +140,73 @@ class Muaalem:
                     "expected": exp_val,
                     "confidence": confidence,
                 })
+        return sifat_errors
 
+    def _grade_against_text(self, wav_bytes, uthmani, madd):
+        """Core Path-A grading: arbitrary Uthmani reference (ayah or syllable/word).
+
+        Same phonetizer + explain_error + sifat heads as /correct. Used by both the
+        ayah endpoint and /grade-text (M3 echo exercises — see Spike S1 / Path A).
+        """
+        import dataclasses
+        import json
+
+        from quran_transcript import quran_phonetizer, explain_error
+        from quran_transcript.phonetics.moshaf_attributes import MoshafAttributes
+
+        wave = self._decode_wave(wav_bytes)
+        moshaf = MoshafAttributes(rewaya="hafs", **madd)
+        ref = quran_phonetizer(uthmani, moshaf, remove_spaces=True)
+
+        t0 = time.perf_counter()
+        outs = self.model([wave], [ref], sampling_rate=16000)
+        infer_secs = time.perf_counter() - t0
+
+        predicted = outs[0].phonemes.text
+        errors = explain_error(uthmani, ref.phonemes, predicted, ref.mappings)
+
+        def _enc(o):
+            if isinstance(o, set):
+                return sorted(o)
+            return str(o)
+
+        errors_json = json.loads(
+            json.dumps([dataclasses.asdict(e) for e in errors], default=_enc)
+        )
+        sifat_errors = self._sifat_errors(outs[0], ref, predicted)
+
+        return {
+            "reference_text": uthmani,
+            "reference_phonemes": ref.phonemes,
+            "predicted_phonemes": predicted,
+            "errors": errors_json,
+            "sifat_errors": sifat_errors,
+            "error_count": len(errors_json),
+            "sifat_error_count": len(sifat_errors),
+            "all_correct": len(errors_json) == 0 and len(sifat_errors) == 0,
+            "audio_secs": round(len(wave) / 16000, 2),
+            "infer_secs": round(infer_secs, 3),
+        }
+
+    def _correct(self, wav_bytes, sura, aya, madd):
+        """Pure logic: audio bytes + ayah -> structured errors. No HTTP here."""
+        from quran_transcript import Aya
+
+        # Reference for the target ayah (Hafs). Bismillah counts as aya 1.
+        uthmani = Aya(sura, aya).get().uthmani
+        result = self._grade_against_text(wav_bytes, uthmani, madd)
+        # Keep the /correct response shape (sura/aya/uthmani fields) the backend
+        # parser already depends on; grade-text returns reference_text instead.
         return {
             "sura": sura,
             "aya": aya,
             "uthmani": uthmani,
-            "errors": errors_json,
-            "sifat_errors": sifat_errors,
-            "error_count": len(errors_json),
-            "all_correct": len(errors_json) == 0,
-            "audio_secs": round(len(wave) / 16000, 2),
-            "infer_secs": round(infer_secs, 3),
+            "errors": result["errors"],
+            "sifat_errors": result["sifat_errors"],
+            "error_count": result["error_count"],
+            "all_correct": len(result["errors"]) == 0,
+            "audio_secs": result["audio_secs"],
+            "infer_secs": result["infer_secs"],
         }
 
     @modal.fastapi_endpoint(method="POST", docs=True)
@@ -220,4 +245,54 @@ class Muaalem:
             # Any failure in the pipeline (aya beyond the surah's verse count ->
             # AssertionError, undecodable audio, model error) becomes a structured
             # 422 instead of a 500 + non-JSON body the caller can't parse.
+            return fail(422, "unprocessable_audio", f"{type(e).__name__}: {e}")
+
+    @modal.fastapi_endpoint(method="POST", docs=True)
+    async def grade_text(
+        self,
+        audio: UploadFile,
+        reference_text: str = "",
+        madd_monfasel_len: int = 2,
+        madd_mottasel_len: int = 4,
+        madd_mottasel_waqf: int = 4,
+        madd_aared_len: int = 4,
+    ):
+        """POST multipart: `audio` + `reference_text` (arbitrary Uthmani).
+
+        M3 Path A endpoint for echo / syllable grading. Production of Ktor's
+        POST /speech/grade. Content pipeline enforces madd-/sukoon-final targets
+        (see docs/decisions/grading-tiers.md) — this endpoint does not re-validate.
+
+        Decode crashes (multilevel_greedy_decode RuntimeError on rare short clips)
+        return a structured body so the backend can map them to verdict=retry,
+        never a 500.
+        """
+        from fastapi.responses import JSONResponse
+
+        def fail(status, code, msg):
+            return JSONResponse(status_code=status, content={"error": code, "message": msg})
+
+        wav_bytes = await audio.read()
+        if not wav_bytes:
+            return fail(422, "unprocessable_audio", "Empty audio.")
+        text = (reference_text or "").strip()
+        if not text:
+            return fail(400, "bad_request", "missing reference_text")
+        # Hard length guard for lesson clips — backend also caps upload size.
+        if len(text) > 64:
+            return fail(400, "bad_request", "reference_text too long for grade-text")
+
+        madd = dict(
+            madd_monfasel_len=madd_monfasel_len,
+            madd_mottasel_len=madd_mottasel_len,
+            madd_mottasel_waqf=madd_mottasel_waqf,
+            madd_aared_len=madd_aared_len,
+        )
+        try:
+            return self._grade_against_text(wav_bytes, text, madd)
+        except RuntimeError as e:
+            # Known upstream decode bug on some short clips (Spike S1 1/43). Ktor maps
+            # decode_failed -> verdict:retry rather than surfacing a 5xx.
+            return fail(422, "decode_failed", f"RuntimeError: {e}")
+        except Exception as e:
             return fail(422, "unprocessable_audio", f"{type(e).__name__}: {e}")
