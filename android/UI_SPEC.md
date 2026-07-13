@@ -114,4 +114,4 @@ Matches [`VersePickerScreen.kt`](app/src/main/java/com/bayaan/ui/screens/VersePi
 
 ---
 
-**Data contract** (types the recitation screen consumes) lives in [`UI_BRIEF.md`](UI_BRIEF.md) §4 and in [`ui/model/Models.kt`](app/src/main/java/com/bayaan/ui/model/Models.kt) — don't rename those fields. **Build plan & per-owner guides:** see [`PROTOTYPE_DOCS.md`](PROTOTYPE_DOCS.md).
+**Data contract** (types the recitation screen consumes) lives in [`UI_BRIEF.md`](UI_BRIEF.md) §4 and in [`ui/model/Models.kt`](app/src/main/java/com/bayaan/ui/model/Models.kt) — don't rename those fields.

@@ -4,8 +4,8 @@
 > the decision behind it, so you drive the code instead of the AI driving you.
 > Style: terse. Caveman words, senior-dev substance.
 >
-> Companion files: [`architecture.md`](./architecture.md) (as-built diagram),
-> [`NEXT_STEPS.md`](./NEXT_STEPS.md) (what's left), [`PRODUCT_VISION.md`](./PRODUCT_VISION.md) (full dream).
+> Companion files: [`PRODUCTION_PLAN.md`](./PRODUCTION_PLAN.md) (current execution plan),
+> [`PRODUCT_VISION.md`](./PRODUCT_VISION.md) (full dream).
 > **Where they disagree with each other, THIS file matches the code as of today.**
 
 ---
@@ -73,11 +73,9 @@ Kotlin SDK (`AuthViewModel`). Supabase hands back a **JWT** (a signed token prov
 - Valid token → Ktor builds a `JWTPrincipal`. The user's UUID is the token's `sub` field.
 - Bad/expired → `challenge{}` returns `401 {"error":"unauthorized"}`.
 
-> ⚠️ **STALE DOCS:** `architecture.md` and `backend/AGENTS.md` still say "HS256, verified
-> with `SUPABASE_JWT_SECRET`". That is OLD. The code moved to **JWKS/ES256** (commits db8ff83,
-> 706df94). `SUPABASE_JWT_SECRET` env var is effectively dead now; the real env vars that
-> matter are `SUPABASE_PROJECT_REF` (builds the issuer URL) and `SUPABASE_DB_URL`. Fix those
-> docs next time you touch them.
+The code moved from HS256/`SUPABASE_JWT_SECRET` to **JWKS/ES256** (commits db8ff83, 706df94).
+`SUPABASE_JWT_SECRET` is dead; the real env vars are `SUPABASE_PROJECT_REF` (builds the
+issuer URL) and `SUPABASE_DB_URL`.
 
 **Where the fence is** — [`Application.kt`](../backend/src/main/kotlin/com/bayaan/Application.kt):
 ```kotlin
@@ -249,10 +247,9 @@ We render the Quran as a **real page-faithful mushaf**, not plain Arabic text. S
 - RTL pager (`reverseLayout=true`) — swipe right = next page, like a real mushaf.
 - Tap a word → whole ayah highlights → action sheet {Analyze Tajweed, Memorize(disabled)} → hands off to the recitation screen for that `sura:aya`.
 
-**The catch — why not the whole Quran:** each font ≈ 2MB; all 47 ≈ ~100MB; 604 pages. Bundling all = a
-~100MB APK. **Current build ships a SUBSET:** Surahs 1–5 + Juz Amma → ~14 fonts + those pages
-(see `ls assets/qcf4/fonts`: pages 01–10 and 45–47). Any page outside that range renders
-"Page N is outside this build" ([MushafPagerScreen.kt:126](../android/app/src/main/java/com/bayaan/ui/screens/MushafPagerScreen.kt#L126)). Decision to bundle-all vs download-on-demand is still open — see NEXT_STEPS §Step 1.
+**Bundle size:** each font ≈ 2MB; all 48 ≈ 113MB total for all 604 pages. Decided to bundle
+everything rather than subset or download-on-demand — simplest, fine for a sideloaded showcase.
+Revisit before a Play Store release (APK size limits).
 
 > ⚠️ **LICENSE:** MIT covers the QCF *data*, **NOT the fonts** (KFGQPC owns those). Fine for a
 > non-commercial supervisor showcase. **Production blocker** until you get KFGQPC permission.
@@ -270,21 +267,19 @@ We render the Quran as a **real page-faithful mushaf**, not plain Arabic text. S
 - **Store audio? No.** Audio processed in memory, discarded. Only the *mistake data* persists. Privacy + cheap.
 - **Modal scale-to-zero.** GPU is expensive; we pay ~$0 idle and eat a cold start. Acceptable for a prototype/demo.
 - **Render free tier.** One-Dockerfile deploys; cold start acceptable for now.
-- **QCF glyph-font mushaf, subset-bundled.** Page-faithful script beats plain text for a recitation coach; subset keeps the APK sane for the showcase.
+- **QCF glyph-font mushaf, fully bundled.** Page-faithful script beats plain text for a recitation coach; all 604 pages ship in the APK for the showcase.
 - **Solo repo, one `main` branch.** Team shrank to one; PR ceremony was pure overhead → removed (AGENTS.md).
 
 ---
 
 ## 12. Sharp edges to remember
 
-- **Stale docs:** `architecture.md` + `backend/AGENTS.md` say HS256/`SUPABASE_JWT_SECRET`. Reality = JWKS/ES256. (§4)
 - **Two cold starts** (Render + Modal) stack before a demo. Warm both.
 - **Modal deploy** won't replace a warm container — `modal app stop` first to test new code.
 - **Backend drops `sifat_errors`** (parser ignores them). Phone shows them live; DB never sees them.
 - **`/progress*` built but unused** by the app. Backend ahead of UI.
 - **`/surahs` is hardcoded** to 2 surahs and mostly superseded by the mushaf screen.
-- **Mushaf is subset-only** — most pages show a placeholder. Not a bug, a size decision.
-- **Font fonts license** = showcase-only until KFGQPC permission.
+- **Font license** = showcase-only until KFGQPC permission.
 - **10MB audio cap is post-buffer** (`ponytail:` note in AnalyzeRoute) — fine while the app is the only client.
 </content>
 </invoke>

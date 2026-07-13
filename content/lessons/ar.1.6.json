@@ -1,0 +1,23 @@
+{
+  "lesson_id": "ar.1.6",
+  "unit_id": "ar.1",
+  "title_en": "Hamza & checkpoint",
+  "title_ar": "ك ل م هـ ء أ",
+  "is_checkpoint": true,
+  "teach": {
+    "narration_en": "The last letters: kaf, lam, mim, and a soft ha. Hamza is a clean glottal stop, like the catch in 'uh-oh'. When it sits on an alif we write alif-hamza. Now a checkpoint over the whole unit.",
+    "glyphs": ["ك", "ل", "م", "ه", "ء", "أ"],
+    "focus_en": "Hamza (glottal stop) + Unit 1 checkpoint."
+  },
+  "items": [
+    { "item_ref": "ar.1.6.listen.kaf", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/kaf_fatha.ogg", "answer": "ك", "options": ["ك", "ق", "ل", "م"] },
+    { "item_ref": "ar.1.6.listen.mim", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/mim_fatha.ogg", "answer": "م", "options": ["م", "ن", "ل", "ه"] },
+    { "item_ref": "ar.1.6.listen.hamza", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/hamza_fatha.ogg", "answer": "ء", "options": ["ء", "ع", "ه", "ك"] },
+    { "item_ref": "ar.1.6.read.lam", "type": "READ_PICK", "grading_tier": 0, "prompt_text_ar": "ل", "answer": "letters/lam_fatha.ogg", "options": ["letters/lam_fatha.ogg", "letters/kaf_fatha.ogg", "letters/mim_fatha.ogg"] },
+    { "item_ref": "ar.1.6.disc.kaf_qaf", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/kaf_fatha.ogg", "answer": "ك", "options": ["ك", "ق"] },
+    { "item_ref": "ar.1.6.odd.review", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ص", "options": ["ك", "ل", "م", "ص"] },
+    { "item_ref": "ar.1.6.echo.kaf", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/kaf_madd.ogg", "reference_text": "كَا" },
+    { "item_ref": "ar.1.6.echo.mim", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/mim_madd.ogg", "reference_text": "مَا" },
+    { "item_ref": "ar.1.6.echo.ha", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/ha_madd.ogg", "reference_text": "هَا" }
+  ]
+}

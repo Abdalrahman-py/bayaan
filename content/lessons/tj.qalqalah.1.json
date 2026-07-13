@@ -1,0 +1,31 @@
+{
+  "lesson_id": "tj.qalqalah.1",
+  "unit_id": "tj.qalqalah",
+  "title_en": "The bounce",
+  "title_ar": "القَلقَلة",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Qalqalah is a bouncing or echoing sound made on the letters of Qutb Jadin (ق ط ب ج د) when they have a Sukoon or are paused upon.",
+    "rule_name_en": "Qalqalah",
+    "rule_name_ar": "القَلقَلة",
+    "audio_correct": "letters/qalqalah_correct.ogg",
+    "audio_incorrect": "letters/qalqalah_incorrect.ogg",
+    "glyphs": ["ق", "ط", "ب", "ج", "د"]
+  },
+  "items": [
+    {
+      "item_ref": "tj.qalqalah.1.recite.ahad",
+      "type": "ECHO",
+      "grading_tier": 1,
+      "prompt_asset": "quran/112_1.ogg",
+      "reference_text": "قُلْ هُوَ ٱللَّهُ أَحَدْ"
+    },
+    {
+      "item_ref": "tj.qalqalah.1.recite.samad",
+      "type": "ECHO",
+      "grading_tier": 1,
+      "prompt_asset": "quran/112_2.ogg",
+      "reference_text": "ٱللَّهُ ٱلصَّمَدْ"
+    }
+  ]
+}

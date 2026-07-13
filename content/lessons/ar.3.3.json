@@ -1,0 +1,20 @@
+{
+  "lesson_id": "ar.3.3",
+  "unit_id": "ar.3",
+  "title_en": "Damma",
+  "title_ar": "الضمة",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "The damma is a small loop above a letter, like a tiny waw. It gives a short 'u' sound: bu, tu, su. Round your lips slightly.",
+    "glyphs": ["بُ", "تُ", "سُ"],
+    "focus_en": "Damma = short 'u', a loop above."
+  },
+  "items": [
+    { "item_ref": "ar.3.3.listen.bu", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_damma.ogg", "answer": "بُ", "options": ["بُ", "بَ", "بِ"] },
+    { "item_ref": "ar.3.3.listen.tu", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ta_damma.ogg", "answer": "تُ", "options": ["تُ", "تَ", "تِ"] },
+    { "item_ref": "ar.3.3.read.su", "type": "READ_PICK", "grading_tier": 0, "prompt_text_ar": "سُ", "answer": "letters/sin_damma.ogg", "options": ["letters/sin_damma.ogg", "letters/sin_fatha.ogg", "letters/sin_kasra.ogg"] },
+    { "item_ref": "ar.3.3.odd.vowel", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "بَ", "options": ["بُ", "تُ", "سُ", "بَ"] },
+    { "item_ref": "ar.3.3.read_aloud.kul", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كُلْ" },
+    { "item_ref": "ar.3.3.read_aloud.qum", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قُمْ" }
+  ]
+}

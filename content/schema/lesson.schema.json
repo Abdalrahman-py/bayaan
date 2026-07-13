@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bayaan/content/lesson.schema.json",
+  "title": "Bayaan lesson file",
+  "description": "One lesson: teach segment + exercise items, or a stub. build_content.py additionally enforces answer∈options, waqf-safe reference_text, item_ref prefixing, and curriculum agreement.",
+  "type": "object",
+  "required": ["lesson_id", "unit_id", "title_en", "title_ar", "is_checkpoint"],
+  "properties": {
+    "lesson_id": { "type": "string", "pattern": "^[a-z0-9._]+$" },
+    "unit_id": { "type": "string", "pattern": "^[a-z0-9._]+$" },
+    "title_en": { "type": "string", "minLength": 1 },
+    "title_ar": { "type": "string", "minLength": 1 },
+    "is_checkpoint": { "type": "boolean" },
+    "stub": { "type": "boolean" },
+    "note": { "type": "string" },
+    "teach": {
+      "type": "object",
+      "required": ["narration_en"],
+      "properties": {
+        "narration_en": { "type": "string", "minLength": 1 },
+        "glyphs": { "type": "array", "items": { "type": "string" } },
+        "focus_en": { "type": "string" }
+      }
+    },
+    "items": { "type": "array", "items": { "$ref": "#/definitions/item" } }
+  },
+  "oneOf": [
+    {
+      "title": "authored lesson",
+      "required": ["teach", "items"],
+      "properties": { "stub": { "not": { "const": true } }, "items": { "minItems": 1 } }
+    },
+    {
+      "title": "stub lesson",
+      "required": ["stub", "items"],
+      "properties": { "stub": { "const": true }, "items": { "maxItems": 0 } }
+    }
+  ],
+  "definitions": {
+    "item": {
+      "type": "object",
+      "required": ["item_ref", "type", "grading_tier"],
+      "properties": {
+        "item_ref": { "type": "string", "pattern": "^[a-z0-9._]+$" },
+        "type": { "enum": ["LISTEN_PICK", "READ_PICK", "DISCRIMINATE", "ODD_ONE_OUT", "ECHO", "READ_ALOUD_SYLLABLE"] },
+        "grading_tier": { "enum": [0, 1, 2] },
+        "prompt_asset": { "type": "string", "pattern": "\\.ogg$" },
+        "prompt_text_ar": { "type": "string" },
+        "answer": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "reference_text": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["ECHO", "READ_ALOUD_SYLLABLE"] } } },
+          "then": { "required": ["reference_text"], "properties": { "grading_tier": { "enum": [1, 2] } } }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["LISTEN_PICK", "READ_PICK", "DISCRIMINATE", "ODD_ONE_OUT"] } } },
+          "then": { "required": ["answer", "options"], "properties": { "grading_tier": { "const": 0 }, "options": { "minItems": 2 } } }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["LISTEN_PICK", "DISCRIMINATE"] } } },
+          "then": { "required": ["prompt_asset"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "READ_PICK" } } },
+          "then": { "required": ["prompt_text_ar"] }
+        }
+      ]
+    }
+  }
+}

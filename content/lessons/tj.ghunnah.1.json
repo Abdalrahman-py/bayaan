@@ -1,0 +1,31 @@
+{
+  "lesson_id": "tj.ghunnah.1",
+  "unit_id": "tj.ghunnah",
+  "title_en": "The nasal sound",
+  "title_ar": "الغُنّة",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Ghunnah is a nasal sound that is held for two counts. It applies whenever you see a Noon (نّ) or Meem (مّ) with a Shaddah.",
+    "rule_name_en": "Ghunnah",
+    "rule_name_ar": "الغُنّة",
+    "audio_correct": "letters/ghunnah_correct.ogg",
+    "audio_incorrect": "letters/ghunnah_incorrect.ogg",
+    "glyphs": ["نّ", "مّ"]
+  },
+  "items": [
+    {
+      "item_ref": "tj.ghunnah.1.recite.nas",
+      "type": "ECHO",
+      "grading_tier": 1,
+      "prompt_asset": "quran/114_1.ogg",
+      "reference_text": "قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسْ"
+    },
+    {
+      "item_ref": "tj.ghunnah.1.recite.malik",
+      "type": "ECHO",
+      "grading_tier": 1,
+      "prompt_asset": "quran/114_2.ogg",
+      "reference_text": "مَلِكِ ٱلنَّاسْ"
+    }
+  ]
+}

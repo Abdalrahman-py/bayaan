@@ -1,0 +1,22 @@
+{
+  "lesson_id": "ar.1.1",
+  "unit_id": "ar.1",
+  "title_en": "Dotted family",
+  "title_ar": "ب ت ث ن ي",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "These five letters share the same boat shape. Only the dots tell them apart: one dot below is ba, two above is ta, three above is tha.",
+    "glyphs": ["ب", "ت", "ث", "ن", "ي"],
+    "focus_en": "Dots distinguish otherwise-identical letters."
+  },
+  "items": [
+    { "item_ref": "ar.1.1.listen.ba", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_fatha.ogg", "answer": "ب", "options": ["ب", "ت", "ث", "ن"] },
+    { "item_ref": "ar.1.1.listen.ta", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ta_fatha.ogg", "answer": "ت", "options": ["ت", "ب", "ن", "ث"] },
+    { "item_ref": "ar.1.1.listen.tha", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/tha_fatha.ogg", "answer": "ث", "options": ["ث", "ت", "ب", "ي"] },
+    { "item_ref": "ar.1.1.read.nun", "type": "READ_PICK", "grading_tier": 0, "prompt_text_ar": "ن", "answer": "letters/nun_fatha.ogg", "options": ["letters/nun_fatha.ogg", "letters/ba_fatha.ogg", "letters/ta_fatha.ogg"] },
+    { "item_ref": "ar.1.1.odd.family", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "م", "options": ["ب", "ت", "ث", "م"] },
+    { "item_ref": "ar.1.1.disc.ta_tha", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/ta_fatha.ogg", "answer": "ت", "options": ["ت", "ث"] },
+    { "item_ref": "ar.1.1.echo.ba", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/ba_madd.ogg", "reference_text": "بَا" },
+    { "item_ref": "ar.1.1.echo.ta", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/ta_madd.ogg", "reference_text": "تَا" }
+  ]
+}

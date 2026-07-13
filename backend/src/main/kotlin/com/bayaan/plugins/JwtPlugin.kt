@@ -9,11 +9,9 @@ import io.ktor.server.response.*
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
-fun Application.configureJwt() {
-    val projectRef = System.getenv("SUPABASE_PROJECT_REF")
-        ?: throw IllegalStateException("SUPABASE_PROJECT_REF env var is required")
-    val issuer = "https://$projectRef.supabase.co/auth/v1"
-
+// `issuer` is overridable so tests can point verification at a local JWKS endpoint
+// instead of a real Supabase project — production always uses the env-derived default.
+fun Application.configureJwt(issuer: String = defaultIssuer()) {
     // Verify tokens against the project's asymmetric signing key (ES256) via the public
     // JWKS endpoint — no shared secret to manage. Ktor resolves the key by the token's
     // `kid` and picks the algorithm automatically. Requires the ECC key to be the
@@ -40,4 +38,10 @@ fun Application.configureJwt() {
             }
         }
     }
+}
+
+private fun defaultIssuer(): String {
+    val projectRef = System.getenv("SUPABASE_PROJECT_REF")
+        ?: throw IllegalStateException("SUPABASE_PROJECT_REF env var is required")
+    return "https://$projectRef.supabase.co/auth/v1"
 }

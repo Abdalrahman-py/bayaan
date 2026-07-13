@@ -77,7 +77,8 @@ These are contextual rules that depend on what follows a phoneme — the engine'
 
 ## Surah Coverage
 
-The app currently covers **Al-Fatihah** (7 verses) and **Al-Bayyinah** (8 verses). Al-Fatihah is recited in every prayer, making it the highest-value target for a learning tool.
+The app's mushaf browser and full Uthmani text cover all 114 surahs. Al-Fatihah remains the
+highest-value example below since it's recited in every prayer.
 
 | Verse | Arabic text |
 |-------|------------|

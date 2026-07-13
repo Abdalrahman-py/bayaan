@@ -1,0 +1,22 @@
+{
+  "lesson_id": "ar.2.5",
+  "unit_id": "ar.2",
+  "title_en": "Mixed gauntlet & checkpoint",
+  "title_ar": "مراجعة",
+  "is_checkpoint": true,
+  "teach": {
+    "narration_en": "A mixed gauntlet of every hard pair from this unit, with cruel distractors. Take your time and listen for the weight of each sound. This is the Unit 2 checkpoint.",
+    "glyphs": ["ص", "ط", "ض", "ظ", "ق", "ح"],
+    "focus_en": "Unit 2 checkpoint — mixed discrimination."
+  },
+  "items": [
+    { "item_ref": "ar.2.5.listen.sad", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/sad_fatha.ogg", "answer": "ص", "options": ["ص", "س", "ز", "ث"] },
+    { "item_ref": "ar.2.5.listen.zaa", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/zaa_fatha.ogg", "answer": "ظ", "options": ["ظ", "ذ", "ز", "ط"] },
+    { "item_ref": "ar.2.5.disc.qaf_kaf", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/qaf_fatha.ogg", "answer": "ق", "options": ["ق", "ك"] },
+    { "item_ref": "ar.2.5.disc.hha_ha", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/hha_fatha.ogg", "answer": "ح", "options": ["ح", "ه"] },
+    { "item_ref": "ar.2.5.odd.heavy", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ت", "options": ["ص", "ط", "ض", "ت"] },
+    { "item_ref": "ar.2.5.echo.sad", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/sad_madd.ogg", "reference_text": "صَا" },
+    { "item_ref": "ar.2.5.echo.taa", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/taa_madd.ogg", "reference_text": "طَا" },
+    { "item_ref": "ar.2.5.echo.ayn", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/ayn_madd.ogg", "reference_text": "عَا" }
+  ]
+}

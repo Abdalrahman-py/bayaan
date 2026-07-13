@@ -1,57 +1,109 @@
 # Bayaan
 
-An AI-powered Quran recitation coach. A student records an ayah, and Bayaan flags Tajweed and pronunciation mistakes directly on the Arabic script — no teacher required to catch what went wrong.
+An AI-powered Quran recitation coach for Android. Pick an ayah, record your recitation, and Bayaan flags Tajweed and pronunciation mistakes directly on the Arabic script — no teacher required.
 
-**Status: working prototype, one full loop built end to end** — sign in, pick an ayah, record it, get mistakes highlighted, try again. Three services, each with a distinct job:
+**Status: Learning track MVP** — guided Arabic curriculum with real-time speech grading, XP/streaks, and spaced repetition. Full recitation analysis loop with page-faithful mushaf (604 pages). Ready for graduation submission.
 
-## What's built
+## What's Built
 
 ### Android — Kotlin, Jetpack Compose, Material 3
-A two-screen RTL-first app: a verse picker (Al-Fatihah, Al-Bayyinah) and a recitation screen driven by a single UI state machine (`Ready → Recording → Uploading → Result/Error`). Records 16kHz mono PCM directly via `AudioRecord`, wraps it as WAV in-memory, and renders per-character mistake highlighting over Uthmani script using `AnnotatedString`.
+- 4-tab bottom nav (Learn · Qur'an · Progress · Profile)
+- **Learn tab:** curriculum roadmap with animated nodes, server-driven progress/locks
+- **Lesson player:** 6 exercise types (listen-pick, read-pick, discriminate, odd-one-out, connect, echo with real mic grading)
+- **Qur'an tab:** full page-faithful QCF mushaf browser — all 114 surahs, 604 pages, RTL pager
+- **Recitation screen:** record → upload → per-character mistake highlighting + sifat analysis
+- **Progress tab:** streak/XP header, weak-rules breakdown, session history
+- Premium feel: score ring, confetti canvas, haptics, sound effects, animated transitions
+- Supabase Auth (email/password) with local token verification
 
 ### Backend — Kotlin, Ktor
-Verifies Supabase JWTs locally (HS256, no round-trip per request), forwards audio to the recitation engine, and persists every session and mistake to Postgres. Six endpoints — auth sync, analyze, and paginated progress history. Deployed on Render from a single Dockerfile.
+- JWT verification via Supabase JWKS/ES256 (no per-request network roundtrip)
+- `/audio/analyze` — forward audio to Muaalem engine, persist results
+- `/speech/grade` — grade arbitrary Uthmani text for echo exercises
+- `/learn/path`, `/learn/complete`, `/learn/reviews`, `/learn/placement` — full learning track API
+- `/progress`, `/progress/sessions` — paginated history with mistake breakdown
+- Exposed ORM + HikariCP → Supabase Postgres (11 tables)
+- Deployed on Render (Docker, free tier)
 
-### ML — pretrained model on serverless GPU
-Runs `obadx/quran-muaalem`, a third-party recitation-analysis model, on Modal. Returns phoneme-level mistakes (`errors`) tied to character ranges in the verse, plus 10 letter-characteristic attributes (`sifat_errors` — qalqalah, ghunnah, tafkheem, etc.) classified directly from the audio waveform. No training happens in this repo; a de-risking spike ([`spike/`](spike/)) validated latency and accuracy before the backend was built around it.
+### ML — Muaalem on Modal GPU
+- `/correct` — grade full ayat against Quran database
+- `/grade-text` — grade arbitrary Uthmani text (syllables, words) — enables Arabic track echo exercises
+- 10 sifat classification heads (ghunnah, qalqalah, tafkheem, etc.)
+- Scale-to-zero (~$0 idle), ~24s cold start, ~1.7s warm
 
----
-
-## How it works
-
-1. Sign in (Supabase Auth).
-2. Pick a verse from Al-Fatihah or Al-Bayyinah.
-3. Tap record and recite it.
-4. The app uploads the recording; the backend forwards it to the recitation engine and gets back a structured list of mistakes.
-5. The backend persists the session and its mistakes, then the app highlights the mistaken text and explains what went wrong — which rule, what was expected, what was recited.
-6. Try again, or move to the next ayah. `GET /progress` shows aggregate stats across past sessions.
+### Content Pipeline
+- 3 authored units (17 lessons) with recognition + echo exercises
+- JSON schema-validated at build time by `scripts/build_content.py`
+- Bundled as Android assets
 
 ## Architecture
 
 ```
-Android app  --(JWT + audio)-->  Ktor backend  --(audio)-->  Recitation engine
-   (Compose)                     (auth, persist,             (pretrained model,
-                                   thin proxy)                 serverless GPU)
-                                        |
-                                        v
-                                Supabase Postgres
+[Android App] ──JWT + audio──▶ [Ktor Backend (Render)]
+     ▲                              │
+     │                  forward audio │ verify locally (JWKS)
+     │                              ▼
+     │               [Muaalem Engine (Modal GPU)]
+     │                              │
+     +────── JSON: errors ──────────+
+                                    │
+                    persist session + mistakes
+                                    ▼
+                        [Supabase Postgres]
 ```
-
-Full breakdown: [`docs/architecture.md`](docs/architecture.md).
 
 ## Documentation
 
 | Doc | What's in it |
 |---|---|
-| [Architecture](docs/architecture.md) | System design, data flow, what's deferred |
+| [Graduation Report](docs/GRADUATION_REPORT.md) | Full project report (abstract, architecture, implementation, testing) |
+| [Codebase Map](docs/CODEBASE_MAP.md) | System design, data flow, every moving part |
+| [Production Plan](docs/PRODUCTION_PLAN.md) | Milestone-by-milestone build spec (M0–M8) |
 | [API Spec](docs/api-spec.md) | Every endpoint, request/response shapes, error codes |
-| [Tajweed Rules](docs/tajweed-rules.md) | The rules covered in the demo, with examples |
-| [AGENTS.md](AGENTS.md) | Contributing rules, commit format (also read by AI coding agents) |
+| [Tajweed Rules](docs/tajweed-rules.md) | The rules the engine detects, with examples |
+| [Grading Tiers Decision](docs/decisions/grading-tiers.md) | Spike S1 results + Path A vs B decision |
+| [Team Plan](docs/TEAM_PLAN.md) | Team split (Abdalrahman + Ramzi + Gemini) |
+
+## Quick Start
+
+### Backend
+```bash
+cd backend
+./gradlew run   # needs SUPABASE_DB_URL and SUPABASE_PROJECT_REF env vars
+```
+
+### Android
+```bash
+cd android
+./gradlew assembleDebug
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+### ML Engine
+```bash
+cd ml
+modal deploy muaalem_modal.py
+```
+
+## Database Setup
+Apply the migration in Supabase SQL editor:
+```sql
+-- backend/sql/0001_mvp_learn_tables.sql
+```
 
 ## Roadmap
 
-The current build is deliberately a single, well-tested loop rather than a broad feature set. Next, in rough order:
+| Milestone | Status |
+|---|---|
+| M0 — App shell (4-tab nav, design system) | ✅ Done |
+| M1 — Content pipeline + curriculum v1 | ✅ Done (Units 1–3) |
+| M2 — Lesson player (recognition exercises) | ✅ Done |
+| M3 — Voice loop (echo grading) | ✅ Done |
+| M4 — Learn backend (progress, XP, SRS, placement) | ✅ Done |
+| M5 — LLM tutor integration | ⬜ Planned |
+| M6 — Content complete (Units 4–8) | ⬜ Planned |
+| M7 — Tajweed guided-lesson track | ⬜ Planned (backend ready) |
+| M8 — Production hardening & launch | ⬜ Planned |
 
-- Wider Quran coverage beyond the two demo surahs
-- An Arabic-proficiency placement step ahead of recitation practice
-- Spoken (TTS) feedback instead of text-only (later)
+## License
+Private — graduation project. QCF font license is showcase-only pending KFGQPC permission.

@@ -1,8 +1,8 @@
 # Bayaan — Roadmap
 
-> Last updated: 2026-07-05. Format: Now / Next / Later. Source docs: `README.md`,
+> Last updated: 2026-07-06. Format: Now / Next / Later. Source docs: `README.md`,
 > `docs/PRODUCT_VISION.md` (long-term encyclopedia), `docs/PRODUCTION_PLAN.md`
-> (current execution plan — wins on sequencing disputes), `docs/NEXT_STEPS.md`,
+> (current execution plan — wins on sequencing disputes),
 > `docs/CODEBASE_MAP.md` (matches the code as of today).
 >
 > This file is a communication tool, not a task tracker — it shows what's shipped,
@@ -16,7 +16,8 @@
 **Shipped:** a working prototype with one full loop end to end — sign in, pick an
 ayah, record it, get tajweed/pronunciation mistakes highlighted on the Arabic
 script, try again. Three services (Android/Kotlin, Ktor backend, Muaalem ML
-engine on Modal) plus a subset-bundled page-faithful mushaf renderer.
+engine on Modal) plus a fully-bundled page-faithful mushaf renderer (all 604
+pages, all 48 fonts).
 
 **In flight:** nothing yet — the product is at the pivot point between "single
 working loop" and the full AI-tutor product. `docs/PRODUCTION_PLAN.md` defines
@@ -33,7 +34,6 @@ Small, unblocking work — land this before picking up M0.
 | Item | What / why |
 |---|---|
 | Commit pending polish | Scrollable auth/home screens + friendly auth-error messages are done but uncommitted in the working tree. Land it so it isn't lost. |
-| Decide mushaf bundling strategy | Only a subset of the 604-page mushaf ships today (fonts are ~2MB each; all 47 ≈ 100MB). Three options on the table: bundle everything (simplest, fine for a sideloaded showcase), download-on-demand (real work, needed for Play Store), or bundle a curated subset permanently. Blocks "wider Quran coverage." |
 | Cold end-to-end device verification | Run the full signup → login → mushaf → record → highlight loop on a real device with both Render and Modal cold. Gate before calling the current build "done." |
 | **M0 — Foundations & shell** | 4-tab nav (Learn / Qur'an / Progress / Profile), `learn` + `progress` route stubs, design-system additions (motion, sound, haptics utilities; streak/XP header; score ring; confetti canvas), app icon + branded splash, `DEMO_MODE` build flag. |
 
@@ -87,10 +87,6 @@ phoneme-level grading or falls back to recognition-only + Whisper hinges entirel
 on this spike. It should run before M1's content design is locked in, not
 discovered partway through.
 
-**Mushaf bundling decision is open and blocking.** "Wider Quran coverage" (listed
-in the README's own roadmap) can't proceed until bundle-vs-download is decided —
-this has been open since before this roadmap was written.
-
 **Solo developer, fully sequential.** No parallel tracks are possible; each
 milestone's timeline is a soft estimate, not a commitment. Milestones are ordered
 so each one is independently shippable (M2 + M3 alone already demo the product
@@ -105,10 +101,6 @@ public launch until permission is secured. Don't remove `assets/qcf4/ATTRIBUTION
 
 **LLM cost exposure (M5).** Needs per-user daily caps and a kill-switch designed
 in before dynamic tutor calls ship, not retrofitted after a cost surprise.
-
-**Stale docs.** `backend/AGENTS.md` still describes the old HS256 JWT verification;
-the code moved to JWKS/ES256 several commits ago. Low-risk but worth fixing next
-time that file is touched, so an AI agent working from it isn't misled.
 
 ---
 

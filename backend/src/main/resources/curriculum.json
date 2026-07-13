@@ -1,0 +1,116 @@
+{
+  "_note": "Roadmap slice — SAMPLE for backend /learn/path to build against. Owner (M1) extends this same file with per-lesson exercise/item manifests + later units 4-8. Backend reads ONLY: version, units[].{unit_id,track,title_en,title_ar}, lessons[].{lesson_id,title_en,title_ar,is_checkpoint}. Order = array order.",
+  "version": 1,
+  "units": [
+    {
+      "unit_id": "ar.1", "track": "arabic",
+      "title_en": "The Letters", "title_ar": "الحروف",
+      "lessons": [
+        { "lesson_id": "ar.1.1", "title_en": "Dotted family", "title_ar": "ب ت ث ن ي", "is_checkpoint": false },
+        { "lesson_id": "ar.1.2", "title_en": "Throat letters", "title_ar": "ج ح خ", "is_checkpoint": false },
+        { "lesson_id": "ar.1.3", "title_en": "Non-connectors", "title_ar": "د ذ ر ز و", "is_checkpoint": false },
+        { "lesson_id": "ar.1.4", "title_en": "Whistling & heavy", "title_ar": "س ش ص ض", "is_checkpoint": false },
+        { "lesson_id": "ar.1.5", "title_en": "Deep-throat & heavy", "title_ar": "ط ظ ع غ ف ق", "is_checkpoint": false },
+        { "lesson_id": "ar.1.6", "title_en": "Hamza & checkpoint", "title_ar": "ك ل م هـ ء أ", "is_checkpoint": true }
+      ]
+    },
+    {
+      "unit_id": "ar.2", "track": "arabic",
+      "title_en": "Hearing the difference", "title_ar": "تمييز الأصوات",
+      "lessons": [
+        { "lesson_id": "ar.2.1", "title_en": "ه / ح / خ", "title_ar": "ه ح خ", "is_checkpoint": false },
+        { "lesson_id": "ar.2.2", "title_en": "س/ص، ت/ط، د/ض", "title_ar": "س ص ت ط د ض", "is_checkpoint": false },
+        { "lesson_id": "ar.2.3", "title_en": "ذ/ظ/ز، ث/س", "title_ar": "ذ ظ ز ث س", "is_checkpoint": false },
+        { "lesson_id": "ar.2.4", "title_en": "ك/ق، أ/ع", "title_ar": "ك q أ ع", "is_checkpoint": false },
+        { "lesson_id": "ar.2.5", "title_en": "Mixed gauntlet & checkpoint", "title_ar": "مراجعة", "is_checkpoint": true }
+      ]
+    },
+    {
+      "unit_id": "ar.3", "track": "arabic",
+      "title_en": "Short vowels", "title_ar": "الحركات",
+      "lessons": [
+        { "lesson_id": "ar.3.1", "title_en": "Fatha", "title_ar": "الفتحة", "is_checkpoint": false },
+        { "lesson_id": "ar.3.2", "title_en": "Kasra", "title_ar": "الكسرة", "is_checkpoint": false },
+        { "lesson_id": "ar.3.3", "title_en": "Damma", "title_ar": "الضمة", "is_checkpoint": false },
+        { "lesson_id": "ar.3.4", "title_en": "Mixed CV drills", "title_ar": "تدريبات مختلطة", "is_checkpoint": false },
+        { "lesson_id": "ar.3.5", "title_en": "Two-syllable chains", "title_ar": "مقاطع مزدوجة", "is_checkpoint": false },
+        { "lesson_id": "ar.3.6", "title_en": "Checkpoint: read aloud", "title_ar": "اختبار القراءة", "is_checkpoint": true }
+      ]
+    },
+    {
+      "unit_id": "ar.4", "track": "arabic",
+      "title_en": "Letters join up", "title_ar": "اتصال الحروف",
+      "lessons": [
+        { "lesson_id": "ar.4.1", "title_en": "Letter forms", "title_ar": "أشكال الحروف", "is_checkpoint": false },
+        { "lesson_id": "ar.4.2", "title_en": "Two-letter joins", "title_ar": "وصل حرفين", "is_checkpoint": false },
+        { "lesson_id": "ar.4.3", "title_en": "Three-letter words", "title_ar": "كلمات ثلاثية", "is_checkpoint": false },
+        { "lesson_id": "ar.4.4", "title_en": "Non-connectors in words", "title_ar": "الحروف المنفصلة", "is_checkpoint": false },
+        { "lesson_id": "ar.4.5", "title_en": "Checkpoint: joined reading", "title_ar": "اختبار الوصل", "is_checkpoint": true }
+      ]
+    },
+    {
+      "unit_id": "ar.5", "track": "arabic",
+      "title_en": "Sukoon, shadda, tanween", "title_ar": "السكون والشدة والتنوين",
+      "lessons": [
+        { "lesson_id": "ar.5.1", "title_en": "Sukoon", "title_ar": "السكون", "is_checkpoint": false },
+        { "lesson_id": "ar.5.2", "title_en": "Shadda", "title_ar": "الشدة", "is_checkpoint": false },
+        { "lesson_id": "ar.5.3", "title_en": "Tanween", "title_ar": "التنوين", "is_checkpoint": false },
+        { "lesson_id": "ar.5.4", "title_en": "Checkpoint: vowelled words", "title_ar": "اختبار الكلمات", "is_checkpoint": true }
+      ]
+    },
+    {
+      "unit_id": "ar.6", "track": "arabic",
+      "title_en": "Long vowels", "title_ar": "حروف المد",
+      "lessons": [
+        { "lesson_id": "ar.6.1", "title_en": "Alif madd", "title_ar": "مد الألف", "is_checkpoint": false },
+        { "lesson_id": "ar.6.2", "title_en": "Ya & Waw madd", "title_ar": "مد الياء والواو", "is_checkpoint": false },
+        { "lesson_id": "ar.6.3", "title_en": "Long vs short", "title_ar": "الطويل والقصير", "is_checkpoint": false },
+        { "lesson_id": "ar.6.4", "title_en": "Checkpoint: rhythm", "title_ar": "اختبار الإيقاع", "is_checkpoint": true }
+      ]
+    },
+    {
+      "unit_id": "ar.7", "track": "arabic",
+      "title_en": "Reading real words", "title_ar": "قراءة الكلمات",
+      "lessons": [
+        { "lesson_id": "ar.7.1", "title_en": "Sacred words", "title_ar": "كلمات مباركة", "is_checkpoint": false },
+        { "lesson_id": "ar.7.2", "title_en": "The article al-", "title_ar": "أل التعريف", "is_checkpoint": false },
+        { "lesson_id": "ar.7.3", "title_en": "Special endings", "title_ar": "نهايات خاصة", "is_checkpoint": false },
+        { "lesson_id": "ar.7.4", "title_en": "Hamzat al-wasl", "title_ar": "همزة الوصل", "is_checkpoint": false },
+        { "lesson_id": "ar.7.5", "title_en": "Uthmani script", "title_ar": "الرسم العثماني", "is_checkpoint": false },
+        { "lesson_id": "ar.7.6", "title_en": "Checkpoint: real words", "title_ar": "اختبار الكلمات", "is_checkpoint": true }
+      ]
+    },
+    {
+      "unit_id": "ar.8", "track": "arabic",
+      "title_en": "First ayat", "title_ar": "أول الآيات",
+      "lessons": [
+        { "lesson_id": "ar.8.1", "title_en": "Al-Ikhlas", "title_ar": "الإخلاص", "is_checkpoint": false },
+        { "lesson_id": "ar.8.2", "title_en": "Al-Kawthar", "title_ar": "الكوثر", "is_checkpoint": false },
+        { "lesson_id": "ar.8.3", "title_en": "An-Nas", "title_ar": "الناس", "is_checkpoint": false },
+        { "lesson_id": "ar.8.4", "title_en": "Al-Falaq", "title_ar": "الفلق", "is_checkpoint": false },
+        { "lesson_id": "ar.8.5", "title_en": "Al-Fatihah — graduation", "title_ar": "الفاتحة", "is_checkpoint": true }
+      ]
+    },
+    {
+      "unit_id": "tj.ghunnah", "track": "tajweed",
+      "title_en": "Ghunnah", "title_ar": "الغُنّة",
+      "lessons": [
+        { "lesson_id": "tj.ghunnah.1", "title_en": "The nasal sound", "title_ar": "الغُنّة", "is_checkpoint": false }
+      ]
+    },
+    {
+      "unit_id": "tj.qalqalah", "track": "tajweed",
+      "title_en": "Qalqalah", "title_ar": "القَلقَلة",
+      "lessons": [
+        { "lesson_id": "tj.qalqalah.1", "title_en": "The bounce", "title_ar": "القَلقَلة", "is_checkpoint": false }
+      ]
+    },
+    {
+      "unit_id": "tj.madd", "track": "tajweed",
+      "title_en": "Madd", "title_ar": "المَدّ",
+      "lessons": [
+        { "lesson_id": "tj.madd.1", "title_en": "Lengthening", "title_ar": "المَدّ", "is_checkpoint": false }
+      ]
+    }
+  ]
+}

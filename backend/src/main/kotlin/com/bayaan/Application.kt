@@ -3,7 +3,9 @@ package com.bayaan
 import com.bayaan.plugins.configureJwt
 import com.bayaan.routes.analyzeRoute
 import com.bayaan.routes.authRoutes
+import com.bayaan.routes.learnRoutes
 import com.bayaan.routes.progressRoutes
+import com.bayaan.routes.speechGradeRoute
 import com.bayaan.routes.surahRoutes
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -24,7 +26,9 @@ fun Application.module() {
         authenticate("auth-jwt") {
             authRoutes()
             analyzeRoute()
+            speechGradeRoute()
             progressRoutes()
+            learnRoutes()
         }
     }
 }

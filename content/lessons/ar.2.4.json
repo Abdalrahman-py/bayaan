@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.2.4",
+  "unit_id": "ar.2",
+  "title_en": "ك/ق، أ/ع",
+  "title_ar": "ك ق أ ع",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Kaf is a K at the roof of the mouth; qaf is a K made far back near the throat. Hamza is a clean stop; ayn is a deep squeeze from the throat. Two pairs English speakers merge — keep them apart.",
+    "glyphs": ["ك", "ق", "أ", "ع"],
+    "focus_en": "Front vs deep stops."
+  },
+  "items": [
+    { "item_ref": "ar.2.4.disc.kaf_qaf", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/qaf_fatha.ogg", "answer": "ق", "options": ["ك", "ق"] },
+    { "item_ref": "ar.2.4.disc.hamza_ayn", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/ayn_fatha.ogg", "answer": "ع", "options": ["أ", "ع"] },
+    { "item_ref": "ar.2.4.listen.qaf", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/qaf_fatha.ogg", "answer": "ق", "options": ["ق", "ك", "غ", "ء"] },
+    { "item_ref": "ar.2.4.listen.ayn", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ayn_fatha.ogg", "answer": "ع", "options": ["ع", "ء", "ح", "غ"] },
+    { "item_ref": "ar.2.4.odd.stops", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "س", "options": ["ك", "ق", "ع", "س"] },
+    { "item_ref": "ar.2.4.echo.qaf", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/qaf_madd.ogg", "reference_text": "قَا" },
+    { "item_ref": "ar.2.4.echo.ayn", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/ayn_madd.ogg", "reference_text": "عَا" }
+  ]
+}

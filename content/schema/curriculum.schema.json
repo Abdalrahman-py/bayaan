@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bayaan/content/curriculum.schema.json",
+  "title": "Bayaan curriculum roadmap",
+  "description": "Top-level unit/lesson roadmap. scripts/build_content.py is the enforcer; this schema documents the shape.",
+  "type": "object",
+  "required": ["version", "units"],
+  "additionalProperties": true,
+  "properties": {
+    "version": { "const": 1 },
+    "_note": { "type": "string" },
+    "units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["unit_id", "track", "title_en", "title_ar", "lessons"],
+        "additionalProperties": false,
+        "properties": {
+          "unit_id": { "type": "string", "pattern": "^[a-z0-9._]+$" },
+          "track": { "enum": ["arabic", "tajweed"] },
+          "title_en": { "type": "string", "minLength": 1 },
+          "title_ar": { "type": "string", "minLength": 1 },
+          "lessons": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["lesson_id", "title_en", "title_ar", "is_checkpoint"],
+              "additionalProperties": false,
+              "properties": {
+                "lesson_id": { "type": "string", "pattern": "^[a-z0-9._]+$" },
+                "title_en": { "type": "string", "minLength": 1 },
+                "title_ar": { "type": "string", "minLength": 1 },
+                "is_checkpoint": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
