@@ -1,0 +1,31 @@
+{
+  "lesson_id": "tj.madd.1",
+  "unit_id": "tj.madd",
+  "title_en": "Lengthening",
+  "title_ar": "المَدّ",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Madd means to stretch the sound of a vowel. When you see a Madd wave symbol (~), stretch the sound for 4 to 6 counts.",
+    "rule_name_en": "Madd",
+    "rule_name_ar": "المَدّ",
+    "audio_correct": "letters/madd_correct.ogg",
+    "audio_incorrect": "letters/madd_incorrect.ogg",
+    "glyphs": ["~"]
+  },
+  "items": [
+    {
+      "item_ref": "tj.madd.1.recite.kauthar",
+      "type": "ECHO",
+      "grading_tier": 1,
+      "prompt_asset": "quran/108_1.ogg",
+      "reference_text": "إِنَّآ أَعْطَيْنَاكَ ٱلْكَوْثَرْ"
+    },
+    {
+      "item_ref": "tj.madd.1.recite.dallin",
+      "type": "ECHO",
+      "grading_tier": 1,
+      "prompt_asset": "quran/1_7.ogg",
+      "reference_text": "وَلَا ٱلضَّالِّينْ"
+    }
+  ]
+}

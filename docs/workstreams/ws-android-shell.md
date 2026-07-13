@@ -1,7 +1,7 @@
 # Workstream: Android app shell (M0)
 
-**Owner:** Issa · **Depends on:** nothing — start immediately · **Unblocks:** lesson player (M2)
-**Spec:** `docs/PRODUCTION_PLAN.md` §6 (navigation), §7 (premium feel), §10 M0. Styling law: `android/UI_SPEC.md`.
+**Owner:** Gemini (builder) · **Reviewed & wired by:** Abdalrahman · **Depends on:** nothing — start immediately · **Unblocks:** lesson player (M2)
+**Spec:** `docs/PRODUCTION_PLAN.md` §6 (navigation), §7 (premium feel), §10 M0. Styling law: `android/UI_SPEC.md`. Agent scope: `android/GEMINI.md`.
 
 ## Goal
 

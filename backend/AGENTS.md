@@ -47,11 +47,18 @@ backend/
 ├── src/
 │   ├── main/kotlin/com/bayaan/
 │   │   ├── Application.kt          Entry point — wires JWT, DB, routes
-│   │   ├── Routing.kt              /health, /audio/analyze
+│   │   ├── Routing.kt              route registration + err() helper
+│   │   ├── RecitationAnalysis.kt   /audio/analyze state machine (Success/EngineError/EngineFailed/PersistenceFailed)
+│   │   ├── EngineResponseParser.kt parses Muaalem's response (note: drops sifat_errors, see CODEBASE_MAP.md §5)
+│   │   ├── ErrorResponse.kt, MistakeInput.kt
 │   │   ├── plugins/
-│   │   │   └── JwtPlugin.kt        Supabase JWT verification
+│   │   │   ├── JwtPlugin.kt        Supabase JWT verification (JWKS/ES256)
+│   │   │   └── AuthExtensions.kt   call.userId() — pulls UUID from verified token
 │   │   ├── routes/
-│   │   │   └── AuthRoutes.kt       POST /auth/sync
+│   │   │   ├── AuthRoutes.kt       POST /auth/sync
+│   │   │   ├── AnalyzeRoute.kt     POST /audio/analyze
+│   │   │   ├── ProgressRoutes.kt   GET /progress, /progress/sessions[*]
+│   │   │   └── SurahRoutes.kt      GET /surahs
 │   │   └── data/
 │   │       ├── DatabaseFactory.kt  HikariCP pool + dbQuery helper
 │   │       ├── tables/             Exposed table objects (Users, Sessions, Mistakes)
@@ -72,13 +79,14 @@ cd backend
 ./gradlew run
 ```
 
-Boots the server on `localhost:8080`. Requires three env vars — without them the server will not start:
+Boots the server on `localhost:8080`. Requires two env vars — without them the server will not start:
 
 ```
 SUPABASE_DB_URL=jdbc:postgresql://db.djcuxaziipgjlmdfkeqz.supabase.co:5432/postgres?user=postgres.djcuxaziipgjlmdfkeqz&password=...
-SUPABASE_JWT_SECRET=<from Supabase dashboard → Settings → API → JWT Secret>
 SUPABASE_PROJECT_REF=djcuxaziipgjlmdfkeqz
 ```
+
+`SUPABASE_JWT_SECRET` is not needed — JWT verification uses JWKS/ES256, not a shared secret.
 
 `MUAALEM_URL` is optional — the live Modal endpoint is the default.
 

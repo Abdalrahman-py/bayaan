@@ -1,0 +1,20 @@
+{
+  "lesson_id": "ar.3.1",
+  "unit_id": "ar.3",
+  "title_en": "Fatha",
+  "title_ar": "الفتحة",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "The fatha is a small line above a letter. It gives a short 'a' sound: ba, ta, sa. It is the lightest, most open of the three short vowels.",
+    "glyphs": ["بَ", "تَ", "سَ"],
+    "focus_en": "Fatha = short 'a', written above."
+  },
+  "items": [
+    { "item_ref": "ar.3.1.listen.ba", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_fatha.ogg", "answer": "بَ", "options": ["بَ", "بِ", "بُ"] },
+    { "item_ref": "ar.3.1.listen.ta", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ta_fatha.ogg", "answer": "تَ", "options": ["تَ", "تِ", "تُ"] },
+    { "item_ref": "ar.3.1.read.ba", "type": "READ_PICK", "grading_tier": 0, "prompt_text_ar": "بَ", "answer": "letters/ba_fatha.ogg", "options": ["letters/ba_fatha.ogg", "letters/ba_kasra.ogg", "letters/ba_damma.ogg"] },
+    { "item_ref": "ar.3.1.odd.vowel", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "بِ", "options": ["بَ", "تَ", "سَ", "بِ"] },
+    { "item_ref": "ar.3.1.read_aloud.kam", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَمْ" },
+    { "item_ref": "ar.3.1.read_aloud.nam", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "نَمْ" }
+  ]
+}

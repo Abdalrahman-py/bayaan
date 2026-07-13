@@ -79,3 +79,9 @@ android/app/src/main/assets/qcf4/index.json
 
 # Large local spike test audio (not for the repo)
 spike/audio/
+
+# Generated content pack — derived from content/ by scripts/build_content.py.
+# Bundle it before an Android build: build_content.py --out android/app/src/main/assets/content
+# (source of truth is content/; this is the packed copy, like the mushaf pages above).
+android/app/src/main/assets/content/
+

@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.2.1",
+  "unit_id": "ar.2",
+  "title_en": "ه / ح / خ",
+  "title_ar": "ه ح خ",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Three sounds from the throat, softest to hardest. Ha is a gentle breath. Hha is deeper, from the middle of the throat. Kha is raspy, from the top. Listen for where the sound sits.",
+    "glyphs": ["ه", "ح", "خ"],
+    "focus_en": "Minimal-pair discrimination across the H family."
+  },
+  "items": [
+    { "item_ref": "ar.2.1.disc.ha_hha", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/ha_fatha.ogg", "answer": "ه", "options": ["ه", "ح"] },
+    { "item_ref": "ar.2.1.disc.hha_kha", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/hha_fatha.ogg", "answer": "ح", "options": ["ح", "خ"] },
+    { "item_ref": "ar.2.1.listen.kha", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/kha_fatha.ogg", "answer": "خ", "options": ["خ", "ح", "ه", "غ"] },
+    { "item_ref": "ar.2.1.listen.ha", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ha_fatha.ogg", "answer": "ه", "options": ["ه", "ح", "خ", "ء"] },
+    { "item_ref": "ar.2.1.odd.hfamily", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ب", "options": ["ه", "ح", "خ", "ب"] },
+    { "item_ref": "ar.2.1.echo.ha", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/ha_madd.ogg", "reference_text": "هَا" },
+    { "item_ref": "ar.2.1.echo.hha", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/hha_madd.ogg", "reference_text": "حَا" }
+  ]
+}

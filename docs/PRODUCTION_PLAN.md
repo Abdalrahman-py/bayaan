@@ -46,7 +46,7 @@
 | Android | Splash → Onboarding → Login/Signup (Supabase auth, session persistence) → Home → Surah index → **QCF-glyph mushaf pager** with word-level ayah selection → RecitationScreen with letter-level mistake highlights (`VerseText`) + sifat cards → Profile/Settings. 3-tab bottom nav. | Material 3, green/sand `BayaanTheme`, Amiri font. `RecitationViewModel` records M4A/AAC, uploads, parses errors. |
 | Backend (Ktor on Render) | `/health`, `/surahs`, `/auth/sync`, `/audio/analyze` (proxy → Muaalem + persist), `/progress`, `/progress/sessions[*]`. JWT verified via Supabase JWKS (ES256). Exposed ORM → Supabase Postgres (`users`, `sessions`, `mistakes`). | `EngineResponseParser` currently **drops `sifat_errors`** (known gap, fix in M6). |
 | ML (Modal, L4 GPU) | `ml/muaalem_modal.py` — `POST /correct`: WAV + sura/aya → phoneme diff vs `quran_phonetizer` reference → structured `errors` (with `ref_tajweed_rules`, expected/predicted madd lengths) + `sifat_errors` (10 attribute heads with confidence). Scale-to-zero, ~24s cold / ~1.7s warm. | This **is** the tajweed track's grading engine. |
-| Docs | `PRODUCT_VISION.md`, `PROTOTYPE_BUILD_GUIDE.md`, `UI_SPEC.md`, `tajweed-rules.md`, `api-spec.md`, `architecture.md`. | `UI_SPEC.md` stays the styling law; this plan extends it (§7). |
+| Docs | `PRODUCT_VISION.md`, `CODEBASE_MAP.md`, `UI_SPEC.md`, `tajweed-rules.md`, `api-spec.md`. | `UI_SPEC.md` stays the styling law; this plan extends it (§7). |
 
 **Reuse contract:** `RecitationScreen`/`VerseText`/`RecitationViewModel`, the mushaf,
 auth, and the Muaalem deployment are load-bearing. New work wraps them; it does not fork
@@ -308,8 +308,11 @@ rule → back to roadmap.
 tag-overlap with the user's weak rules (`mistake_breakdown` + `sifat_breakdown`),
 tie-broken by least-recently-practiced (vision doc Workstream B, unchanged). Ayah→rule
 tags produced deterministically at build time by a script calling
-`quran_phonetizer(...).tajweed_mappings()` (vision doc Workstream C, unchanged) into
-`content/ayah_rule_tags.json`.
+`Phonemizer().phonemize(ref).tajweed_mappings()` from `quranic_phonemizer` (vision doc
+Workstream C, unchanged) into `content/ayah_rule_tags.json`. Note: this is a separate
+package from `quran_transcript.quran_phonetizer`, the function used for grading
+elsewhere in this doc (§3.3) and in `ml/muaalem_modal.py` — same-sounding names,
+different libraries, don't conflate them.
 
 **Explore stays open:** the mushaf tab lets anyone analyze any ayah anytime — that's the
 sandbox; the track is the curriculum. Memorization mode remains deferred (§13).
@@ -412,7 +415,7 @@ All auth-required unless noted; same error envelope as `docs/api-spec.md`.
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /speech/grade` | multipart audio + `{tier, reference_text, item_ref}` → routes to Muaalem (Tier 1/2) or Whisper (Path B) → normalized `{verdict, score, phoneme_issues[], feedback_key}` |
+| `POST /speech/grade` | multipart audio + `{tier, reference_text, item_ref}` → routes to Muaalem (Tier 1/2) or Whisper (Path B) → normalized verdict. Full contract (request/response JSON, `phoneme_issues[]` shape, `feedback_key` enum, grading policy): `docs/api-spec.md` §POST /speech/grade. |
 | `POST /tutor/turn` | `{kind: "stuck_help"\|"explain", item_context, grading_result}` → Haiku → `{text, tts_url?}` (structured output) |
 | `POST /tutor/lesson-summary` | `{lesson_id, item_results[]}` → Opus 4.8 → `{summary_text, focus_points[], encouragement}`; persisted onto `lesson_attempts` |
 | `GET /learn/path` | roadmap state: units/lessons + per-user status + streak/xp header data |

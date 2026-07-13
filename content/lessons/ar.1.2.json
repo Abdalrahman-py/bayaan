@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.1.2",
+  "unit_id": "ar.1",
+  "title_en": "Throat letters",
+  "title_ar": "ج ح خ",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Three letters made deeper in the throat. Jim is a firm J, ha is a breathy H from the middle of the throat, kha is a raspy sound like clearing it.",
+    "glyphs": ["ج", "ح", "خ"],
+    "focus_en": "Throat letters — new articulation point."
+  },
+  "items": [
+    { "item_ref": "ar.1.2.listen.jim", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/jim_fatha.ogg", "answer": "ج", "options": ["ج", "ح", "خ", "ه"] },
+    { "item_ref": "ar.1.2.listen.hha", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/hha_fatha.ogg", "answer": "ح", "options": ["ح", "خ", "ج", "ه"] },
+    { "item_ref": "ar.1.2.listen.kha", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/kha_fatha.ogg", "answer": "خ", "options": ["خ", "ح", "ج", "غ"] },
+    { "item_ref": "ar.1.2.disc.hha_kha", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/hha_fatha.ogg", "answer": "ح", "options": ["ح", "خ"] },
+    { "item_ref": "ar.1.2.odd.throat", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "س", "options": ["ج", "ح", "خ", "س"] },
+    { "item_ref": "ar.1.2.echo.hha", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/hha_madd.ogg", "reference_text": "حَا" },
+    { "item_ref": "ar.1.2.echo.kha", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/kha_madd.ogg", "reference_text": "خَا" }
+  ]
+}

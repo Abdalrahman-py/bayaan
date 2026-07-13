@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.3.4",
+  "unit_id": "ar.3",
+  "title_en": "Mixed CV drills",
+  "title_ar": "تدريبات مختلطة",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Now all three short vowels together, on many different letters. Listen for the vowel, not just the consonant. Above is 'a', below is 'i', a loop above is 'u'.",
+    "glyphs": ["مُ", "قِ", "لَ"],
+    "focus_en": "Mixed short-vowel recognition across letters."
+  },
+  "items": [
+    { "item_ref": "ar.3.4.listen.mu", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/mim_damma.ogg", "answer": "مُ", "options": ["مُ", "مَ", "مِ"] },
+    { "item_ref": "ar.3.4.listen.qi", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/qaf_kasra.ogg", "answer": "قِ", "options": ["قِ", "قَ", "قُ"] },
+    { "item_ref": "ar.3.4.listen.la", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/lam_fatha.ogg", "answer": "لَ", "options": ["لَ", "لُ", "لِ"] },
+    { "item_ref": "ar.3.4.odd.letter", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "زَ", "options": ["رَ", "رُ", "رِ", "زَ"] },
+    { "item_ref": "ar.3.4.read_aloud.lan", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "لَنْ" },
+    { "item_ref": "ar.3.4.read_aloud.qif", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قِفْ" },
+    { "item_ref": "ar.3.4.read_aloud.rud", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "رُدْ" }
+  ]
+}

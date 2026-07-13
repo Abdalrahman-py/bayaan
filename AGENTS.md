@@ -17,7 +17,7 @@ If you cannot determine which module you are in, stop and ask the user.
 
 ## What Bayaan is
 
-Bayaan is an AI-powered Quran recitation coach for Android. The user picks an ayah, records their recitation, and the app flags Tajweed and recitation mistakes on the script so they can try again. Recitation checking is done by an off-the-shelf, MIT-licensed third-party recitation-analysis engine — we build the app and the thin backend around it, not the model itself. See [`docs/architecture.md`](./docs/architecture.md).
+Bayaan is an AI-powered Quran recitation coach for Android. The user picks an ayah, records their recitation, and the app flags Tajweed and recitation mistakes on the script so they can try again. Recitation checking is done by an off-the-shelf, MIT-licensed third-party recitation-analysis engine — we build the app and the thin backend around it, not the model itself. See [`docs/CODEBASE_MAP.md`](./docs/CODEBASE_MAP.md).
 
 **Stack at a glance:** Kotlin/Jetpack Compose (Android) · Ktor (Backend, thin proxy) · a third-party recitation engine on a serverless GPU (Modal) · Render hosting.
 
@@ -25,7 +25,11 @@ Bayaan is an AI-powered Quran recitation coach for Android. The user picks an ay
 
 ## Team
 
-Solo project — Abdalrahman (@Abdalrahman-py) is the sole developer and reviewer. No module split, no other reviewers to assign.
+Team of two plus an AI builder — see [`docs/TEAM_PLAN.md`](./docs/TEAM_PLAN.md) for
+the full split. Gemini builds Android screens/Compose/wiring
+([`android/GEMINI.md`](./android/GEMINI.md)); Ramzi builds backend/Supabase/content
+pipeline; Abdalrahman (@Abdalrahman-py) reviews every PR, does final integration
+wiring on both sides, and owns curriculum correctness.
 
 ---
 
@@ -47,9 +51,14 @@ bayaan/
 
 ## Branch model
 
-**One branch: `main`.** No `dev`, no per-module branches, no branch protection, no PR requirement. Commit and push directly to `main`.
+**Branch per workstream chunk, PR to `main`, Abdalrahman reviews every PR.** See
+[`docs/TEAM_PLAN.md`](./docs/TEAM_PLAN.md) §Working model for the exact flow.
 
-This repo started with a multi-branch / PR-per-module model for a multi-person team. As of 2026-06-24, Abdalrahman is working solo, so that ceremony was pure overhead — it's gone. If the team grows back out, re-introduce structure then, not preemptively.
+This repo ran solo (2026-06-24 to 2026-07-05) with a single-branch, no-PR model —
+that ceremony was overhead for one person. The team grew back out to three
+(Gemini + Ramzi + Abdalrahman) on 2026-07-06, so branch-per-chunk + PR review is
+back, per this file's own rule: re-introduce structure once the team grows, not
+preemptively.
 
 ---
 
@@ -96,7 +105,7 @@ Keep the description in the imperative mood ("add", not "added"), under 72 chara
 - `.env.example` is the canonical template. Add every required key there with an empty value.
 - If a secret is ever committed by accident: rotate the key immediately, then scrub git history.
 
-**Current secrets used:** `SUPABASE_DB_URL`, `SUPABASE_JWT_SECRET`, `SUPABASE_PROJECT_REF` — required for the backend to serve any DB-touching route (see [`backend/AGENTS.md`](./backend/AGENTS.md)). `MUAALEM_URL` is optional; the recitation engine's URL has a working default baked into the backend. If you add a service that needs a key, add it to `.env.example` with an empty value in the same commit.
+**Current secrets used:** `SUPABASE_DB_URL`, `SUPABASE_PROJECT_REF` — required for the backend to serve any DB-touching route (see [`backend/AGENTS.md`](./backend/AGENTS.md)). `SUPABASE_JWT_SECRET` is **not** needed — auth verification uses JWKS/ES256, not a shared secret. `MUAALEM_URL` is optional; the recitation engine's URL has a working default baked into the backend. If you add a service that needs a key, add it to `.env.example` with an empty value in the same commit.
 
 ---
 

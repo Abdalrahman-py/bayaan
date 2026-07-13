@@ -1,0 +1,20 @@
+{
+  "lesson_id": "ar.1.4",
+  "unit_id": "ar.1",
+  "title_en": "Whistling & heavy sounds",
+  "title_ar": "س ش ص ض",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Seen is a light whistle. Sheen is a soft hush. Saad is a heavy, full-mouth version of seen. Daad is a heavy D — the whole tongue presses up.",
+    "glyphs": ["س", "ش", "ص", "ض"],
+    "focus_en": "Light vs heavy (emphatic) pairs begin here."
+  },
+  "items": [
+    { "item_ref": "ar.1.4.listen.sin", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/sin_fatha.ogg", "answer": "س", "options": ["س", "ش", "ص", "ز"] },
+    { "item_ref": "ar.1.4.listen.shin", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/shin_fatha.ogg", "answer": "ش", "options": ["ش", "س", "ث", "ص"] },
+    { "item_ref": "ar.1.4.disc.sin_sad", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/sad_fatha.ogg", "answer": "ص", "options": ["س", "ص"] },
+    { "item_ref": "ar.1.4.odd.heavy", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "د", "options": ["س", "ش", "ص", "د"] },
+    { "item_ref": "ar.1.4.echo.sin", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/sin_madd.ogg", "reference_text": "سَا" },
+    { "item_ref": "ar.1.4.echo.sad", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/sad_madd.ogg", "reference_text": "صَا" }
+  ]
+}

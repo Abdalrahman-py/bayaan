@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.2.2",
+  "unit_id": "ar.2",
+  "title_en": "س/ص، ت/ط، د/ض",
+  "title_ar": "س ص ت ط د ض",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Three light-versus-heavy pairs. Seen and saad, ta and taa, dal and daad. The heavy letter fills the mouth and darkens the vowel after it. Feel the difference in your tongue.",
+    "glyphs": ["س", "ص", "ت", "ط", "د", "ض"],
+    "focus_en": "Emphatic (heavy) vs light minimal pairs."
+  },
+  "items": [
+    { "item_ref": "ar.2.2.disc.sin_sad", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/sad_fatha.ogg", "answer": "ص", "options": ["س", "ص"] },
+    { "item_ref": "ar.2.2.disc.ta_taa", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/taa_fatha.ogg", "answer": "ط", "options": ["ت", "ط"] },
+    { "item_ref": "ar.2.2.disc.dal_dad", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/dad_fatha.ogg", "answer": "ض", "options": ["د", "ض"] },
+    { "item_ref": "ar.2.2.listen.sad", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/sad_fatha.ogg", "answer": "ص", "options": ["ص", "س", "ز", "ث"] },
+    { "item_ref": "ar.2.2.echo.sin", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/sin_madd.ogg", "reference_text": "سَا" },
+    { "item_ref": "ar.2.2.echo.sad", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/sad_madd.ogg", "reference_text": "صَا" },
+    { "item_ref": "ar.2.2.echo.taa", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/taa_madd.ogg", "reference_text": "طَا" }
+  ]
+}

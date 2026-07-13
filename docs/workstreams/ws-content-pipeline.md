@@ -1,6 +1,6 @@
 # Workstream: Content pipeline engineering (M1)
 
-**Owner:** Ramzi · **Depends on:** nothing — start immediately (spikes already done) · **Unblocks:** lesson player (M2), voice loop (M3), content authoring
+**Owner:** Ramzi · **Reviewed & wired by:** Abdalrahman (curriculum correctness sign-off, per unit) · **Depends on:** nothing — start immediately (spikes already done) · **Unblocks:** lesson player (M2), voice loop (M3), content authoring
 **Spec:** the full PRD at `docs/specs/m1-content-pipeline.md` — read it end to end. Curriculum being encoded: `docs/PRODUCTION_PLAN.md` §4.
 
 ## Goal

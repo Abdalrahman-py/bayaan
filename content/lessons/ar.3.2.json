@@ -1,0 +1,20 @@
+{
+  "lesson_id": "ar.3.2",
+  "unit_id": "ar.3",
+  "title_en": "Kasra",
+  "title_ar": "الكسرة",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "The kasra is a small line below a letter. It gives a short 'i' sound: bi, ti, si. Notice it is the only short vowel written underneath.",
+    "glyphs": ["بِ", "تِ", "سِ"],
+    "focus_en": "Kasra = short 'i', written below."
+  },
+  "items": [
+    { "item_ref": "ar.3.2.listen.bi", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_kasra.ogg", "answer": "بِ", "options": ["بِ", "بَ", "بُ"] },
+    { "item_ref": "ar.3.2.listen.si", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/sin_kasra.ogg", "answer": "سِ", "options": ["سِ", "سَ", "سُ"] },
+    { "item_ref": "ar.3.2.read.ti", "type": "READ_PICK", "grading_tier": 0, "prompt_text_ar": "تِ", "answer": "letters/ta_kasra.ogg", "options": ["letters/ta_kasra.ogg", "letters/ta_fatha.ogg", "letters/ta_damma.ogg"] },
+    { "item_ref": "ar.3.2.odd.vowel", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "تَ", "options": ["بِ", "سِ", "تِ", "تَ"] },
+    { "item_ref": "ar.3.2.read_aloud.min", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "مِنْ" },
+    { "item_ref": "ar.3.2.read_aloud.bint", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بِنْتْ" }
+  ]
+}

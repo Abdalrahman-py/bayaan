@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.1.3",
+  "unit_id": "ar.1",
+  "title_en": "Non-connectors",
+  "title_ar": "د ذ ر ز و",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Some letters never join to the letter after them — they leave a small gap. Dal, dhal, ra, zay and waw are five of these six non-connectors.",
+    "glyphs": ["د", "ذ", "ر", "ز", "و"],
+    "focus_en": "Non-connecting letters leave a gap."
+  },
+  "items": [
+    { "item_ref": "ar.1.3.listen.dal", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/dal_fatha.ogg", "answer": "د", "options": ["د", "ذ", "ر", "ز"] },
+    { "item_ref": "ar.1.3.listen.ra", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ra_fatha.ogg", "answer": "ر", "options": ["ر", "ز", "د", "و"] },
+    { "item_ref": "ar.1.3.read.waw", "type": "READ_PICK", "grading_tier": 0, "prompt_text_ar": "و", "answer": "letters/waw_fatha.ogg", "options": ["letters/waw_fatha.ogg", "letters/ra_fatha.ogg", "letters/dal_fatha.ogg"] },
+    { "item_ref": "ar.1.3.disc.dal_dhal", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/dhal_fatha.ogg", "answer": "ذ", "options": ["د", "ذ"] },
+    { "item_ref": "ar.1.3.odd.connector", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ب", "options": ["د", "ر", "و", "ب"] },
+    { "item_ref": "ar.1.3.echo.dal", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/dal_madd.ogg", "reference_text": "دَا" },
+    { "item_ref": "ar.1.3.echo.ra", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/ra_madd.ogg", "reference_text": "رَا" }
+  ]
+}
