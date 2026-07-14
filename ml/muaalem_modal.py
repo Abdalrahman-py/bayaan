@@ -33,6 +33,8 @@ import time
 
 import modal
 
+from fastapi import UploadFile
+
 # Mirrors the spike image (that build already succeeded). fastapi[standard] is
 # needed for @modal.fastapi_endpoint to accept multipart uploads.
 image = (
@@ -213,7 +215,7 @@ class Muaalem:
     @modal.fastapi_endpoint(method="POST", docs=True)
     async def correct(
         self,
-        audio,
+        audio: UploadFile,
         sura: int = 1,
         aya: int = 1,
         madd_monfasel_len: int = 2,
@@ -222,7 +224,6 @@ class Muaalem:
         madd_aared_len: int = 4,
     ):
         """POST multipart: `audio` file + sura/aya (+ optional madd lengths)."""
-        from fastapi import UploadFile
         from fastapi.responses import JSONResponse
 
         def fail(status, code, msg):
@@ -252,7 +253,7 @@ class Muaalem:
     @modal.fastapi_endpoint(method="POST", docs=True)
     async def grade_text(
         self,
-        audio,
+        audio: UploadFile,
         reference_text: str = "",
         madd_monfasel_len: int = 2,
         madd_mottasel_len: int = 4,
@@ -269,7 +270,6 @@ class Muaalem:
         return a structured body so the backend can map them to verdict=retry,
         never a 500.
         """
-        from fastapi import UploadFile
         from fastapi.responses import JSONResponse
 
         def fail(status, code, msg):
