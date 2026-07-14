@@ -85,3 +85,9 @@ spike/audio/
 # (source of truth is content/; this is the packed copy, like the mushaf pages above).
 android/app/src/main/assets/content/
 
+# Local scratch / throwaway artifacts — never commit (kept only on this machine).
+# (docs.zip and .scratch/ are local-only; the full-Quran text uthmani.json stays
+# tracked — it's public-domain Quran text and is needed to build a fresh clone.)
+.scratch/
+docs.zip
+
