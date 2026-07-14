@@ -1,6 +1,6 @@
 # Bayaan — Full Product Vision (Arabic + Tajweed tutoring platform)
 
-> **Framing:** This is the *complete product spec* — the long-term vision, not a build task. The near-term buildable slice for the supervisor showcase lives in [`PROTOTYPE_BUILD_GUIDE.md`](./PROTOTYPE_BUILD_GUIDE.md). Frontend is a **team** (Abdalrahman, Ramzi, Osama, Issa); the backend is functionally built. This doc is organized into **parallelizable feature workstreams** so the team can pick and sequence from it.
+> **Framing:** This is the *complete product spec* — the long-term vision, not a build task. The near-term execution plan lives in [`PRODUCTION_PLAN.md`](./PRODUCTION_PLAN.md); the team split is in [`TEAM_PLAN.md`](./TEAM_PLAN.md) (Abdalrahman + Ramzi, with Gemini building Android screens/wiring). This doc is organized into **parallelizable feature workstreams** so the team can pick and sequence from it.
 
 ---
 
@@ -11,7 +11,7 @@ Bayaan is an AI Quran-recitation **tutoring/mentor** product with two tracks tha
 - **Arabic track (front of funnel):** a recognition-based Arabic **placement test** assigns a proficiency level; graded Arabic lessons (letters → harakat → reading) build that level up.
 - **Tajweed/Quran track (gated behind Arabic):** guided daily lessons that **teach one tajweed rule then test it** on a real ayah, with adaptive ayah selection driven by the learner's tracked weak rules; plus a free **Explore** sandbox (browse the whole Quran like quran.com, self-test on tajweed or memorization).
 
-Built state today: a 2-screen recitation demo (`VersePickerScreen`, `RecitationScreen`) on a polished Material3 theme (green/sand palette, Amiri font); a Ktor backend that verifies Supabase JWTs and proxies the Muaalem recitation engine (Modal GPU) + persists sessions/mistakes to Supabase Postgres; and `/progress*` endpoints. No auth UI exists yet — every protected call currently 401s (fixed by the prototype slice).
+Built state today: the prototype slice is done — auth (login/signup/session), a 3-tab shell (Home/Qur'an/Profile), a full page-faithful QCF mushaf browser (all 114 surahs, 604 pages), and the record→analyze→highlight recitation loop, all wired to the Ktor backend (Supabase JWT verification, Muaalem engine proxy, Postgres persistence) and `/progress*` endpoints. See `docs/CODEBASE_MAP.md` for the as-built detail. Nothing below this (Arabic track, tajweed lessons, gating, roadmap UI) is built yet.
 
 ---
 
@@ -44,7 +44,7 @@ Built state today: a 2-screen recitation demo (`VersePickerScreen`, `RecitationS
 - **Email confirmation ON** (realistic): signup shows a "check your inbox" pending state; login errors clearly if unconfirmed. Keep a pre-confirmed demo account for live login.
 - **Session holder:** single `AuthViewModel` (`AndroidViewModel`, manual `ViewModelProvider`, no Hilt) owns the `SupabaseClient`, exposes `AuthUiState` as plain Compose state. `RecitationViewModel` (and other authed callers) get a `tokenProvider: () -> String?` constructor param, factory-injected in `MainActivity`. Never log the token.
 - **`/auth/sync`** called after successful `signInWith(Email)`, before flipping to `LoggedIn`.
-- *(Built in detail in the prototype slice — see [`PROTOTYPE_BUILD_GUIDE.md`](./PROTOTYPE_BUILD_GUIDE.md).)*
+- *(Built in detail in the prototype slice — see [`CODEBASE_MAP.md`](./CODEBASE_MAP.md).)*
 
 ---
 

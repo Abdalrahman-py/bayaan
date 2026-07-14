@@ -15,7 +15,9 @@ between them). We run the model in-process, so we only need the diff functions.
 
 Deploy:   modal deploy ml/muaalem_modal.py
 Local:    modal serve  ml/muaalem_modal.py     (hot-reloads, gives a temp URL)
-Endpoint: POST {url}/correct   (multipart: audio file + sura + aya + error params)
+Endpoints:
+  POST {url}/correct     (multipart: audio + sura + aya + optional madd lengths)
+  POST {url}/grade-text  (multipart: audio + reference_text + optional madd lengths)
 
 Cold vs warm (see docs/quran-muaalem-decision.md):
   - Default = scale to zero: $0 idle, but ~24s cold start on the first call.
@@ -30,6 +32,7 @@ import io
 import time
 
 import modal
+
 from fastapi import UploadFile
 
 # Mirrors the spike image (that build already succeeded). fastapi[standard] is

@@ -1,0 +1,15 @@
+audio,text,expect,note
+s1_recordings/baa_correct_b.wav,بَا,correct,honest long baa attempt (accent OK)
+s1_recordings/bii_correct_b.wav,بِي,correct,honest bii attempt
+s1_recordings/buu_correct_b.wav,بُو,correct,honest buu attempt
+s1_recordings/saad_correct_b.wav,صَا,correct,honest heavy Saa attempt
+s1_recordings/taa_correct_b.wav,طَا,correct,honest heavy Taa attempt
+s1_recordings/haa_correct_b.wav,حَا,correct,honest 7aa attempt
+s1_recordings/qul_correct_b.wav,قُلْ,correct,honest qul attempt
+s1_recordings/bismi_correct_b.wav,بِسْمِ,correct,honest bismi attempt
+s1_recordings/saad_as_siin_b.wav,صَا,wrong,say siin — planted consonant error
+s1_recordings/taa_as_light_b.wav,طَا,wrong,say light taa — planted consonant error
+s1_recordings/haa_as_soft_b.wav,حَا,wrong,say soft haa (هـ) — planted consonant error
+s1_recordings/qul_as_kul_b.wav,قُلْ,wrong,say kul — planted consonant error
+s1_recordings/bismi_as_basmi_b.wav,بِسْمِ,wrong,say basmi — planted vowel error
+s1_recordings/baa_short_b.wav,بَا,wrong,say short ba — planted length error

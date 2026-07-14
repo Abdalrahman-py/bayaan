@@ -1,6 +1,6 @@
 # Bayaan — Team Plan (Arabic track build-out)
 
-> Written 2026-07-06. This is the delegation layer on top of
+> Written 2026-07-06, revised 2026-07-06 (team re-sliced to Abdalrahman + Ramzi + Gemini). This is the delegation layer on top of
 > [`PRODUCTION_PLAN.md`](./PRODUCTION_PLAN.md) (the *what*) — this file is the *who*.
 > Each workstream below has its own assignment sheet in [`workstreams/`](./workstreams/).
 > The production plan was written for a solo dev; this plan re-slices it for the team.
@@ -8,15 +8,11 @@
 
 ## Roles
 
-| Person | Workstream | Sheet |
+| Who | Workstream | Sheet |
 |---|---|---|
-| **Issa** | Android: app shell (M0), then lesson player (M2) | [ws-android-shell.md](./workstreams/ws-android-shell.md), [ws-lesson-player.md](./workstreams/ws-lesson-player.md) |
-| **Osama** | Android: lesson player exercises with Issa (M2), then mic/voice UX (M3 client side) | [ws-lesson-player.md](./workstreams/ws-lesson-player.md) |
+| **Gemini** (AI builder) | Android: screens, Compose code, and wiring for app shell (M0) and lesson player (M2/M3 client) | [`android/GEMINI.md`](../android/GEMINI.md), [ws-android-shell.md](./workstreams/ws-android-shell.md), [ws-lesson-player.md](./workstreams/ws-lesson-player.md) |
 | **Ramzi** | Backend + tooling: content pipeline engineering (M1), learn backend (M4), `/speech/grade` (M3 server side) | [ws-content-pipeline.md](./workstreams/ws-content-pipeline.md), [ws-learn-backend.md](./workstreams/ws-learn-backend.md) |
-| **Abdalrahman** | Product owner / reviewer — not a builder on these workstreams | this file, §Reviewer duties |
-
-If Osama is unavailable (unconfirmed since kickoff), Issa absorbs M2 solo and M3
-client work shifts after M2 — nothing else changes.
+| **Abdalrahman** | Reviews every PR (android + backend), does the final integration wiring on both sides, and owns curriculum correctness | this file, §Reviewer duties |
 
 ## The two contracts (freeze these first — everything parallelizes after)
 
@@ -34,23 +30,26 @@ client work shifts after M2 — nothing else changes.
 ## Sequence
 
 ```
-Week 0:  Issa → M0 shell          Ramzi → schema draft + build_content.py skeleton
+Week 0:  Gemini → M0 shell        Ramzi → schema draft + build_content.py skeleton
          (parallel, no deps)       Abdalrahman → approves schema (contract 1 frozen)
-Week 1+: Issa/Osama → M2 player   Ramzi → validator, packer, rule-tag script,
+Week 1+: Gemini → M2 player       Ramzi → validator, packer, rule-tag script,
          against frozen schema             then /speech/grade (contract 2)
                                    Content authoring (agent-generated) → Abdalrahman
                                    reviews per unit, content freezes unit by unit
-Then:    M3 wiring (Osama client + Ramzi server) → M4 learn backend (Ramzi)
+Then:    M3 wiring (Gemini client + Ramzi server) → M4 learn backend (Ramzi)
+                                   Abdalrahman wires client↔server integration
+                                   on both workstreams before each merge
 ```
 
 ## Working model
 
-- Branch per workstream chunk, PR to `main`, **Abdalrahman reviews every PR**
-  (CODEOWNERS: android lines activate once Issa/Osama hand in GitHub handles —
-  currently commented out, see `.github/CODEOWNERS`).
-- Every module has an `AGENTS.md` — read yours before touching anything; AI
-  agents (Claude Code) are expected tooling here, see `scripts/setup.sh` for the
-  per-role command.
+- Branch per workstream chunk, PR to `main`, **Abdalrahman reviews and wires every
+  PR** — android (Gemini-built) and backend (Ramzi-built) alike (CODEOWNERS routes
+  everything to Abdalrahman, see `.github/CODEOWNERS`).
+- Every module has an `AGENTS.md` — read yours before touching anything. Gemini's
+  Android-specific scope is [`android/GEMINI.md`](../android/GEMINI.md); AI agents
+  (Claude Code) are expected tooling too, see `scripts/setup.sh` for the per-role
+  command.
 - Acceptance criteria are NOT in this file — each workstream sheet quotes its
   acceptance list from `PRODUCTION_PLAN.md` §10. A workstream is done when its
   acceptance list is green **on a real device**, not when it compiles.
