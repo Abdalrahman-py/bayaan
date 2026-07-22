@@ -4,7 +4,18 @@
   "title_en": "Two-letter joins",
   "title_ar": "وصل حرفين",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Two letters joined together make the smallest real words. لَكْ ('for you') is just ل and كَ pulled into one connected shape — no gap, no change in sound. Read it as one flowing word, not two separate letters.",
+    "glyphs": ["لَكْ", "مَنْ", "بِكْ"],
+    "focus_en": "Two letters, one flowing shape."
+  },
+  "items": [
+    { "item_ref": "ar.4.2.listen.lam", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/lam_fatha.ogg", "answer": "لَ", "options": ["لَ", "كَ", "نَ"] },
+    { "item_ref": "ar.4.2.odd.ya_shapes", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ن", "options": ["ي", "يـ", "ـيـ", "ن"] },
+    { "item_ref": "ar.4.2.odd.mim_shapes", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ـب", "options": ["م", "مـ", "ـمـ", "ـب"] },
+    { "item_ref": "ar.4.2.disc.kaf_qaf", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/kaf_fatha.ogg", "answer": "كَ", "options": ["كَ", "قَ"] },
+    { "item_ref": "ar.4.2.read_aloud.man", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "مَنْ" },
+    { "item_ref": "ar.4.2.read_aloud.lak", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "لَكْ" },
+    { "item_ref": "ar.4.2.read_aloud.bik", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بِكْ" }
+  ]
 }

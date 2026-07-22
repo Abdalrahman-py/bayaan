@@ -4,7 +4,18 @@
   "title_en": "Three-letter words",
   "title_ar": "كلمات ثلاثية",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Most Arabic words are built from a three-letter root — كَتَبْ ('he wrote') is ك ت ب joined into one word, each letter keeping its correct joined shape. Learn to read these as a single flowing unit, not letter by letter.",
+    "glyphs": ["كَتَبْ", "ذَهَبْ", "جَلَسْ"],
+    "focus_en": "Three joined letters — your first real words."
+  },
+  "items": [
+    { "item_ref": "ar.4.3.listen.kaf", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/kaf_fatha.ogg", "answer": "كَ", "options": ["كَ", "تَ", "بَ"] },
+    { "item_ref": "ar.4.3.odd.ta_shapes", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ـن", "options": ["ت", "تـ", "ـتـ", "ـن"] },
+    { "item_ref": "ar.4.3.disc.dal_dhal", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/dal_fatha.ogg", "answer": "دَ", "options": ["دَ", "ذَ"] },
+    { "item_ref": "ar.4.3.read_aloud.katab", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَتَبْ" },
+    { "item_ref": "ar.4.3.read_aloud.dhahab", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "ذَهَبْ" },
+    { "item_ref": "ar.4.3.read_aloud.jalas", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "جَلَسْ" },
+    { "item_ref": "ar.4.3.read_aloud.kharaj", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "خَرَجْ" }
+  ]
 }
