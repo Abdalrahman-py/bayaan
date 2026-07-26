@@ -16,7 +16,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 /**
  * In-memory H2 (PostgreSQL compatibility mode) standing in for Supabase Postgres in
  * tests. Schema comes from the real Exposed `Table` objects — not hand-copied SQL —
- * so a column added to `data/tables/*.kt` is picked up here for free, no drift.
+ * so a column added to `data/tables/` (any .kt file) is picked up here for free, no drift.
  *
  * One H2 instance per JVM test run (DB_CLOSE_DELAY=-1 keeps it alive between tests);
  * call `reset()` in a `@BeforeTest` to isolate test cases.

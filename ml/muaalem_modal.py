@@ -33,7 +33,7 @@ import time
 
 import modal
 
-from fastapi import UploadFile
+from fastapi import Form, UploadFile
 
 # Mirrors the spike image (that build already succeeded). fastapi[standard] is
 # needed for @modal.fastapi_endpoint to accept multipart uploads.
@@ -254,11 +254,11 @@ class Muaalem:
     async def grade_text(
         self,
         audio: UploadFile,
-        reference_text: str = "",
-        madd_monfasel_len: int = 2,
-        madd_mottasel_len: int = 4,
-        madd_mottasel_waqf: int = 4,
-        madd_aared_len: int = 4,
+        reference_text: str = Form(""),
+        madd_monfasel_len: int = Form(2),
+        madd_mottasel_len: int = Form(4),
+        madd_mottasel_waqf: int = Form(4),
+        madd_aared_len: int = Form(4),
     ):
         """POST multipart: `audio` + `reference_text` (arbitrary Uthmani).
 
