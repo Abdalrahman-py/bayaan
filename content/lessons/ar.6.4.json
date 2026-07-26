@@ -4,7 +4,19 @@
   "title_en": "Checkpoint: rhythm",
   "title_ar": "اختبار الإيقاع",
   "is_checkpoint": true,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "The Unit 6 checkpoint. You will read a mix of short and long words aloud — I'm grading whether you hold each madd for its full length, not just the letters and vowels. Take your time on the long ones.",
+    "glyphs": ["قَامْ", "بِي", "قَدْ"],
+    "focus_en": "Unit 6 checkpoint — short vs long, read aloud (Tier 1 graded)."
+  },
+  "items": [
+    { "item_ref": "ar.6.4.listen.ba_madd", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_madd.ogg", "answer": "بَا", "options": ["بَا", "بَ", "بِ"] },
+    { "item_ref": "ar.6.4.odd.length", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "قَدْ", "options": ["قَامْ", "نُورْ", "سِيرْ", "قَدْ"] },
+    { "item_ref": "ar.6.4.read_aloud.baa", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بَا" },
+    { "item_ref": "ar.6.4.read_aloud.bii", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بِي" },
+    { "item_ref": "ar.6.4.read_aloud.buu", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بُو" },
+    { "item_ref": "ar.6.4.read_aloud.qaam", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَامْ" },
+    { "item_ref": "ar.6.4.read_aloud.noor", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "نُورْ" },
+    { "item_ref": "ar.6.4.read_aloud.qad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَدْ" }
+  ]
 }
