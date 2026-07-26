@@ -61,6 +61,8 @@ same human reciter, same recording spec. `content/audio/words/{name}.ogg`:
 | اللَّهْ (Allah, pause form) | `allah.ogg` |
 | رَبّْ (Rabb, pause form) | `rabb.ogg` |
 | بِسْمِ اللَّهِ (Bismillah) | `bismillah.ogg` |
+| القَمَرْ (al-qamar, the moon — moon letter) | `al_qamar.ogg` |
+| الشَّمْسْ (ash-shams, the sun — sun letter) | `al_shams.ogg` |
 
 ## Tutor narration (TTS, not human)
 
