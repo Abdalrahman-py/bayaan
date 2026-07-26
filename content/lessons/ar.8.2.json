@@ -4,7 +4,14 @@
   "title_en": "Al-Kawthar",
   "title_ar": "الكوثر",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Al-Kawthar — 'Abundance.' The shortest surah in the Quran, just three ayat, and one of the first many memorize after Al-Ikhlas. Full recitation now, same as last lesson — tajweed slips get a gentle note, not a fail.",
+    "glyphs": ["إِنَّا أَعْطَيْنَاكَ الْكَوْثَرْ", "فَصَلِّ لِرَبِّكَ وَانْحَرْ"],
+    "focus_en": "Surah Al-Kawthar, ayah by ayah — full recitation, tajweed errors softened."
+  },
+  "items": [
+    { "item_ref": "ar.8.2.echo.1", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/108_1.ogg", "reference_text": "إِنَّا أَعْطَيْنَاكَ الْكَوْثَرْ" },
+    { "item_ref": "ar.8.2.echo.2", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/108_2.ogg", "reference_text": "فَصَلِّ لِرَبِّكَ وَانْحَرْ" },
+    { "item_ref": "ar.8.2.echo.3", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/108_3.ogg", "reference_text": "إِنَّ شَانِئَكَ هُوَ الْأَبْتَرْ" }
+  ]
 }
