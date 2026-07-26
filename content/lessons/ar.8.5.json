@@ -4,7 +4,18 @@
   "title_en": "Al-Fatihah — graduation",
   "title_ar": "الفاتحة",
   "is_checkpoint": true,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Al-Fatihah — 'The Opening.' Every prayer, every day, opens with these seven ayat. This is your graduation from the Arabic track — read it clean and the Tajweed track unlocks right after, where every rule you've been previewing becomes a full lesson of its own.",
+    "glyphs": ["بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمْ", "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينْ"],
+    "focus_en": "Surah Al-Fatihah, the full seven ayat — graduation checkpoint."
+  },
+  "items": [
+    { "item_ref": "ar.8.5.echo.1", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/1_1.ogg", "reference_text": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمْ" },
+    { "item_ref": "ar.8.5.echo.2", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/1_2.ogg", "reference_text": "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينْ" },
+    { "item_ref": "ar.8.5.echo.3", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/1_3.ogg", "reference_text": "الرَّحْمَٰنِ الرَّحِيمْ" },
+    { "item_ref": "ar.8.5.echo.4", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/1_4.ogg", "reference_text": "مَالِكِ يَوْمِ الدِّينْ" },
+    { "item_ref": "ar.8.5.echo.5", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/1_5.ogg", "reference_text": "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينْ" },
+    { "item_ref": "ar.8.5.echo.6", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/1_6.ogg", "reference_text": "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمْ" },
+    { "item_ref": "ar.8.5.echo.7", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/1_7.ogg", "reference_text": "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينْ" }
+  ]
 }
