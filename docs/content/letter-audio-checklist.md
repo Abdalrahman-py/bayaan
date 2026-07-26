@@ -51,6 +51,17 @@ per letter, ~+56, toward the ~250 in §3.2 — not needed until Unit 6 is author
 | 13 | ش | `shin` | sheen | 27 | و | `waw` | waw |
 | 14 | ص | `sad` | saad | 28 | ي | `ya` | ya |
 
+## Word-level clips (Unit 7+)
+
+A few sacred/high-frequency words aren't decomposable into the letter matrix above —
+same human reciter, same recording spec. `content/audio/words/{name}.ogg`:
+
+| word | filename |
+|---|---|
+| اللَّهْ (Allah, pause form) | `allah.ogg` |
+| رَبّْ (Rabb, pause form) | `rabb.ogg` |
+| بِسْمِ اللَّهِ (Bismillah) | `bismillah.ogg` |
+
 ## Tutor narration (TTS, not human)
 
 Teach-segment lines (`teach.narration_en` in each lesson) are pre-generated TTS, **not**

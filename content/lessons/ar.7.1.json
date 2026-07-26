@@ -4,7 +4,17 @@
   "title_en": "Sacred words",
   "title_ar": "كلمات مباركة",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Three words you'll read every single day: اللَّهْ (Allah), رَبّْ (Lord), and بِسْمِ (in the name of — always paired with a name after it, like بِسْمِ اللَّهِ). One heads-up on اللَّهْ: the ل is heavy and full in the throat here, unlike its usual light sound — you'll master that fully in the Tajweed track.",
+    "glyphs": ["اللَّهْ", "رَبّْ", "بِسْمِ اللَّهِ"],
+    "focus_en": "Recognize the words you'll read most: Allah, Rabb, Bismillah."
+  },
+  "items": [
+    { "item_ref": "ar.7.1.listen.allah", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/allah.ogg", "answer": "اللَّهْ", "options": ["اللَّهْ", "رَبّْ", "قَامْ"] },
+    { "item_ref": "ar.7.1.listen.rabb", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/rabb.ogg", "answer": "رَبّْ", "options": ["رَبّْ", "اللَّهْ", "دَرَّسْ"] },
+    { "item_ref": "ar.7.1.odd.sacred", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "قَامْ", "options": ["اللَّهْ", "رَبّْ", "بِسْمِ", "قَامْ"] },
+    { "item_ref": "ar.7.1.read.bismillah", "type": "READ_PICK", "grading_tier": 0, "prompt_text_ar": "بِسْمِ اللَّهِ", "answer": "words/bismillah.ogg", "options": ["words/bismillah.ogg", "words/allah.ogg", "words/rabb.ogg"] },
+    { "item_ref": "ar.7.1.read_aloud.allah", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "اللَّهْ" },
+    { "item_ref": "ar.7.1.read_aloud.rabb", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "رَبّْ" }
+  ]
 }
