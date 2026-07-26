@@ -69,6 +69,20 @@ same human reciter, same recording spec. `content/audio/words/{name}.ogg`:
 | ٱبْنْ (ibn, son — hamzat al-wasl) | `ibn.ogg` |
 | هَٰذَا (haadha, this — superscript alif) | `hadha.ogg` |
 
+## Quran ayah clips (Unit 8)
+
+Full-ayah recitation clips, `content/audio/quran/{surah_number}_{ayah_number}.ogg` —
+same reciter, natural recitation pace (not the isolated-letter drilling of the clips
+above). 114_1/114_2 already exist for the Tajweed track's Ghunnah lesson; reused here.
+
+| Surah | Ayat needed |
+|---|---|
+| 112 Al-Ikhlas | 112_1 .. 112_4 |
+| 108 Al-Kawthar | 108_1 .. 108_3 |
+| 114 An-Nas | 114_1 .. 114_6 (114_1, 114_2 already recorded) |
+| 113 Al-Falaq | 113_1 .. 113_5 |
+| 1 Al-Fatihah | 1_1 .. 1_7 |
+
 ## Tutor narration (TTS, not human)
 
 Teach-segment lines (`teach.narration_en` in each lesson) are pre-generated TTS, **not**
