@@ -67,6 +67,7 @@ same human reciter, same recording spec. `content/audio/words/{name}.ogg`:
 | مُوسَى (Musa — alif maqsura) | `musa.ogg` |
 | آدَمْ (Adam — alif madda) | `adam.ogg` |
 | ٱبْنْ (ibn, son — hamzat al-wasl) | `ibn.ogg` |
+| هَٰذَا (haadha, this — superscript alif) | `hadha.ogg` |
 
 ## Tutor narration (TTS, not human)
 
