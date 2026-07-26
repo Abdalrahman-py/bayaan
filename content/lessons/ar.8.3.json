@@ -4,7 +4,17 @@
   "title_en": "An-Nas",
   "title_ar": "الناس",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "An-Nas — 'Mankind.' The very last surah in the Quran, six ayat asking refuge from whispered harm. You already met its first two ayat back in the Ghunnah lesson — here's the whole surah, full recitation.",
+    "glyphs": ["قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسْ", "مَلِكِ ٱلنَّاسْ"],
+    "focus_en": "Surah An-Nas, ayah by ayah — full recitation, tajweed errors softened."
+  },
+  "items": [
+    { "item_ref": "ar.8.3.echo.1", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/114_1.ogg", "reference_text": "قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسْ" },
+    { "item_ref": "ar.8.3.echo.2", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/114_2.ogg", "reference_text": "مَلِكِ ٱلنَّاسْ" },
+    { "item_ref": "ar.8.3.echo.3", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/114_3.ogg", "reference_text": "إِلَٰهِ ٱلنَّاسْ" },
+    { "item_ref": "ar.8.3.echo.4", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/114_4.ogg", "reference_text": "مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسْ" },
+    { "item_ref": "ar.8.3.echo.5", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/114_5.ogg", "reference_text": "الَّذِي يُوَسْوِسُ فِي صُدُورِ ٱلنَّاسْ" },
+    { "item_ref": "ar.8.3.echo.6", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/114_6.ogg", "reference_text": "مِنَ الْجِنَّةِ وَٱلنَّاسْ" }
+  ]
 }
