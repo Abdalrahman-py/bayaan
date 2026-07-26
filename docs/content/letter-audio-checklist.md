@@ -63,6 +63,9 @@ same human reciter, same recording spec. `content/audio/words/{name}.ogg`:
 | بِسْمِ اللَّهِ (Bismillah) | `bismillah.ogg` |
 | القَمَرْ (al-qamar, the moon — moon letter) | `al_qamar.ogg` |
 | الشَّمْسْ (ash-shams, the sun — sun letter) | `al_shams.ogg` |
+| رَحْمَة (rahma, mercy — taa marbuta) | `rahma.ogg` |
+| مُوسَى (Musa — alif maqsura) | `musa.ogg` |
+| آدَمْ (Adam — alif madda) | `adam.ogg` |
 
 ## Tutor narration (TTS, not human)
 
