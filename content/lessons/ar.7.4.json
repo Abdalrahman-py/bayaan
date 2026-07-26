@@ -4,7 +4,17 @@
   "title_en": "Hamzat al-wasl",
   "title_ar": "همزة الوصل",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Hamzat al-wasl is a 'connecting hamza' — ٱبْنْ (ibn, son). You only pronounce it when you start speaking right there; connect it to the word before it and it vanishes. That ال you learned last lesson is exactly this hamza. One more quirk: the verb ending وا, as in كَتَبُوا (they wrote), carries a silent alif — written, never said aloud.",
+    "glyphs": ["ٱبْنْ", "كَتَبُوا", "قَامُوا"],
+    "focus_en": "Hamzat al-wasl: said only at the start. The وا ending: alif is silent."
+  },
+  "items": [
+    { "item_ref": "ar.7.4.listen.ibn", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/ibn.ogg", "answer": "ٱبْنْ", "options": ["ٱبْنْ", "كَتَبُوا", "قَامُوا"] },
+    { "item_ref": "ar.7.4.odd.silent_alif", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "قَامْ", "options": ["كَتَبُوا", "قَامُوا", "سَمِعُوا", "قَامْ"] },
+    { "item_ref": "ar.7.4.read_aloud.ibn", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "ٱبْنْ" },
+    { "item_ref": "ar.7.4.read_aloud.katabu", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَتَبُوا" },
+    { "item_ref": "ar.7.4.read_aloud.qamu", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَامُوا" },
+    { "item_ref": "ar.7.4.read_aloud.samiu", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "سَمِعُوا" }
+  ]
 }
