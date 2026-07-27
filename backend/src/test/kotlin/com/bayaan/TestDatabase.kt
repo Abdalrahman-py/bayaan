@@ -3,9 +3,12 @@ package com.bayaan
 import com.bayaan.data.DatabaseFactory
 import com.bayaan.data.tables.LessonAttempts
 import com.bayaan.data.tables.LessonProgress
+import com.bayaan.data.tables.Mistakes
 import com.bayaan.data.tables.PlacementResults
 import com.bayaan.data.tables.Profiles
 import com.bayaan.data.tables.ReviewItems
+import com.bayaan.data.tables.Sessions
+import com.bayaan.data.tables.SifatMistakes
 import com.bayaan.data.tables.Users
 import com.bayaan.data.tables.XpEvents
 import com.zaxxer.hikari.HikariConfig
@@ -24,6 +27,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 object TestDatabase {
 private val LEARN_TABLES = arrayOf(
 Users, Profiles, PlacementResults, LessonProgress, LessonAttempts, ReviewItems, XpEvents,
+Sessions, Mistakes, SifatMistakes,
 )
 
 private var installed = false

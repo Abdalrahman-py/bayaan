@@ -61,7 +61,7 @@ class ServerTest {
     @Test
     fun `progress session detail requires auth`() = testApplication {
         application { configureJwt(); routing { authenticate("auth-jwt") { progressRoutes() } } }
-        // ponytail: 404-on-wrong-owner and pagination boundary need a live DB — integration test, not here
+        // 404-on-wrong-owner and pagination boundary are covered in ProgressRoutesTest (needs live DB)
         assertEquals(HttpStatusCode.Unauthorized, client.get("/progress/sessions/${UUID.randomUUID()}").status)
     }
 }
