@@ -10,9 +10,6 @@
     "focus_en": "Sukoon closes a syllable — no vowel, sound stops."
   },
   "items": [
-    { "item_ref": "ar.5.1.listen.ba_sukoon", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_sukoon.ogg", "answer": "بْ", "options": ["بْ", "بَ", "بِ"] },
-    { "item_ref": "ar.5.1.listen.qaf_sukoon", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/qaf_sukoon.ogg", "answer": "قْ", "options": ["قْ", "قَ", "كْ"] },
-    { "item_ref": "ar.5.1.disc.dal_taa", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/dal_sukoon.ogg", "answer": "دْ", "options": ["دْ", "تْ"] },
     { "item_ref": "ar.5.1.odd.vowel", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "بَ", "options": ["بْ", "دْ", "قْ", "بَ"] },
     { "item_ref": "ar.5.1.read_aloud.qad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَدْ" },
     { "item_ref": "ar.5.1.read_aloud.qat", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَطْ" },

@@ -10,7 +10,6 @@
     "focus_en": "Unit 5 checkpoint — sukoon + shadda, read aloud (Tier 1 graded)."
   },
   "items": [
-    { "item_ref": "ar.5.4.listen.qaf_sukoon", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/qaf_sukoon.ogg", "answer": "قْ", "options": ["قْ", "قَ", "كْ"] },
     { "item_ref": "ar.5.4.odd.shadda", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "كَتَبْ", "options": ["كَبَّرْ", "سَبَّحْ", "دَرَّسْ", "كَتَبْ"] },
     { "item_ref": "ar.5.4.read_aloud.qad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَدْ" },
     { "item_ref": "ar.5.4.read_aloud.baad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بَعْدْ" },
