@@ -1,10 +1,13 @@
 package com.bayaan.ui.viewmodel
 
+import android.Manifest
 import android.app.Application
+import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
@@ -90,6 +93,15 @@ class RecitationViewModel(
     fun record(sura: Int, aya: Int) {
         val key = sura to aya
         val verse = verseFor(sura, aya)
+
+        // The screen asks for RECORD_AUDIO first, but it can be revoked from settings
+        // mid-session; constructing AudioRecord without it throws.
+        if (ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.RECORD_AUDIO) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            uiStates[key] = RecitationUiState.Error(verse, "Microphone permission is off. Enable it in Settings to record.")
+            return
+        }
 
         val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         if (minBuf <= 0) {

@@ -1,10 +1,13 @@
 package com.bayaan.ui.viewmodel
 
+import android.Manifest
 import android.app.Application
+import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.compose.runtime.getValue
+import androidx.core.content.ContextCompat
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
@@ -159,6 +162,13 @@ class LessonViewModel(application: Application) : AndroidViewModel(application) 
         if (s.outcome != null) return
         if (!s.current.type.isSpoken) return
         if (isRecordingVal || isGradingVal) return // Prevent concurrent recording/grading
+
+        // NavGraph asks for RECORD_AUDIO before this screen, but the learner can revoke it
+        // from settings mid-session; constructing AudioRecord without it throws. Kept inline
+        // rather than in a helper — lint's MissingPermission only sees the check in-method.
+        if (ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.RECORD_AUDIO) !=
+            PackageManager.PERMISSION_GRANTED
+        ) return
 
         val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         if (minBuf <= 0) return
