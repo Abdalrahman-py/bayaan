@@ -51,6 +51,38 @@ per letter, ~+56, toward the ~250 in §3.2 — not needed until Unit 6 is author
 | 13 | ش | `shin` | sheen | 27 | و | `waw` | waw |
 | 14 | ص | `sad` | saad | 28 | ي | `ya` | ya |
 
+## Word-level clips (Unit 7+)
+
+A few sacred/high-frequency words aren't decomposable into the letter matrix above —
+same human reciter, same recording spec. `content/audio/words/{name}.ogg`:
+
+| word | filename |
+|---|---|
+| اللَّهْ (Allah, pause form) | `allah.ogg` |
+| رَبّْ (Rabb, pause form) | `rabb.ogg` |
+| بِسْمِ اللَّهِ (Bismillah) | `bismillah.ogg` |
+| القَمَرْ (al-qamar, the moon — moon letter) | `al_qamar.ogg` |
+| الشَّمْسْ (ash-shams, the sun — sun letter) | `al_shams.ogg` |
+| رَحْمَة (rahma, mercy — taa marbuta) | `rahma.ogg` |
+| مُوسَى (Musa — alif maqsura) | `musa.ogg` |
+| آدَمْ (Adam — alif madda) | `adam.ogg` |
+| ٱبْنْ (ibn, son — hamzat al-wasl) | `ibn.ogg` |
+| هَٰذَا (haadha, this — superscript alif) | `hadha.ogg` |
+
+## Quran ayah clips (Unit 8)
+
+Full-ayah recitation clips, `content/audio/quran/{surah_number}_{ayah_number}.ogg` —
+same reciter, natural recitation pace (not the isolated-letter drilling of the clips
+above). 114_1/114_2 already exist for the Tajweed track's Ghunnah lesson; reused here.
+
+| Surah | Ayat needed |
+|---|---|
+| 112 Al-Ikhlas | 112_1 .. 112_4 |
+| 108 Al-Kawthar | 108_1 .. 108_3 |
+| 114 An-Nas | 114_1 .. 114_6 (114_1, 114_2 already recorded) |
+| 113 Al-Falaq | 113_1 .. 113_5 |
+| 1 Al-Fatihah | 1_1 .. 1_7 |
+
 ## Tutor narration (TTS, not human)
 
 Teach-segment lines (`teach.narration_en` in each lesson) are pre-generated TTS, **not**

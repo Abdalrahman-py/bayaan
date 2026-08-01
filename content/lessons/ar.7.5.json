@@ -4,7 +4,16 @@
   "title_en": "Uthmani script",
   "title_ar": "الرسم العثماني",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "The mushaf carries a couple of small marks worth knowing. A tiny alif floating above a letter adds a hidden long 'aa' you'd otherwise miss — هَٰذَا (haadha, 'this') is haa-dhaa, not ha-dha. You'll see the same mark again very soon in الرَّحْمَٰن. Small marks like this are notes on how to say what's already there — read the big letters, not the small ones.",
+    "glyphs": ["هَٰذَا", "الرَّحْمَٰنْ"],
+    "focus_en": "A small floating alif marks a hidden long vowel — don't skip it."
+  },
+  "items": [
+    { "item_ref": "ar.7.5.listen.hadha", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/hadha.ogg", "answer": "هَٰذَا", "options": ["هَٰذَا", "الرَّحْمَٰنْ", "قَامْ"] },
+    { "item_ref": "ar.7.5.odd.superscript_alif", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "قَامْ", "options": ["هَٰذَا", "الرَّحْمَٰنْ", "قَامْ"] },
+    { "item_ref": "ar.7.5.read_aloud.hadha", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "هَٰذَا" },
+    { "item_ref": "ar.7.5.read_aloud.rahman", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "الرَّحْمَٰنْ" },
+    { "item_ref": "ar.7.5.read_aloud.adam", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "آدَمْ" }
+  ]
 }

@@ -4,7 +4,18 @@
   "title_en": "The article al-",
   "title_ar": "أل التعريف",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "ال means 'the'. With most letters — the 'moon letters' — you say the ل clearly: القَمَرْ, al-qamar, the moon. But with 14 'sun letters' the ل goes silent and the next letter doubles instead: الشَّمْسْ is said ash-shams, the sun — written with a ل you never hear. The two names are the example: قَمَر keeps its ل, شَمْس swallows it.",
+    "glyphs": ["القَمَرْ", "الشَّمْسْ", "الكِتَابْ"],
+    "focus_en": "Moon letters: say the ل. Sun letters: it goes silent, the next letter doubles."
+  },
+  "items": [
+    { "item_ref": "ar.7.2.listen.qamar", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/al_qamar.ogg", "answer": "القَمَرْ", "options": ["القَمَرْ", "الشَّمْسْ", "الكِتَابْ"] },
+    { "item_ref": "ar.7.2.listen.shams", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/al_shams.ogg", "answer": "الشَّمْسْ", "options": ["الشَّمْسْ", "القَمَرْ", "البَيْتْ"] },
+    { "item_ref": "ar.7.2.odd.silent_lam", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "الشَّمْسْ", "options": ["القَمَرْ", "الكِتَابْ", "البَيْتْ", "الشَّمْسْ"] },
+    { "item_ref": "ar.7.2.read_aloud.qamar", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "القَمَرْ" },
+    { "item_ref": "ar.7.2.read_aloud.kitab", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "الكِتَابْ" },
+    { "item_ref": "ar.7.2.read_aloud.bayt", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "البَيْتْ" },
+    { "item_ref": "ar.7.2.read_aloud.shams", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "الشَّمْسْ" }
+  ]
 }

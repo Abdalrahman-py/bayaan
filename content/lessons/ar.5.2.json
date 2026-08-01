@@ -4,7 +4,18 @@
   "title_en": "Shadda",
   "title_ar": "الشدة",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Shadda is the little 'w' shape that doubles a letter — you hold the sound instead of saying it once. دَرَسْ is 'studied'; دَرَّسْ holds the ر and means 'taught'. Same three letters, one doubled sound, different word. When شّ or نّ or مّ show up doubled, hold them fully — you'll hear this a lot once we reach Ghunnah in the Tajweed track.",
+    "glyphs": ["دَرَّسْ", "كَبَّرْ", "سَبَّحْ"],
+    "focus_en": "Shadda doubles the letter — hold the sound, don't rush it."
+  },
+  "items": [
+    { "item_ref": "ar.5.2.odd.shadda", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "كَتَبْ", "options": ["دَرَّسْ", "كَبَّرْ", "سَبَّحْ", "كَتَبْ"] },
+    { "item_ref": "ar.5.2.odd.pair", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "دَرَسْ", "options": ["دَرَّسْ", "كَبَّرْ", "كَذَّبْ", "دَرَسْ"] },
+    { "item_ref": "ar.5.2.read_aloud.darras", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "دَرَّسْ" },
+    { "item_ref": "ar.5.2.read_aloud.kabbar", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَبَّرْ" },
+    { "item_ref": "ar.5.2.read_aloud.sabbah", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "سَبَّحْ" },
+    { "item_ref": "ar.5.2.read_aloud.kaddhab", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَذَّبْ" },
+    { "item_ref": "ar.5.2.read_aloud.daras", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "دَرَسْ" }
+  ]
 }

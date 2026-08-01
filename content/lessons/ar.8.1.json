@@ -4,7 +4,15 @@
   "title_en": "Al-Ikhlas",
   "title_ar": "الإخلاص",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Al-Ikhlas — 'Sincerity.' Four short ayat on the oneness of Allah, one of the most-recited surahs there is. You already know every letter and every mark in it. I'm grading the full recitation now, but tajweed slips just get a gentle note here — that's a whole track of its own, coming right after this one.",
+    "glyphs": ["قُلْ هُوَ اللَّهُ أَحَدْ", "اللَّهُ الصَّمَدْ"],
+    "focus_en": "Surah Al-Ikhlas, ayah by ayah — full recitation, tajweed errors softened."
+  },
+  "items": [
+    { "item_ref": "ar.8.1.echo.1", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/112_1.ogg", "reference_text": "قُلْ هُوَ اللَّهُ أَحَدْ" },
+    { "item_ref": "ar.8.1.echo.2", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/112_2.ogg", "reference_text": "اللَّهُ الصَّمَدْ" },
+    { "item_ref": "ar.8.1.echo.3", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/112_3.ogg", "reference_text": "لَمْ يَلِدْ وَلَمْ يُولَدْ" },
+    { "item_ref": "ar.8.1.echo.4", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/112_4.ogg", "reference_text": "وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدْ" }
+  ]
 }

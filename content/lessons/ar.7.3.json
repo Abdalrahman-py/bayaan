@@ -4,7 +4,18 @@
   "title_en": "Special endings",
   "title_ar": "نهايات خاصة",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Three shapes that don't play by the usual rules. ة is taa marbuta — a hidden h, like in رَحْمَة (mercy). ى is alif maqsura — no dots, but it says a long 'aa' just like a regular alif, as in مُوسَى (Musa). آ is alif madda — a hamza stretched automatically to two counts right from the start of the word, as in آدَمْ (Adam).",
+    "glyphs": ["رَحْمَة", "مُوسَى", "آدَمْ"],
+    "focus_en": "ة sounds like h, ى sounds like a long alif, آ starts a word already stretched."
+  },
+  "items": [
+    { "item_ref": "ar.7.3.listen.rahma", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/rahma.ogg", "answer": "رَحْمَة", "options": ["رَحْمَة", "مُوسَى", "آدَمْ"] },
+    { "item_ref": "ar.7.3.listen.musa", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/musa.ogg", "answer": "مُوسَى", "options": ["مُوسَى", "آدَمْ", "رَحْمَة"] },
+    { "item_ref": "ar.7.3.listen.adam", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/adam.ogg", "answer": "آدَمْ", "options": ["آدَمْ", "مُوسَى", "رَحْمَة"] },
+    { "item_ref": "ar.7.3.odd.special", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "قَامْ", "options": ["رَحْمَة", "مُوسَى", "آدَمْ", "قَامْ"] },
+    { "item_ref": "ar.7.3.read_aloud.rahma", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "رَحْمَة" },
+    { "item_ref": "ar.7.3.read_aloud.musa", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "مُوسَى" },
+    { "item_ref": "ar.7.3.read_aloud.adam", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "آدَمْ" }
+  ]
 }

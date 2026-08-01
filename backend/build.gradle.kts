@@ -21,19 +21,15 @@ dependencies {
     implementation(ktorLibs.server.netty)
     implementation(libs.logback.classic)
 
-    // Auth + JWT (Supabase JWKS/ES256)
     implementation("io.ktor:ktor-server-auth-jvm")
     implementation("io.ktor:ktor-server-auth-jwt-jvm")
 
-    // HTTP client to forward audio to the quran-muaalem engine on Modal.
     implementation(ktorLibs.client.core)
     implementation(ktorLibs.client.cio)
 
-    // JSON parsing for engine response + content negotiation for call.respond()
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
 
-    // Database: Supabase Postgres via Exposed + HikariCP
     implementation("org.jetbrains.exposed:exposed-core:0.61.0")
     implementation("org.jetbrains.exposed:exposed-jdbc:0.61.0")
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.61.0")
@@ -43,6 +39,8 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
+
+    testImplementation("com.h2database:h2:2.3.232")
 }
 
 tasks.withType<Test> {

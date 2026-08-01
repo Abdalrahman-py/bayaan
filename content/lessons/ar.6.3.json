@@ -4,7 +4,18 @@
   "title_en": "Long vs short",
   "title_ar": "الطويل والقصير",
   "is_checkpoint": false,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "Now mix short and long back to back — that switch is the exact rhythm skill the Tajweed track's madd rules are built on. قَامْ (stood) holds the alif; نُورْ (light) holds the waw; سِيرْ (travel) holds the ya. Feel the difference against short words like قَدْ.",
+    "glyphs": ["قَامْ", "نُورْ", "سِيرْ"],
+    "focus_en": "Switching between short and long builds recitation rhythm."
+  },
+  "items": [
+    { "item_ref": "ar.6.3.disc.qaf_length", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/qaf_madd.ogg", "answer": "قَا", "options": ["قَا", "قَ"] },
+    { "item_ref": "ar.6.3.disc.nun_waw", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/nun_madd_waw.ogg", "answer": "نُو", "options": ["نُو", "نُ"] },
+    { "item_ref": "ar.6.3.odd.length_mix", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "قَدْ", "options": ["قَامْ", "نُورْ", "سِيرْ", "قَدْ"] },
+    { "item_ref": "ar.6.3.read_aloud.qaam", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَامْ" },
+    { "item_ref": "ar.6.3.read_aloud.noor", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "نُورْ" },
+    { "item_ref": "ar.6.3.read_aloud.seer", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "سِيرْ" },
+    { "item_ref": "ar.6.3.read_aloud.qad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَدْ" }
+  ]
 }

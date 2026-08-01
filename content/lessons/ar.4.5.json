@@ -4,7 +4,20 @@
   "title_en": "Checkpoint: joined reading",
   "title_ar": "اختبار الوصل",
   "is_checkpoint": true,
-  "stub": true,
-  "note": "Not yet authored — placeholder manifest (M1 stubs Units 4-8 + tajweed; authored in M6/M7).",
-  "items": []
+  "teach": {
+    "narration_en": "The Unit 4 checkpoint. You will read joined words aloud — some built entirely from connecting letters, some full of gaps — and I will grade your letters, your vowels, and your flow. Read each one as a single word, not letter by letter.",
+    "glyphs": ["لَكْ", "كَتَبْ", "وَرَدْ"],
+    "focus_en": "Unit 4 checkpoint — read joined words aloud (Tier 1 graded)."
+  },
+  "items": [
+    { "item_ref": "ar.4.5.listen.waw", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/waw_fatha.ogg", "answer": "وَ", "options": ["وَ", "رَ", "زَ"] },
+    { "item_ref": "ar.4.5.odd.mix", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "بَ", "options": ["دَ", "ذَ", "رَ", "بَ"] },
+    { "item_ref": "ar.4.5.read_aloud.lak", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "لَكْ" },
+    { "item_ref": "ar.4.5.read_aloud.man", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "مَنْ" },
+    { "item_ref": "ar.4.5.read_aloud.katab", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَتَبْ" },
+    { "item_ref": "ar.4.5.read_aloud.jalas", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "جَلَسْ" },
+    { "item_ref": "ar.4.5.read_aloud.daras", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "دَرَسْ" },
+    { "item_ref": "ar.4.5.read_aloud.warad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "وَرَدْ" },
+    { "item_ref": "ar.4.5.read_aloud.fatah", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "فَتَحْ" }
+  ]
 }
