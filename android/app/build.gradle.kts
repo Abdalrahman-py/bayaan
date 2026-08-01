@@ -90,9 +90,6 @@ dependencies {
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.auth)
 
-    // Coil Image Loader
-    implementation(libs.coil.compose)
-
     // HTTP client to the Bayaan backend's /audio/analyze — same client + engine
     // the backend itself uses to call the muaalem engine (Routing.kt).
     implementation(ktorLibs.client.core)
