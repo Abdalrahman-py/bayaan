@@ -22,6 +22,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -156,7 +157,8 @@ private fun TeachContent(lesson: Lesson, onStart: () -> Unit, onExit: () -> Unit
                         
                         val context = androidx.compose.ui.platform.LocalContext.current
                         val player = remember { LessonAudioPlayer(context) }
-                        
+                        DisposableEffect(Unit) { onDispose { player.stop() } }
+
                         Spacer(Modifier.height(16.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             if (!teach.audioCorrect.isNullOrBlank()) {
@@ -264,9 +266,15 @@ private fun DrillContent(
                     )
             }
             Spacer(Modifier.height(32.dp))
-            if (drill.outcome != null) {
+            if (drill.outcome != null && drill.outcome != Outcome.GRADING) {
                 Button(onClick = onNext, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(52.dp)) {
-                    Text(if (drill.index == drill.total - 1) "See results" else "Continue")
+                    Text(
+                        when {
+                            drill.outcome == Outcome.RETRY -> "Try again"
+                            drill.index == drill.total - 1 -> "See results"
+                            else -> "Continue"
+                        }
+                    )
                 }
             }
             Spacer(Modifier.height(24.dp))

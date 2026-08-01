@@ -24,6 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
@@ -104,7 +105,7 @@ fun LearnScreen(
     LaunchedEffect(Unit) { visible = true }
 
     val flatNodes = units.flatMap { it.nodes }
-    val continueNode = flatNodes.firstOrNull { demoMode || it.status == NodeStatus.CURRENT }
+    val continueNode = flatNodes.firstOrNull { it.status == NodeStatus.CURRENT }
         ?: flatNodes.firstOrNull { it.status == NodeStatus.DONE }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -190,7 +191,10 @@ private fun LessonNode(node: NodeUi, demoMode: Boolean, onClick: () -> Unit) {
         animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "nodeScale",
     )
 
-    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth().clickable(enabled = unlocked, onClick = onClick).padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(
             modifier = Modifier.scale(if (node.status == NodeStatus.CURRENT) scale else 1f)
                 .size(56.dp).clip(CircleShape).background(badgeColor),

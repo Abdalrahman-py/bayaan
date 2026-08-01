@@ -1,6 +1,5 @@
 package com.bayaan.ui.navigation
 
-import android.app.Application
 import android.content.Context
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -170,8 +169,7 @@ fun BayaanNavGraph(
                 arguments = listOf(navArgument("lessonId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val lessonId = backStackEntry.arguments?.getString("lessonId") ?: return@composable
-                val application = context.applicationContext as Application
-                val lessonViewModel: LessonViewModel = viewModel(factory = LessonViewModel.Factory(application))
+                val lessonViewModel: LessonViewModel = viewModel()
                 LaunchedEffect(lessonId) { lessonViewModel.load(lessonId, authViewModel::currentAccessToken) }
                 
                 val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(

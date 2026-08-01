@@ -8,8 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.bayaan.ui.lesson.ContentRepository
 import com.bayaan.ui.lesson.LearnApi
@@ -36,13 +34,6 @@ import java.io.ByteArrayOutputStream
  * RecitationViewModel); composables stay stateless.
  */
 class LessonViewModel(application: Application) : AndroidViewModel(application) {
-
-    class Factory(private val application: Application) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return LessonViewModel(application) as T
-        }
-    }
 
     enum class Outcome { CORRECT, FAILED, GRADING, RETRY }
 
@@ -388,12 +379,8 @@ class LessonViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun tokenProvider(): () -> String? = {
-        val prefs = getApplication<Application>().getSharedPreferences("supabase_session", 0)
-        prefs.getString("access_token", null)
-    }
-
     override fun onCleared() {
+        super.onCleared()
         recordingTimeoutJob?.cancel()
         recordingJob?.cancel()
         audioRecord?.release()
