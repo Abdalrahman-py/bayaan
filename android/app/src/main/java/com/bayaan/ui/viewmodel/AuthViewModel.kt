@@ -9,6 +9,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.status.SessionStatus
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
@@ -26,6 +27,26 @@ sealed interface AuthUiState {
         val submitting: Boolean = false,
     ) : AuthUiState
     data object LoggedIn : AuthUiState
+}
+
+/**
+ * The whole sign-in-persistence rule, in one place so it can be tested without a client.
+ *
+ * `Initializing` keeps the current state (the splash) — reading the session before Auth has
+ * finished loading it from storage is what made every cold start look logged out, and is the
+ * "I have to sign in again every time I reopen the app" bug.
+ *
+ * `RefreshFailure` means the refresh call failed on the network, not that the server rejected
+ * the token: the stored session is untouched and Auth retries in the background, so being
+ * offline must not send the user back to a password prompt. A rejected refresh token clears
+ * the session and arrives here as `NotAuthenticated` instead, along with sign-out and the
+ * genuinely-never-logged-in case.
+ */
+internal fun authUiState(status: SessionStatus, current: AuthUiState): AuthUiState = when (status) {
+    is SessionStatus.Authenticated -> AuthUiState.LoggedIn
+    is SessionStatus.RefreshFailure -> AuthUiState.LoggedIn
+    is SessionStatus.NotAuthenticated -> AuthUiState.LoggedOut()
+    SessionStatus.Initializing -> current
 }
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -47,23 +68,21 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         install(HttpTimeout) { requestTimeoutMillis = 60_000 }
     }
 
-    // Source of truth for LoggedIn/LoggedOut is the Supabase session alone.
-    // /auth/sync (UserRepository.upsert, idempotent) is best-effort: a cold Render
-    // backend must never undo a valid login/session — it used to, and that's the
-    // "re-enter password every time I reopen the app" bug this replaces.
-    fun checkSession() {
+    // Source of truth for LoggedIn/LoggedOut is Auth's own sessionStatus flow — the only
+    // thing that knows when the stored session has finished loading and refreshing.
+    // Polling currentSessionOrNull() at startup (what this replaces) returned null while
+    // the status was still Initializing, so a cold start bounced a perfectly valid session
+    // to the login screen: the "sign in again every time I reopen the app" bug.
+    // /auth/sync (UserRepository.upsert, idempotent) stays best-effort: a cold Render
+    // backend must never undo a valid session.
+    init {
         viewModelScope.launch {
-            try {
-                val session = supabaseClient.auth.currentSessionOrNull()
-                if (session != null) {
-                    persistToken(session.accessToken)
-                    state.value = AuthUiState.LoggedIn
-                    syncUserWithBackend(session.accessToken)
-                } else {
-                    state.value = AuthUiState.LoggedOut()
+            supabaseClient.auth.sessionStatus.collect { status ->
+                val previous = state.value
+                state.value = authUiState(status, previous)
+                if (status is SessionStatus.Authenticated && previous !is AuthUiState.LoggedIn) {
+                    syncUserWithBackend(status.session.accessToken)
                 }
-            } catch (e: Exception) {
-                state.value = AuthUiState.LoggedOut(error = friendlyAuthError(e, "Couldn't restore your session."))
             }
         }
     }
@@ -73,17 +92,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         state.value = currentState.copy(submitting = true, error = null)
         viewModelScope.launch {
             try {
+                // On success the sessionStatus collector above flips state to LoggedIn.
                 supabaseClient.auth.signInWith(Email) {
                     this.email = email
                     this.password = password
-                }
-                val session = supabaseClient.auth.currentSessionOrNull()
-                if (session != null) {
-                    persistToken(session.accessToken)
-                    state.value = AuthUiState.LoggedIn
-                    syncUserWithBackend(session.accessToken)
-                } else {
-                    state.value = AuthUiState.LoggedOut(error = "Session failed to initialize.")
                 }
             } catch (e: Exception) {
                 state.value = AuthUiState.LoggedOut(error = friendlyAuthError(e, "Couldn't log in. Please try again."))
@@ -100,14 +112,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     this.email = email
                     this.password = password
                 }
-                // With email confirmation OFF, signUp returns an active session → log straight in.
-                // With it ON, there's no session yet → show the confirm-your-email state.
-                val session = supabaseClient.auth.currentSessionOrNull()
-                if (session != null) {
-                    persistToken(session.accessToken)
-                    state.value = AuthUiState.LoggedIn
-                    syncUserWithBackend(session.accessToken)
-                } else {
+                // With email confirmation OFF, signUp returns an active session and the
+                // collector logs us in. With it ON there's no session → confirm-your-email.
+                if (supabaseClient.auth.currentSessionOrNull() == null) {
                     state.value = AuthUiState.LoggedOut(pendingConfirmation = true)
                 }
             } catch (e: Exception) {
@@ -120,7 +127,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     // calling this) never observes a stale LoggedIn and bounces back to home — that
     // was the "logout then instantly signed back in" bug.
     fun signOut() {
-        clearPersistedToken()
         state.value = AuthUiState.LoggedOut()
         viewModelScope.launch {
             try {
@@ -131,6 +137,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Auth persists the session itself (SettingsSessionManager → default SharedPreferences
+    // file `com.bayaan_preferences`, key `sb-<supabase-url>-session`), so there is nothing
+    // for us to write or clear — this is the only way to read a token.
+    // ponytail: that store is plain, not EncryptedSharedPreferences. allowBackup=false
+    // (AndroidManifest.xml) closes the adb-backup/cloud-restore exfil path, which was the
+    // concrete risk found; a rooted/compromised device can still read the file. Upgrade
+    // path: pass a custom SessionManager backed by androidx.security:security-crypto's
+    // EncryptedSharedPreferences if that threat model becomes real.
     fun currentAccessToken(): String? {
         return supabaseClient.auth.currentSessionOrNull()?.accessToken
     }
@@ -165,23 +179,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             raw.contains("Unable to validate email", ignoreCase = true) -> "That email address looks invalid."
             else -> fallback
         }
-    }
-
-    // ponytail: plain SharedPreferences, not EncryptedSharedPreferences — allowBackup=false
-    // (AndroidManifest.xml) closes the adb-backup/cloud-restore exfil path, which was the
-    // concrete risk found; a rooted/compromised device can still read this file. Upgrade
-    // path: androidx.security:security-crypto's EncryptedSharedPreferences if that threat
-    // model becomes real.
-    private fun persistToken(token: String) {
-        getApplication<Application>()
-            .getSharedPreferences("supabase_session", 0)
-            .edit().putString("access_token", token).apply()
-    }
-
-    private fun clearPersistedToken() {
-        getApplication<Application>()
-            .getSharedPreferences("supabase_session", 0)
-            .edit().remove("access_token").apply()
     }
 
     override fun onCleared() {

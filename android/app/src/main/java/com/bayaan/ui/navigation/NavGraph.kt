@@ -110,7 +110,9 @@ fun BayaanNavGraph(
             modifier = Modifier.padding(paddingValues)
         ) {
             composable("splash") {
-                SplashScreen(onLoad = { authViewModel.checkSession() })
+                // AuthViewModel starts watching the session in its init block, so the splash
+                // only has to wait for authState to leave Checking.
+                SplashScreen(onLoad = {})
 
                 LaunchedEffect(authState) {
                     if (authState is AuthUiState.LoggedIn) {
