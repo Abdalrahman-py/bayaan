@@ -167,6 +167,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // ponytail: plain SharedPreferences, not EncryptedSharedPreferences — allowBackup=false
+    // (AndroidManifest.xml) closes the adb-backup/cloud-restore exfil path, which was the
+    // concrete risk found; a rooted/compromised device can still read this file. Upgrade
+    // path: androidx.security:security-crypto's EncryptedSharedPreferences if that threat
+    // model becomes real.
     private fun persistToken(token: String) {
         getApplication<Application>()
             .getSharedPreferences("supabase_session", 0)
