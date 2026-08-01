@@ -220,7 +220,7 @@ Future idea (PRODUCT_VISION): move auth/progress to Supabase Edge Functions, but
 Single Gradle module `app/`, all Compose. Files under [`android/app/src/main/java/com/bayaan/`](../android/app/src/main/java/com/bayaan/).
 
 **Two brains (ViewModels):**
-- `AuthViewModel` — owns Supabase client. `checkSession / login / signup / signOut`. State machine `Checking → LoggedOut / LoggedIn`. `friendlyAuthError()` turns Supabase's wall-of-text exceptions into short human messages. Also handles email-confirmation-pending state.
+- `AuthViewModel` — owns Supabase client. `login / signup / signOut / currentAccessToken`; signed-in state comes from collecting the SDK's `sessionStatus` flow, mapped by `authUiState()`. State machine `Checking → LoggedOut / LoggedIn`. `friendlyAuthError()` turns Supabase's wall-of-text exceptions into short human messages. Also handles email-confirmation-pending state.
 - `RecitationViewModel` — the record loop. Mic → PCM → WAV → upload → parse. Holds one UI state **per (sura,aya)** so revisiting an ayah keeps its result. Built with a `Factory` that injects the auth token provider — that's how `/audio/analyze` gets its Bearer token (fixed the old 401).
 
 **Navigation** — `NavGraph.kt`. Single `NavHost`. The **auth gate** is here: `authState` drives
