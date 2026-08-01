@@ -104,7 +104,7 @@ read/write anyone's data — the token is the only thing tying a request to a pe
 
 ## 5. Backend endpoints — the whole surface
 
-Six routes. Files in [`backend/src/main/kotlin/com/bayaan/routes/`](../backend/src/main/kotlin/com/bayaan/routes/).
+Thirteen routes. Files in [`backend/src/main/kotlin/com/bayaan/routes/`](../backend/src/main/kotlin/com/bayaan/routes/).
 
 | Route | Auth? | What | Why |
 |---|---|---|---|
@@ -112,9 +112,17 @@ Six routes. Files in [`backend/src/main/kotlin/com/bayaan/routes/`](../backend/s
 | `GET /surahs` | no | **hardcoded** list (Fatihah + Bayyinah) | old verse-picker fed off this; mushaf screen doesn't use it. Stale-ish. |
 | `POST /auth/sync` | yes | upsert `users` row | give Postgres a user to hang sessions on |
 | `POST /audio/analyze` | yes | engine call + persist | the core loop (§3) |
+| `GET /learn/path` | yes | units + lessons + per-node status | the learn tab (§9) |
+| `POST /learn/complete` | yes | mark lesson done, award XP | XP = base + per-item bonus on first-try correct |
+| `GET /learn/reviews` | yes | review items due today | spaced repetition queue |
+| `POST /learn/reviews/{id}/result` | yes | grade one review, reschedule | returns next due date + remaining count |
+| `POST /learn/placement` | yes | server-computed placement level | client result is **not** trusted |
+| `POST /speech/grade` | yes | M3 Path A echo grading | multipart audio+reference → verdict/score/phoneme issues; clip **not** persisted (privacy) |
 | `GET /progress` | yes | aggregate stats for you | Progress tab (not built in app yet) |
 | `GET /progress/sessions` | yes | your session history, paginated | history list (not wired in app) |
 | `GET /progress/sessions/{id}` | yes | one session + all its mistakes | drill-in (not wired in app) |
+
+Lesson availability is a **single global chain** in curriculum file order — a lesson unlocks once the immediately-preceding one (across the whole file) is done, which is also what gates the tajweed track behind the last Arabic lesson.
 
 Note: `/progress*` endpoints **work but the app never calls them yet**. Backend is ahead of the UI here.
 
@@ -219,16 +227,24 @@ Future idea (PRODUCT_VISION): move auth/progress to Supabase Edge Functions, but
 
 Single Gradle module `app/`, all Compose. Files under [`android/app/src/main/java/com/bayaan/`](../android/app/src/main/java/com/bayaan/).
 
-**Two brains (ViewModels):**
+**Three brains (ViewModels):**
 - `AuthViewModel` — owns Supabase client. `login / signup / signOut / currentAccessToken`; signed-in state comes from collecting the SDK's `sessionStatus` flow, mapped by `authUiState()`. State machine `Checking → LoggedOut / LoggedIn`. `friendlyAuthError()` turns Supabase's wall-of-text exceptions into short human messages. Also handles email-confirmation-pending state.
 - `RecitationViewModel` — the record loop. Mic → PCM → WAV → upload → parse. Holds one UI state **per (sura,aya)** so revisiting an ayah keeps its result. Built with a `Factory` that injects the auth token provider — that's how `/audio/analyze` gets its Bearer token (fixed the old 401).
+- `LessonViewModel` — one lesson, start to finish. `Missing → Teach → Drill → Wrap` states. Recognition items grade locally; spoken items record mic → `POST /speech/grade` → `CORRECT / RETRY / FAILED`. Engine unreachable falls back to `RETRY` rather than punishing the learner. Completion writes `ProgressStore` first, then fires `/learn/complete` fire-and-forget.
+
+**Learn path (the MVP feature)** — [`ui/lesson/`](../android/app/src/main/java/com/bayaan/ui/lesson/):
+- Content is **bundled, not fetched**: `assets/content/` holds `curriculum.json`, `lessons/`, `audio/` and the build manifests, produced by `scripts/build_content.py`. `ContentRepository` parses it; `LearnApi` talks to `/learn/*`.
+- `LearnScreen` seeds units **during composition** from the asset + `ProgressStore` — no placeholder frame, no layout shift waiting on the network. The `/learn/path` response only *corrects* what is already on screen. Renders in a `LazyColumn` (44 lessons across 11 units). Parse failure shows Retry, not invented lessons.
+- `ProgressStore` — `SharedPreferences` file `bayaan_learn`. Completion, best score, XP, streak. **This is why the app works offline**; the server is a mirror, not the source.
+- Eight exercise types under `exercises/` (listen-pick, discriminate, odd-one-out, read-pick, connect, build-word, spoken) behind a shared `ExerciseScaffold`.
 
 **Navigation** — `NavGraph.kt`. Single `NavHost`. The **auth gate** is here: `authState` drives
 whether you see Splash/Onboarding/Login/Signup or the real app. 3-tab bottom bar (Home · Qur'an ·
 Profile); drill-in routes (mushaf, recitation) hide the bar. Onboarding shows once via a
 `first_launch` SharedPreference.
 
-**Screens of note:** `SplashScreen` (auth check), `OnboardingScreen` (once), `Login/Signup`,
+**Screens of note:** `SplashScreen` (held while the SDK session status is `Initializing`), `OnboardingScreen` (once), `Login/Signup`,
+`LearnScreen` (the path) → `LessonScreen` (teach → drill → wrap),
 `SurahIndexScreen` (list surahs) → `MushafPagerScreen` (the script) → tap ayah → `RecitationScreen` (record + highlights). `VersePickerScreen` is the OLD path (feeds off `/surahs`), superseded by the mushaf.
 
 **Full-Quran text:** [`QuranText.kt`](../android/app/src/main/java/com/bayaan/ui/model/QuranText.kt) loads all 6236 Uthmani ayat from `assets/quran/uthmani.json` (1.4MB, dumped from the same DB the engine uses) once at VM init, so pre-record verse text is correct for *any* ayah. Hardcoded Fatihah/Bayyinah kept only as a Compose-preview fallback.

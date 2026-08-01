@@ -552,7 +552,6 @@ The hardware constraint is load-bearing on the architecture. Because the develop
 | FastAPI | via `fastapi[standard]` | Multipart HTTP endpoints on the inference container |
 | Python | 3.11 | Inference and content tooling |
 | `scripts/build_content.py` | Project-internal, zero third-party dependencies | Curriculum validation, pause-form enforcement, asset walking, deterministic packing |
-| `scripts/build_report.py` | Project-internal, `python-docx` | Renders this report's Markdown source to a formatted document |
 
 Every inference dependency is **version-pinned deliberately**. The upstream model and transcript libraries are single-maintainer projects that define the JSON error and attribute schema the backend parser depends on; an unpinned release could silently reshape that schema on the next container cold build, breaking parsing in production with no code change on our side.
 
@@ -2546,7 +2545,7 @@ bayaan/
 ├── backend/          Ktor service — routes, domain, repositories, tests, migration
 ├── ml/               Recitation engine deployment script (one file)
 ├── content/          Curriculum source: curriculum.json, lessons/, schema/, dist/
-├── scripts/          build_content.py, generate_ayah_tags.py, build_report.py
+├── scripts/          build_content.py, generate_ayah_tags.py
 ├── spike/            Evaluation harness, manifests, and raw spike results
 ├── docs/             Architecture, API specification, decisions, workstreams
 └── AGENTS.md         Binding instruction set for every contributor, human or agent
