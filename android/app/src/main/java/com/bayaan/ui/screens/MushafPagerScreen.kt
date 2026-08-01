@@ -1,11 +1,13 @@
 package com.bayaan.ui.screens
 
 import android.content.Context
+import android.os.Trace
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -35,17 +37,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.LayoutDirection
@@ -57,6 +64,7 @@ import com.bayaan.ui.mushaf.QcfPage
 import com.bayaan.ui.mushaf.QcfRepository
 import com.bayaan.ui.mushaf.QcfWord
 import com.bayaan.ui.mushaf.getFontFamily
+import com.bayaan.ui.theme.BayaanTheme
 
 // The mushaf page is always a cream/black printed page, independent of app theme —
 // intentionally not sourced from MaterialTheme.colorScheme (see ink color comment below).
@@ -67,13 +75,26 @@ private val MushafHeaderBg = Color(0xFFF4EFE6)
 private val MushafHeaderBorder = Color(0xFFDCD6C8)
 private val MushafInk = Color(0xFF000000)
 
-// ponytail: uniformFontSizeForLines measures every word on the page (~100+ calls);
-// re-entering a page after scrolling away redoes it since Pager discards the
-// composable slot (and its remember) outside beyondBoundsPageCount. Keyed on
-// dimensions too (not just page number) since rotation recreates the Activity but
-// not this process-lifetime cache — a stale entry from the old orientation would
-// otherwise render the wrong size after rotating back to a visited page.
-private val pageFontSizeCache = mutableMapOf<Triple<Int, Int, Int>, TextUnit>()
+// ponytail: uniformFontSizeForLines measures every line on the page; re-entering a
+// page after scrolling away redoes it since Pager discards the composable slot (and
+// its remember) outside beyondViewportPageCount. Keyed on dimensions too (not just
+// page number) since rotation recreates the Activity but not this process-lifetime
+// cache — a stale entry from the old orientation would otherwise render the wrong
+// size after rotating back to a visited page.
+//
+// fontScale is part of the key for the same reason, one level less obvious: the
+// measurement is done at BASE_GLYPH_SIZE, an sp value, so sp->px depends on it.
+// Change the system font size and the Activity is recreated with byte-identical
+// pixel dimensions, so page+w+h alone would serve a size computed under the old
+// scale. targetSdk 34 uses non-linear font scaling, so it isn't a simple multiply
+// we could divide back out.
+//
+// Deliberately NOT concurrent, unlike QcfRepository's fontCache: BoxWithConstraints
+// subcomposition and LazyLayout prefetch both run on the main thread, so every
+// touch of this map is main-thread-confined.
+private data class PageSizeKey(val page: Int, val widthPx: Int, val heightPx: Int, val fontScale: Float)
+
+private val pageFontSizeCache = mutableMapOf<PageSizeKey, TextUnit>()
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -94,12 +115,18 @@ fun MushafPagerScreen(
         pageCount = { 604 }
     )
 
-    var selectedVerseKey by remember { mutableStateOf<String?>(null) }
+    // Held as the State object, not a by-delegate value, so the selection can be
+    // passed down as a getter and read in the draw phase — see MushafLineRenderer.
+    // Reading .value here instead would recompose all ~140 words on every tap.
+    val selectedVerseKey = remember { mutableStateOf<String?>(null) }
     var showMenu by remember { mutableStateOf(false) }
 
-    // Clear selection when turning pages
-    LaunchedEffect(pagerState.currentPage) {
-        selectedVerseKey = null
+    // Clear selection when turning pages. snapshotFlow rather than
+    // LaunchedEffect(pagerState.currentPage) so currentPage is read inside the
+    // coroutine — as an effect key it is a composition read, recomposing this whole
+    // screen on every settle.
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { selectedVerseKey.value = null }
     }
 
     Scaffold(
@@ -124,7 +151,14 @@ fun MushafPagerScreen(
             // any page swiped to for the first time. Result<> (vs a bare nullable)
             // lets "still loading" (null) read differently from "load failed"
             // (Result.failure) so we don't flash the error text while loading.
-            val pageResult by produceState<Result<QcfPage>?>(initialValue = null, pageNum) {
+            // Seeded from the parse cache: produceState's block runs in a
+            // LaunchedEffect dispatched on AndroidUiDispatcher.Main, so without this
+            // even an already-parsed page renders one blank frame before its content
+            // appears — which is every page you flip back to.
+            val seed = remember(pageNum) {
+                qcfRepository.cachedPage(pageNum)?.let { Result.success(it) }
+            }
+            val pageResult by produceState<Result<QcfPage>?>(initialValue = seed, pageNum) {
                 value = try {
                     Result.success(qcfRepository.page(pageNum))
                 } catch (e: java.io.IOException) {
@@ -139,9 +173,9 @@ fun MushafPagerScreen(
                 MushafPageRenderer(
                     page = pageData,
                     chapters = chapters,
-                    selectedVerseKey = selectedVerseKey,
+                    selectedVerseKey = { selectedVerseKey.value },
                     onWordTapped = { verseKey ->
-                        selectedVerseKey = verseKey
+                        selectedVerseKey.value = verseKey
                         showMenu = true
                     }
                 )
@@ -159,8 +193,9 @@ fun MushafPagerScreen(
             }
         }
 
-        if (showMenu && selectedVerseKey != null) {
-            val parts = selectedVerseKey!!.split(":")
+        val menuVerseKey = selectedVerseKey.value
+        if (showMenu && menuVerseKey != null) {
+            val parts = menuVerseKey.split(":")
             val sura = parts[0].toInt()
             val aya = parts[1].toInt()
 
@@ -223,7 +258,11 @@ fun MushafPagerScreen(
 fun MushafPageRenderer(
     page: QcfPage,
     chapters: List<QcfChapter>,
-    selectedVerseKey: String?,
+    // A getter, not the value: this is read in the draw phase (MushafLineRenderer),
+    // so a tap invalidates draw only instead of recomposing ~140 words per composed
+    // page. Taking String? here would defeat that no matter what the leaf does,
+    // because the parameter itself would change.
+    selectedVerseKey: () -> String?,
     onWordTapped: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -263,10 +302,24 @@ fun MushafPageRenderer(
             // device's CPU is the bottleneck during a fling, not main-thread scheduling,
             // so background threads just compete with Main/RenderThread for the same
             // cores instead of freeing them up. Reverted to synchronous measurement.
-            val pageFontSize = remember(page, availableWidthPx, availableHeightPx) {
-                val cacheKey = Triple(page.page, availableWidthPx.toInt(), availableHeightPx.toInt())
+            val pageFontSize = remember(page, availableWidthPx, availableHeightPx, density.fontScale) {
+                val cacheKey = PageSizeKey(
+                    page.page,
+                    availableWidthPx.toInt(),
+                    availableHeightPx.toInt(),
+                    density.fontScale
+                )
                 pageFontSizeCache.getOrPut(cacheKey) {
-                    uniformFontSizeForLines(page.lines, availableWidthPx, availableHeightPx, density, textMeasurer, context)
+                    // Trace, not a log: BoxWithConstraints is a SubcomposeLayout, so
+                    // this runs in the measure pass and will not show up under
+                    // recomposition in Layout Inspector. Perfetto finds it under
+                    // Choreographer#doFrame -> measure.
+                    Trace.beginSection("Mushaf.uniformFontSize")
+                    try {
+                        uniformFontSizeForLines(page.lines, availableWidthPx, availableHeightPx, density, textMeasurer, context)
+                    } finally {
+                        Trace.endSection()
+                    }
                 }
             }
 
@@ -321,6 +374,23 @@ fun MushafPageRenderer(
 // negative-gap overlap on some lines, or reads as a vanished inter-word gap on others.
 private const val FIT_SAFETY_MARGIN = 0.96f
 
+// The style every glyph-width measurement uses. Extracted for the same reason the
+// scaling logic itself was (see above): MeasureParityPreview measures with it too,
+// and a preview holding its own copy would stop guarding anything the moment the two
+// drifted.
+//
+// textDirection is pinned rather than inherited: measurement happens inside the RTL
+// CompositionLocalProvider, and while these PUA codepoints are strong-L so first-strong
+// resolves to Ltr anyway, stating it skips the bidi scan and stops a future font change
+// from silently reordering a measurement. lineHeight is deliberately left Unspecified —
+// see THEME_BODY_LINE_HEIGHT for why that is a known mismatch with the render style.
+private fun glyphMeasureStyle(context: Context, fontName: String) = TextStyle(
+    fontFamily = getFontFamily(context, fontName),
+    fontSize = BASE_GLYPH_SIZE,
+    letterSpacing = 0.sp, // must match the render TextStyle exactly — see MushafLineRenderer
+    textDirection = TextDirection.Ltr
+)
+
 private fun uniformFontSizeForLines(
     lines: List<QcfLine>,
     availableWidthPx: Float,
@@ -338,6 +408,9 @@ private fun uniformFontSizeForLines(
     var headerLineHeightPx = 0f
     var headerLineCount = 0
 
+    // Reused across every line — the whole point is to stop allocating per word.
+    val runBuilder = StringBuilder(16)
+
     lines.forEach { line ->
         val headerWord = line.words.firstOrNull { it.type == "surah_header" }
         if (headerWord != null) {
@@ -351,7 +424,8 @@ private fun uniformFontSizeForLines(
                         fontFamily = getFontFamily(context, headerWord.fontName),
                         fontSize = 24.sp,
                         letterSpacing = 0.sp
-                    )
+                    ),
+                    skipCache = true
                 ).size.height.toFloat()
             }
             return@forEach
@@ -359,18 +433,57 @@ private fun uniformFontSizeForLines(
 
         wordLineCount++
         var lineWidthPx = 0f
-        line.words.forEach { word ->
+        var runFont: String? = null
+
+        // One measure() per font run instead of one per word — ~140 calls per page
+        // down to ~15. Safe because the QCF4 fonts contain no GSUB, GPOS, kern, morx
+        // or kerx table (checked across all 48), so every advance comes from hmtx
+        // alone and a joined run's width is exactly the sum of its glyphs' isolated
+        // widths. Worth far more than the 9x call count suggests: the codepoints are
+        // all >= 0x0590, so BoringLayout.isBoring bails and each call was paying full
+        // StaticLayout construction to measure a single glyph.
+        //
+        // Written as a run-flusher rather than a flat join of the whole line because
+        // single-font-per-line is a property of today's page JSONs, not of the
+        // format. Those JSONs are gitignored and regenerable from other data; this
+        // stays correct if that ever changes.
+        fun flushRun() {
+            if (runBuilder.isEmpty()) return
             val result = textMeasurer.measure(
-                text = word.glyph,
-                style = TextStyle(
-                    fontFamily = getFontFamily(context, word.fontName),
-                    fontSize = BASE_GLYPH_SIZE,
-                    letterSpacing = 0.sp
-                )
+                text = runBuilder.toString(),
+                style = glyphMeasureStyle(context, runFont!!),
+                softWrap = false, // single line by construction; skips LineBreaker
+                // The measurer's LRU is 8 entries against ~15 distinct inputs per
+                // page, all unique — a guaranteed 0% hit rate. Without this we pay to
+                // build a key and hash a ~25-field TextStyle purely to miss and evict.
+                skipCache = true
             )
-            lineWidthPx += result.size.width + wordPaddingPx
+            lineWidthPx += result.size.width
             if (wordLineHeightPx == 0f) wordLineHeightPx = result.size.height.toFloat()
+            runBuilder.setLength(0)
         }
+
+        line.words.forEach { word ->
+            if (word.fontName != runFont) {
+                flushRun()
+                runFont = word.fontName
+            }
+            runBuilder.append(word.glyph)
+        }
+        flushRun()
+
+        // TextLayoutResult.size is an IntSize, so the renderer — which still measures
+        // each word separately — pays one ceil() per word, while a joined run pays
+        // only one for the whole run. Adding back one pixel per word keeps this
+        // estimate on the conservative side of what actually gets laid out: it is
+        // never below the old per-word sum, and at most ~n px above it. So the
+        // resulting font size can come out equal or a hair (<1%) smaller, never
+        // larger. That direction matters — larger is what re-introduces the
+        // negative-gap overlap FIT_SAFETY_MARGIN exists to prevent, and that margin
+        // is already spent on render-time rounding drift (see above). Don't spend it
+        // twice.
+        lineWidthPx += line.words.size * (wordPaddingPx + 1f)
+
         if (lineWidthPx > safeAvailableWidthPx) {
             val scale = safeAvailableWidthPx / lineWidthPx
             if (scale < minScale) minScale = scale
@@ -427,18 +540,67 @@ fun SurahHeaderRenderer(
 }
 
 private val BASE_GLYPH_SIZE = 28.sp
-private val WORD_PADDING = 2.dp // matches the per-word Box padding below
+private val WORD_PADDING = 2.dp // matches the per-word padding below
+
+// Hoisted out of the per-word loop: these were 140 allocations per page.
+private val WordHighlightColor = MushafGreen.copy(alpha = 0.24f)
+private val WordHighlightRadius = 4.dp
 
 @Composable
 fun MushafLineRenderer(
     line: QcfLine,
     fontSize: TextUnit,
     alignCenter: Boolean,
-    selectedVerseKey: String?,
+    selectedVerseKey: () -> String?,
     onWordTapped: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    // One source shared by every word on the line instead of 140. With
+    // indication = null nothing ever collects from it, so interleaved press/release
+    // across words is unobservable. (foundation 1.7 allows passing null outright,
+    // but this project resolves to 1.7.4 only transitively via navigation-compose —
+    // sharing one instance gets the same saving without depending on that.)
+    val interactionSource = remember { MutableInteractionSource() }
+
+    // Two styles per line rather than a TextStyle.merge per word. material3.Text
+    // reads LocalTextStyle + LocalContentColor and merges on every word, every
+    // composition — ~140 merges/page, each allocating a SpanStyle, a ParagraphStyle
+    // and a TextStyle. BasicText takes the finished style and skips all of it.
+    val lineFontName = line.words.firstOrNull()?.fontName
+    val lineFontFamily = lineFontName?.let { getFontFamily(context, it) } ?: FontFamily.Default
+
+    // Taken from the theme, not hardcoded (UI_SPEC §0: never inline a size in a
+    // screen) — this is precisely the value material3.Text used to merge in from
+    // LocalTextStyle, so reproducing it keeps rendering identical, and sourcing it
+    // here means it cannot drift from Type.kt.
+    //
+    // It is also wrong, and knowingly left wrong for now: uniformFontSizeForLines
+    // measures with lineHeight Unspecified, i.e. the font's natural metrics, which
+    // for these fonts is (3706 + 1986) / 2500 = 2.277em — 63.8sp at BASE_GLYPH_SIZE
+    // against the 24sp box actually rendered. So the height branch of the fit model
+    // overestimates by ~2.66x and likely binds on most pages, rendering the mushaf
+    // smaller than it needs to be. Fixing that changes all 604 pages visually, so it
+    // is a separate, device-reviewed change — not a rider on a perf commit.
+    val themeLineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+
+    // Fixed ink on the cream page (the page is always light, regardless of app
+    // theme). Ayah-end markers get the green accent like the header. Pure black +
+    // larger size: the QCF strokes are thin, so this is what gives readable contrast
+    // on the cream background.
+    val inkStyle = remember(lineFontFamily, fontSize, themeLineHeight) {
+        TextStyle(
+            fontFamily = lineFontFamily,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Normal,
+            lineHeight = themeLineHeight,
+            letterSpacing = 0.sp, // must match the measurement TextStyle exactly — see glyphMeasureStyle
+            textAlign = TextAlign.Center,
+            color = MushafInk
+        )
+    }
+    val endStyle = remember(inkStyle) { inkStyle.copy(color = MushafGreen) }
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -446,38 +608,53 @@ fun MushafLineRenderer(
         verticalAlignment = Alignment.CenterVertically
     ) {
         line.words.forEach { word ->
-            val isHighlighted = word.verseKey != null && word.verseKey == selectedVerseKey
-            val backgroundColor = if (isHighlighted) MushafGreen.copy(alpha = 0.24f) else Color.Transparent
             val onClick = remember(word, onWordTapped) {
                 { word.verseKey?.let { onWordTapped(it) }; Unit }
             }
+            val base = if (word.type == "end") endStyle else inkStyle
+            // All 9,046 lines in today's page JSONs use a single font, so the else
+            // branch never runs. Kept because the failure mode if that ever changes
+            // is silent: a word would render with another page's glyph table, i.e.
+            // the wrong Arabic, with nothing to catch it. Three lines to make a
+            // data assumption non-load-bearing is worth it here.
+            val style = if (word.fontName == lineFontName) {
+                base
+            } else {
+                base.copy(fontFamily = getFontFamily(context, word.fontName))
+            }
 
-            Box(
+            // No Box wrapper: Compose never collapses a single-child Box, so one per
+            // word doubled the page's LayoutNodes (280 -> 140 without it). padding,
+            // clickable and the highlight are Modifier.Nodes, not layout nodes, so
+            // they cost the same hung directly off the text. Order preserved:
+            // highlight outside padding, exactly as background() sat outside it.
+            BasicText(
+                text = word.glyph,
+                style = style,
                 modifier = Modifier
-                    .background(backgroundColor, shape = RoundedCornerShape(4.dp))
+                    // drawBehind, not background(): the selection is read here in the
+                    // draw phase, so tapping a word invalidates draw instead of
+                    // recomposing every word on all three composed pages. It also
+                    // skips the outline allocation and draw call that
+                    // background(Color.Transparent, shape) still paid for all 139
+                    // unselected words.
+                    .drawBehind {
+                        val key = word.verseKey
+                        if (key != null && key == selectedVerseKey()) {
+                            drawRoundRect(
+                                color = WordHighlightColor,
+                                cornerRadius = CornerRadius(WordHighlightRadius.toPx())
+                            )
+                        }
+                    }
                     .clickable(
                         enabled = word.verseKey != null,
                         onClick = onClick,
-                        interactionSource = remember { MutableInteractionSource() },
+                        interactionSource = interactionSource,
                         indication = null // No default ripple to keep text neat
                     )
                     .padding(horizontal = WORD_PADDING, vertical = WORD_PADDING)
-            ) {
-                val glyph = word.glyph
-                // Fixed ink on the cream page (the page is always light, regardless of
-                // app theme). Ayah-end markers get the green accent like the header.
-                // Pure black + larger size: the QCF strokes are thin, so this is what
-                // gives readable contrast on the cream background.
-                val inkColor = if (word.type == "end") MushafGreen else MushafInk
-                Text(
-                    text = glyph,
-                    fontFamily = getFontFamily(context, word.fontName),
-                    fontSize = fontSize,
-                    letterSpacing = 0.sp, // must match the measurement TextStyle exactly — see uniformFontSizeForLines
-                    color = inkColor,
-                    textAlign = TextAlign.Center
-                )
-            }
+            )
         }
     }
 }
@@ -530,14 +707,19 @@ private fun MushafLineRendererDensePreview() {
     val fontSize = remember {
         uniformFontSizeForLines(listOf(PreviewDenseLine), availableWidthPx, availableHeightPx, density, textMeasurer, context)
     }
-    Box(modifier = Modifier.background(MushafPaper).padding(8.dp)) {
-        MushafLineRenderer(
-            line = PreviewDenseLine,
-            fontSize = fontSize,
-            alignCenter = false,
-            selectedVerseKey = null,
-            onWordTapped = {}
-        )
+    // BayaanTheme, per UI_SPEC §0 — and load-bearing, not ceremony: MushafLineRenderer
+    // sources its lineHeight from MaterialTheme.typography, so an unthemed preview
+    // renders at a different line box than the device and stops being a guard.
+    BayaanTheme {
+        Box(modifier = Modifier.background(MushafPaper).padding(8.dp)) {
+            MushafLineRenderer(
+                line = PreviewDenseLine,
+                fontSize = fontSize,
+                alignCenter = false,
+                selectedVerseKey = { null },
+                onWordTapped = {}
+            )
+        }
     }
 }
 
@@ -552,25 +734,29 @@ private fun MushafLineRendererSparsePreview() {
     val fontSize = remember {
         uniformFontSizeForLines(listOf(PreviewSparseLine), availableWidthPx, availableHeightPx, density, textMeasurer, context)
     }
-    Box(modifier = Modifier.background(MushafPaper).padding(8.dp)) {
-        MushafLineRenderer(
-            line = PreviewSparseLine,
-            fontSize = fontSize,
-            alignCenter = false,
-            selectedVerseKey = null,
-            onWordTapped = {}
-        )
+    BayaanTheme {
+        Box(modifier = Modifier.background(MushafPaper).padding(8.dp)) {
+            MushafLineRenderer(
+                line = PreviewSparseLine,
+                fontSize = fontSize,
+                alignCenter = false,
+                selectedVerseKey = { null },
+                onWordTapped = {}
+            )
+        }
     }
 }
 
 @Preview(name = "Surah header glyph", showBackground = true, widthDp = 320)
 @Composable
 private fun SurahHeaderRendererPreview() {
-    SurahHeaderRenderer(
-        words = listOf(
-            QcfWord(code = 61697, fontName = "QCF4_QBSML", type = "surah_header", verseKey = null)
+    BayaanTheme {
+        SurahHeaderRenderer(
+            words = listOf(
+                QcfWord(code = 61697, fontName = "QCF4_QBSML", type = "surah_header", verseKey = null)
+            )
         )
-    )
+    }
 }
 
 // Full-page preview: mixes the dense Baqarah line with the sparse Al-Ikhlas line on
@@ -584,12 +770,14 @@ private fun MushafPageRendererPreview() {
         fontName = "QCF4_Hafs_01",
         lines = listOf(PreviewDenseLine, PreviewSparseLine)
     )
-    MushafPageRenderer(
-        page = samplePage,
-        chapters = emptyList(),
-        selectedVerseKey = null,
-        onWordTapped = {}
-    )
+    BayaanTheme {
+        MushafPageRenderer(
+            page = samplePage,
+            chapters = emptyList(),
+            selectedVerseKey = { null },
+            onWordTapped = {}
+        )
+    }
 }
 
 // Regression guard for the vertical counterpart of the overlap bug: a real, full
@@ -602,10 +790,84 @@ private fun MushafPageRendererShortHeightPreview() {
     val context = LocalContext.current
     // Preview tooling only — runBlocking is fine here, no real frame to block.
     val page = remember { kotlinx.coroutines.runBlocking { QcfRepository(context).page(3) } } // Al-Baqarah, 15 lines
-    MushafPageRenderer(
-        page = page,
-        chapters = emptyList(),
-        selectedVerseKey = null,
-        onWordTapped = {}
-    )
+    BayaanTheme {
+        MushafPageRenderer(
+            page = page,
+            chapters = emptyList(),
+            selectedVerseKey = { null },
+            onWordTapped = {}
+        )
+    }
+}
+
+// Guards the batching premise in uniformFontSizeForLines: it measures a whole font
+// run in one call instead of one call per word. That is only equivalent because the
+// QCF4 fonts carry no GSUB, GPOS, kern, morx or kerx table — verified across all 48 —
+// so advances come from hmtx alone and nothing interacts across glyph boundaries.
+//
+// The two numbers can still differ by the per-word ceil() that IntSize rounding
+// applies, which is bounded by one pixel per word. Anything beyond that means the
+// font set gained a shaping table and the batching is silently wrong: every line
+// would be modelled narrower than it renders, the fit scale would come out too
+// large, and Row/SpaceBetween would go back to negative gaps — the overlap bug
+// FIT_SAFETY_MARGIN and this whole file's scaling logic exist to prevent.
+//
+// A @Preview rather than a runtime assert on purpose: a per-page DEBUG check would
+// re-add in debug builds the exact ~140 measure() calls this change removes, making
+// the debug build slower than the code it replaced and poisoning the only profiling
+// available here (release is unsigned). Caveat: layoutlib's text stack approximates
+// but does not equal device Minikin, so treat this as a smoke test.
+@Preview(name = "Measure parity: joined run vs per-word (page 3)", showBackground = true, widthDp = 360)
+@Composable
+private fun MeasureParityPreview() {
+    val context = LocalContext.current
+    val textMeasurer = rememberTextMeasurer()
+    // Preview tooling only — runBlocking is fine here, no real frame to block.
+    // Matches the existing convention in MushafPageRendererShortHeightPreview.
+    val page = remember { kotlinx.coroutines.runBlocking { QcfRepository(context).page(3) } }
+
+    val report = remember(page) {
+        fun measure(text: String, font: String) = textMeasurer.measure(
+            text = text,
+            style = glyphMeasureStyle(context, font),
+            softWrap = false,
+            skipCache = true
+        ).size.width
+
+        // Rank by slack — tolerance minus delta — so the worst line is the one
+        // closest to (or past) its budget. Seeded from the first eligible line
+        // rather than from zero: seeding at zero would only ever record a line
+        // that already fails, so a healthy page would record nothing and report
+        // "no eligible lines" instead of PASS.
+        var worstLine = -1
+        var worstDelta = 0
+        var worstTolerance = 0
+        var worstSlack = Int.MAX_VALUE
+        page.lines.forEach { line ->
+            val words = line.words.filter { it.type != "surah_header" }
+            if (words.isEmpty() || words.any { it.fontName != words[0].fontName }) return@forEach
+            val joined = measure(words.joinToString("") { it.glyph }, words[0].fontName)
+            val perWord = words.sumOf { measure(it.glyph, it.fontName) }
+            val delta = kotlin.math.abs(perWord - joined)
+            val slack = words.size - delta
+            if (slack < worstSlack) {
+                worstSlack = slack
+                worstLine = line.line
+                worstDelta = delta
+                worstTolerance = words.size
+            }
+        }
+        when {
+            worstLine < 0 -> "SKIPPED — no single-font body lines on page 3"
+            worstSlack >= 0 ->
+                "PASS — worst line $worstLine: ${worstDelta}px delta, tolerance ${worstTolerance}px"
+            else ->
+                "FAIL — line $worstLine: ${worstDelta}px delta exceeds ${worstTolerance}px. " +
+                    "Joined-run measurement is no longer equivalent; check the font tables."
+        }
+    }
+
+    BayaanTheme {
+        Text(text = report, modifier = Modifier.padding(12.dp))
+    }
 }

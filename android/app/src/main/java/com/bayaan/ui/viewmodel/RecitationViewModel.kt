@@ -125,7 +125,11 @@ class RecitationViewModel(
             val chunk = ByteArray(minBuf)
             while (isActive) {
                 val n = ar.read(chunk, 0, chunk.size)
-                if (n > 0) pcmBuffer.write(chunk, 0, n)
+                if (n > 0) {
+                    pcmBuffer.write(chunk, 0, n)
+                } else if (n < 0) {
+                    break
+                }
             }
         }
 
@@ -271,6 +275,7 @@ class RecitationViewModel(
     }
 
     override fun onCleared() {
+        super.onCleared()
         audioRecord?.release()
         client.close()
     }

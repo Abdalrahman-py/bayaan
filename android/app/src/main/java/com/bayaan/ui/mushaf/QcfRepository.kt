@@ -16,13 +16,37 @@ import java.util.concurrent.ConcurrentHashMap
 // time anything measures/draws it — moved here so it happens on ioDispatcher via
 // preload(), not on the main thread mid-swipe. Keyed by name so both the repo and
 // the renderer share one cache instead of parsing/decoding the same font twice.
-private val fontCache = mutableMapOf<String, FontFamily>()
+//
+// Concurrent because this is genuinely touched from several threads: preloadFonts()
+// runs on ioDispatcher (and the Pager can have two page loads in flight — current +
+// beyondViewportPageCount neighbour), while MushafPagerScreen measures and draws with
+// it on the main thread. A plain mutableMapOf is a LinkedHashMap, which can corrupt
+// its own table if two threads resize it at once — that is the bug being fixed here.
+//
+// computeIfAbsent rather than getOrPut because getOrPut is read-then-write, so two
+// threads can both miss and both construct. That matters more than it looks:
+// AndroidAssetFont does `init { typeface = doLoad(null) }`, i.e. the ~2MB
+// Typeface.createFromAsset happens inside the Font(...) constructor, NOT lazily at
+// resolve() time. So a duplicated construction is a duplicated 2MB parse.
+// computeIfAbsent holds the bin lock across that parse, which is the right trade: the
+// alternative is not "nobody blocks", it is "both threads parse". One waiter beats two
+// parsers, and the loser's Typeface would have been thrown away regardless.
+//
+// (Note the duplicate instances would NOT break caching — AndroidAssetFont.equals
+// compares path, and FontListFontFamily.hashCode is fonts.hashCode(), so two
+// independently built instances for one name are equal and hash alike. The cost is
+// the wasted parse, not a cache miss.)
+private val fontCache = ConcurrentHashMap<String, FontFamily>()
 
 fun getFontFamily(context: Context, name: String): FontFamily {
-    return fontCache.getOrPut(name) {
-        val fileName = if (name == "QCF4_QBSML") "QCF4_QBSML.ttf" else "${name}_W.ttf"
-        val path = "qcf4/fonts/$fileName"
-        FontFamily(Font(path, context.assets))
+    // applicationContext: this map lives for the process, but a Context from
+    // LocalContext.current is the Activity, whose AssetManager is replaced on
+    // configuration change — caching that one strands the FontFamily on a dead
+    // AssetManager after a rotation.
+    val assets = context.applicationContext.assets
+    return fontCache.computeIfAbsent(name) { n ->
+        val fileName = if (n == "QCF4_QBSML") "QCF4_QBSML.ttf" else "${n}_W.ttf"
+        FontFamily(Font("qcf4/fonts/$fileName", assets))
     }
 }
 
@@ -62,6 +86,13 @@ class QcfRepository(
         cachedChapters = list
         return list
     }
+
+    // Synchronous peek, for seeding produceState. Without it, an already-parsed page
+    // still renders one blank frame: produceState's block runs in a LaunchedEffect,
+    // which dispatches on AndroidUiDispatcher.Main, so even a pure cache hit arrives
+    // a frame late. Returns null (never parses) so this stays safe to call in
+    // composition.
+    fun cachedPage(n: Int): QcfPage? = cachedPages[n]
 
     // Main-safe: asset IO + JSON parsing + font decode happen on ioDispatcher, so
     // callers can invoke this from a Composable (e.g. produceState) without
