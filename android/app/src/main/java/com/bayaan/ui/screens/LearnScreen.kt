@@ -58,8 +58,6 @@ import com.bayaan.ui.theme.AmiriFontFamily
 import com.bayaan.ui.theme.BayaanTheme
 import com.bayaan.ui.theme.NodeLockedDark
 import com.bayaan.ui.theme.NodeLockedLight
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 enum class NodeStatus { DONE, CURRENT, LOCKED }
@@ -80,24 +78,22 @@ fun LearnScreen(
     demoMode: Boolean = BuildConfig.DEMO_MODE,
 ) {
     val context = LocalContext.current
-    var units by remember { mutableStateOf(placeholderPath()) }
+    // Parsed during composition, not in the LaunchedEffect: the unit titles live in a
+    // 7.5KB bundled asset, so there is nothing to wait for. Seeding from placeholderPath()
+    // and filling in later meant the first frame always showed "Unit 1 · The Letters"
+    // before swapping to the real titles — a visible flash on every launch. Reading the
+    // asset on the main thread once at startup is the cheaper of the two.
+    var units by remember { mutableStateOf(loadCurriculum(context).ifEmpty { placeholderPath() }) }
     var header by remember { mutableStateOf(LearnApi.Header(0, xp, streak, 10, 0)) }
 
     LaunchedEffect(Unit) {
-        val assetUnits = loadCurriculum(context)
-        val token = tokenProvider()
-        if (token != null) {
-            val api = LearnApi(tokenProvider)
-            val path = api.learnPath()
-            api.close()
-            if (path != null) {
-                header = path.header
-                units = mergeUnits(assetUnits.ifEmpty { placeholderPath() }, path.units)
-            } else {
-                units = assetUnits.ifEmpty { placeholderPath() }
-            }
-        } else {
-            units = assetUnits.ifEmpty { placeholderPath() }
+        if (tokenProvider() == null) return@LaunchedEffect
+        val api = LearnApi(tokenProvider)
+        val path = api.learnPath()
+        api.close()
+        if (path != null) {
+            header = path.header
+            units = mergeUnits(units, path.units)
         }
     }
 
@@ -225,7 +221,7 @@ private fun LessonNode(node: NodeUi, demoMode: Boolean, onClick: () -> Unit) {
     }
 }
 
-private suspend fun loadCurriculum(context: Context): List<UnitUi> = withContext(Dispatchers.IO) {
+private fun loadCurriculum(context: Context): List<UnitUi> = run {
     try {
         val raw = context.assets.open("content/curriculum.json").bufferedReader().use { it.readText() }
         val root = JSONObject(raw)
