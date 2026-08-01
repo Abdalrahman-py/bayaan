@@ -1538,11 +1538,11 @@ classDiagram
     class AuthViewModel {
         +state: AuthUiState
         +supabaseClient
-        +checkSession()
+        +currentAccessToken() String
         +login(email, password)
         +signup(email, password)
         +signOut()
-        -persistToken(token)
+        -syncUserWithBackend(token) Boolean
         -friendlyAuthError(e, fallback) String
     }
     class AuthUiState {
@@ -1874,11 +1874,12 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     L->>App: Launch application
-    App->>AVM: checkSession()
-    AVM->>SDK: currentSessionOrNull()
-    alt Session present
-        SDK-->>AVM: Session with access token
-        AVM->>AVM: persistToken(accessToken)
+    App->>AVM: init: collect auth.sessionStatus
+    AVM->>SDK: Subscribe to sessionStatus
+    SDK->>SDK: Load stored session, refresh if expired
+    Note over AVM,SDK: While the status is Initializing the splash<br/>is held. Reading the session before loading<br/>finishes is what signed the learner out.
+    alt Authenticated
+        SDK-->>AVM: Authenticated(session)
         AVM-->>App: state = LoggedIn
         App->>App: Navigate to Learn tab
         AVM->>BE: POST /auth/sync (Bearer token)
@@ -1887,8 +1888,12 @@ sequenceDiagram
         BE->>DB: SELECT then INSERT user if absent
         DB-->>BE: created = true or false
         BE-->>AVM: 200 {user_id, created}
-    else No session
-        SDK-->>AVM: null
+    else Refresh failed on the network
+        SDK-->>AVM: RefreshFailure
+        AVM-->>App: state = LoggedIn (unchanged)
+        Note over AVM,SDK: The stored session is untouched and the SDK<br/>retries, so being offline must not return<br/>the learner to a password prompt.
+    else NotAuthenticated
+        SDK-->>AVM: NotAuthenticated
         AVM-->>App: state = LoggedOut
         App->>L: Show sign-in screen
         L->>App: Enter email and password
@@ -1897,8 +1902,7 @@ sequenceDiagram
         SDK->>IdP: Authenticate
         alt Credentials valid
             IdP-->>SDK: Signed ES256 JWT
-            SDK-->>AVM: Session
-            AVM->>AVM: persistToken(accessToken)
+            SDK-->>AVM: sessionStatus = Authenticated
             AVM-->>App: state = LoggedIn
             AVM->>BE: POST /auth/sync
         else Credentials rejected
@@ -1913,7 +1917,7 @@ sequenceDiagram
 
 `[FIGURE — render from the mermaid source above and insert image]`
 
-**Figure 9.** Sign-in and session restore (UC02, UC03). The key design point is the note on the synchronisation call: the local session is the sole authority for signed-in state, so a cold or unreachable backend cannot log the learner out. This replaced an earlier defect where every application launch demanded the password again.
+**Figure 9.** Sign-in and session restore (UC02, UC03). The key design point is that the SDK's own session status is the sole authority for signed-in state: the splash is held until loading finishes, a network-level refresh failure leaves the learner signed in, and the synchronisation call is fire-and-forget, so neither a slow start nor a cold or unreachable backend can log the learner out. This replaced an earlier defect where every application launch demanded the password again.
 
 ### 4.3.2 Full-Ayah Recitation Analysis
 
@@ -2581,7 +2585,7 @@ All figures below were measured directly from the working tree rather than estim
 Several planning documents written earlier in the project describe an architecture that was never built. This report describes the system as it exists, and the discrepancies are recorded here because they are material to anyone reading those older documents:
 
 - **The Android module is plain, single-module Android — not Kotlin Multiplatform.** `android/settings.gradle.kts` includes exactly one module, `:app`. There is no `shared/` directory in the working tree. An earlier draft of the Android instruction file planned for a multiplatform structure and a WebSocket audio-streaming path; neither exists.
-- **Authentication is Supabase, not Firebase.** The session token is stored under the shared-preferences file `supabase_session`, and the backend verifies it via JWKS/ES256.
+- **Authentication is Supabase, not Firebase.** The session is persisted by the Supabase SDK itself, in the application's default shared-preferences file under a key derived from the project URL, and the backend verifies the token it carries via JWKS/ES256.
 - **State is held in `mutableStateOf` and `mutableStateMapOf`, not in `StateFlow`.** There is no `Flow` in the application's state layer.
 - **The backend persists letter-characteristic errors.** An earlier note stated that the engine response parser discarded them; it no longer does. `EngineResponseParser` returns a three-field result, and `SifatMistakeRepository` persists the third field.
 - **The curriculum is complete.** An earlier report draft described three authored units and seventeen lessons with units four to eight listed as future work. The working tree contains forty-four authored lessons and zero stubs.
@@ -2725,11 +2729,11 @@ Retry semantics differ by kind, and the difference is pedagogically motivated. A
 
 `AuthViewModel` owns the Supabase client and a three-state machine: `Checking`, `LoggedOut`, `LoggedIn`. Three implementation details matter:
 
-**The session is the sole authority.** `checkSession()` asks the SDK for the locally-stored session. If one exists, the state becomes `LoggedIn` immediately and the backend synchronisation call is dispatched afterwards as fire-and-forget. This ordering fixed a real defect: an earlier implementation gated the signed-in state on the backend call succeeding, which meant that a cold backend — routinely thirty to sixty seconds on the free tier — signed the learner out and demanded their password on every launch.
+**The session is the sole authority.** The view model subscribes to the SDK's `sessionStatus` flow and maps each status onto the state machine in one testable function, `authUiState()`. Two of the four mappings encode defects that were found and fixed. `Initializing` keeps whatever state is current, holding the splash: an earlier implementation polled the SDK for the stored session at launch, which returned null while loading was still in progress and bounced a perfectly valid session to the sign-in screen on every cold start. `RefreshFailure` — a refresh that failed on the network, as distinct from one the server rejected — keeps the learner signed in, because the stored session is untouched and the SDK retries in the background; a rejected refresh token clears the session and arrives as `NotAuthenticated` instead. The backend synchronisation call is dispatched afterwards as fire-and-forget, which fixed a third defect: an earlier implementation gated the signed-in state on that call succeeding, which meant that a cold backend — routinely thirty to sixty seconds on the free tier — signed the learner out and demanded their password on every launch.
 
 **Errors are humanised at the boundary.** `friendlyAuthError()` maps the third-party SDK's verbose exception text onto short messages: wrong credentials, unconfirmed email, weak password, network failure. Raw exception text is never displayed.
 
-**Token storage is plain shared preferences, deliberately.** The file is named `supabase_session`. The source carries an inline note recording that this is not encrypted storage, that application backup is disabled so the file is not extractable through a platform backup, and that the upgrade path — an encrypted preferences implementation — is available if the threat model changes to include a rooted device.
+**Token storage is delegated to the SDK, on plain shared preferences, deliberately.** The application writes no token of its own: the Supabase SDK's default session manager serialises the whole session into the application's default shared-preferences file, `com.bayaan_preferences`, under a key derived from the project URL, and every token read in the application goes through the SDK's `currentSessionOrNull()`. The source carries an inline note recording that this is not encrypted storage, that application backup is disabled so the file is not extractable through a platform backup, and that the upgrade path — supplying a custom session manager backed by an encrypted preferences implementation — is available if the threat model changes to include a rooted device.
 
 ## 5.3 Backend Service
 
