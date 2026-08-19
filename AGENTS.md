@@ -83,7 +83,12 @@ type(module): short description
 
 **Valid types:** `feat`, `fix`, `chore`, `refactor`, `test`, `docs`, `experiment` (ML only)
 
-**Valid modules:** `android`, `backend`, `ml`, `docs`, `infra`
+**Valid modules:** `android`, `flutter`, `backend`, `ml`, `docs`, `infra`
+
+`flutter` is the new client (`flutter/`), replacing `android` (native Kotlin) —
+see the decision note in `flutter/README.md` if one exists, or ask before
+assuming `android/` is dead. Don't delete `android/` without an explicit
+go-ahead; it still has real, working features.
 
 **Examples:**
 

@@ -1,0 +1,39 @@
+name: Flutter Release
+
+on:
+  push:
+    branches: [main]
+    paths: ["flutter/**"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter build apk --release
+
+      - name: Release APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: flutter-build-${{ github.run_number }}
+          name: Flutter build ${{ github.run_number }}
+          files: flutter/build/app/outputs/flutter-apk/app-release.apk
