@@ -1,29 +1,17 @@
-// spike-audio-analyze — Deno Edge Function mirroring Ktor POST /audio/analyze
+// audio-analyze — Deno Edge Function for POST /audio/analyze (the core loop).
 //
-// SPIKE ONLY (2026-08-09): the risky route for the Edge Function migration.
-// /speech/grade clips are <=2MB; /audio/analyze accepts up to 10MB — right at
-// the Edge Function platform's body-size boundary. This spike answers:
-//   1. Does a ~10MB multipart body survive through an Edge Function?
-//   2. Does the Modal /correct forward (audio multipart + sura/aya query
-//      params, 60s timeout) behave identically?
-//   3. Cold vs warm latency vs the Render path.
+// Thin orchestrator: validate multipart at the boundary, forward audio to Modal
+// /correct via the shared forward adapter, PARSE the engine body before
+// persisting (unparseable -> 503 ml_unavailable, per api-spec.md:105), persist
+// session + mistakes + sifat_mistakes, return the engine body unchanged.
 //
-// Ported 1:1 from AnalyzeRoute.kt + RecitationAnalysis.kt + EngineResponseParser.kt.
-// Response contract: engine body passed through UNCHANGED on success (the app
-// parses it itself); error states map like Ktor:
-//   EngineError     -> engine status + body
-//   EngineFailed    -> 503 {"error":"ml_unavailable",...}
-//   PersistenceFailed -> 500 {"error":"persistence_error",...}
+// All dialect knowledge (field names, the preditected_ph misspelling, all_correct
+// semantics, drop-malformed-rows) lives in ../_shared/engine-contract.ts.
 //
-// Persistence: uses SERVICE_ROLE_KEY secret when present (same DB bypass trust
-// as the backend's HikariCP connection). If absent, logs and skips persistence
-// so the proxy path can still be tested — the spike's core questions.
-// NOTE: RLS is ON for all public tables with zero policies (checked 2026-08-09),
-// so anon+user-JWT writes are impossible without adding policies first.
-//
-// Promoted from spike/edge-functions/spike-audio-analyze (2026-08-19): only real
-// change is CORS (native app never needed it; Flutter web dev does).
+// verify_jwt=true on deploy: Supabase validates the Bearer JWT and injects the
+// verified claims into x-supabase-auth.
 import { CORS_HEADERS, handlePreflight } from "../_shared/cors.ts";
+import { forwardMultipart, parseEngineBody } from "../_shared/engine-contract.ts";
 
 const MUAALEM_URL = Deno.env.get("MUAALEM_URL") ??
   "https://abdalrahman-py--bayaan-muaalem-muaalem-correct.modal.run";
@@ -58,90 +46,12 @@ function userIdFromRequest(req: Request): string | null {
   }
 }
 
-interface MistakeRow {
-  id: string;
-  session_id: string;
-  char_start: number;
-  char_end: number;
-  error_type: string;
-  speech_error_type: string | null;
-  rule_name_en: string | null;
-  rule_name_ar: string | null;
-  expected_len: number | null;
-  predicted_len: number | null;
-}
-
-interface SifatRow {
-  id: string;
-  session_id: string;
-  phonemes_group: string;
-  attribute: string;
-  predicted: string;
-  expected: string;
-  confidence: number | null;
-}
-
 function cryptoRandomUuid(): string {
   return crypto.randomUUID();
 }
 
-// Port of EngineResponseParser.parse — extracts what the DB needs. The RAW
-// engine body is still what gets returned to the client.
-function parseEngineBody(body: string) {
-  let root: Record<string, unknown>;
-  try {
-    root = JSON.parse(body);
-  } catch {
-    throw new Error("unparseable engine body");
-  }
-  const allCorrect = typeof root["all_correct"] === "boolean" ? root["all_correct"] as boolean : true;
-
-  const mistakes: MistakeRow[] = [];
-  if (Array.isArray(root["errors"])) {
-    for (const el of root["errors"] as Record<string, unknown>[]) {
-      try {
-        const pos = el["uthmani_pos"] as unknown[];
-        if (!Array.isArray(pos) || pos.length < 2) continue;
-        const rule = (el["ref_tajweed_rules"] as Record<string, unknown>[] | undefined)?.[0] as Record<string, unknown> | undefined;
-        const ruleName = rule?.["name"] as Record<string, unknown> | undefined;
-        mistakes.push({
-          id: cryptoRandomUuid(),
-          session_id: "", // filled after session insert
-          char_start: Number(String(pos[0])),
-          char_end: Number(String(pos[1])),
-          error_type: String(el["error_type"] ?? ""),
-          speech_error_type: el["speech_error_type"] != null ? String(el["speech_error_type"]) : null,
-          rule_name_en: ruleName?.["en"] != null ? String(ruleName["en"]) : null,
-          rule_name_ar: ruleName?.["ar"] != null ? String(ruleName["ar"]) : null,
-          expected_len: el["expected_len"] != null ? Number(el["expected_len"]) : null,
-          predicted_len: el["predicted_len"] != null ? Number(el["predicted_len"]) : null,
-        });
-      } catch { /* skip malformed row, like Ktor's mapNotNull */ }
-    }
-  }
-
-  const sifatErrors: SifatRow[] = [];
-  if (Array.isArray(root["sifat_errors"])) {
-    for (const el of root["sifat_errors"] as Record<string, unknown>[]) {
-      try {
-        sifatErrors.push({
-          id: cryptoRandomUuid(),
-          session_id: "",
-          phonemes_group: String(el["phonemes_group"] ?? ""),
-          attribute: String(el["attribute"] ?? ""),
-          predicted: String(el["predicted"] ?? ""),
-          expected: String(el["expected"] ?? ""),
-          confidence: el["confidence"] != null ? Number(el["confidence"]) : null,
-        });
-      } catch { /* skip */ }
-    }
-  }
-
-  return { allCorrect, mistakes, sifatErrors };
-}
-
 // Minimal PostgREST client — service-role key bypasses RLS exactly like the
-// backend's HikariCP connection does. No SDK dependency needed.
+// backend's HikariCP connection did. No SDK dependency needed.
 function pgRest(table: string) {
   return {
     upsert: async (body: unknown, onConflict: string) => {
@@ -179,8 +89,7 @@ async function persist(
   aya: number,
   parsed: ReturnType<typeof parseEngineBody>,
 ): Promise<void> {
-  // Upsert users row (mirrors UserRepository.upsert / /auth/sync) so the
-  // sessions.user_id FK has a target.
+  // Upsert users row (mirrors /auth-sync) so the sessions.user_id FK has a target.
   await pgRest("users").upsert({ id: userId, email: null }, "id");
 
   const sessionId = cryptoRandomUuid();
@@ -194,14 +103,22 @@ async function persist(
 
   if (parsed.mistakes.length > 0) {
     await pgRest("mistakes").insert(
-      parsed.mistakes.map((m) => ({ ...m, session_id: sessionId })),
+      parsed.mistakes.map((m) => ({ ...m, id: cryptoRandomUuid(), session_id: sessionId })),
     );
   }
   if (parsed.sifatErrors.length > 0) {
     await pgRest("sifat_mistakes").insert(
-      parsed.sifatErrors.map((s) => ({ ...s, session_id: sessionId })),
+      parsed.sifatErrors.map((s) => ({ ...s, id: cryptoRandomUuid(), session_id: sessionId })),
     );
   }
+}
+
+// Strict integer-or-default parsing for sura/aya: garbage -> default 1, never NaN
+// in the Modal query string (Ktor used toIntOrNull()?.let ?: 1).
+function intParam(form: FormData, name: string): number {
+  const raw = String(form.get(name) ?? "");
+  if (/^[1-9]\d*$/.test(raw)) return Number(raw);
+  return 1;
 }
 
 Deno.serve(async (req) => {
@@ -219,8 +136,8 @@ Deno.serve(async (req) => {
   }
 
   const audio = form.get("audio");
-  const sura = Number.parseInt(String(form.get("sura") ?? "1"), 10);
-  const aya = Number.parseInt(String(form.get("aya") ?? "1"), 10);
+  const sura = intParam(form, "sura");
+  const aya = intParam(form, "aya");
 
   if (!(audio instanceof File)) {
     return json({ error: "bad_request", message: "missing audio field" }, 400);
@@ -234,43 +151,50 @@ Deno.serve(async (req) => {
   }
 
   // Forward to Modal /correct — audio multipart, sura/aya as query params
-  // (same shape the Ktor client sends). 60s budget covers cold start.
+  // (same shape the Ktor client sent). 60s budget covers cold start.
   const fd = new FormData();
   fd.append("audio", new Blob([audioBytes], { type: "audio/wav" }), "recording.wav");
 
-  let engineResp: Response;
+  let engineResp;
   try {
-    engineResp = await fetch(`${MUAALEM_URL}?sura=${sura}&aya=${aya}`, {
-      method: "POST",
-      body: fd,
-      signal: AbortSignal.timeout(60_000),
-    });
+    engineResp = await forwardMultipart(`${MUAALEM_URL}?sura=${sura}&aya=${aya}`, fd);
   } catch {
     return json({ error: "ml_unavailable", message: "recitation engine did not respond" }, 503);
   }
 
-  const engineBody = await engineResp.text();
-
   if (engineResp.status < 200 || engineResp.status >= 300) {
-    return new Response(engineBody, { status: engineResp.status, headers: JSON_HEADERS });
+    // Engine answered with an error — pass its body through unchanged.
+    return new Response(engineResp.body, { status: engineResp.status, headers: JSON_HEADERS });
+  }
+
+  // Parse BEFORE persisting: an unparseable engine body is an engine problem,
+  // not a storage problem -> 503 ml_unavailable (api-spec.md:105), not 500.
+  let parsed;
+  try {
+    parsed = parseEngineBody(engineResp.body);
+  } catch {
+    return json({ error: "ml_unavailable", message: "recitation engine did not respond" }, 503);
   }
 
   // Persist, but never fail a real ML result because storage hiccuped —
   // mirroring Ktor: Success(engineBody) only after persistence; on persistence
-  // failure return 500 like PersistenceFailed.
+  // failure return 500 like PersistenceFailed. Missing SERVICE_ROLE_KEY or
+  // userId is a misconfiguration, not a testing shortcut: fail loudly instead
+  // of silently returning 200 with nothing saved.
   const userId = userIdFromRequest(req);
-  if (SERVICE_ROLE_KEY && userId) {
-    try {
-      const parsed = parseEngineBody(engineBody);
-      await persist(userId, sura, aya, parsed);
-    } catch (e) {
-      console.error("persistence failed:", e instanceof Error ? e.message : String(e));
-      return json({ error: "persistence_error", message: "failed to save session" }, 500);
-    }
-  } else {
-    console.log("persistence skipped:", !SERVICE_ROLE_KEY ? "no SERVICE_ROLE_KEY" : "no userId");
+  if (!SERVICE_ROLE_KEY) {
+    return json({ error: "persistence_error", message: "SERVICE_ROLE_KEY not configured" }, 500);
+  }
+  if (!userId) {
+    return json({ error: "persistence_error", message: "failed to save session" }, 500);
+  }
+  try {
+    await persist(userId, sura, aya, parsed);
+  } catch (e) {
+    console.error("persistence failed:", e instanceof Error ? e.message : String(e));
+    return json({ error: "persistence_error", message: "failed to save session" }, 500);
   }
 
   // Return engine body unchanged — the app parses it itself.
-  return new Response(engineBody, { status: 200, headers: JSON_HEADERS });
+  return new Response(engineResp.body, { status: 200, headers: JSON_HEADERS });
 });

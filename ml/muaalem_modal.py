@@ -223,6 +223,8 @@ class Muaalem:
         result = self._grade_against_text(wav_bytes, uthmani, madd)
         # Keep the /correct response shape (sura/aya/uthmani fields) the backend
         # parser already depends on; grade-text returns reference_text instead.
+        # all_correct counts sifat errors too, matching /grade-text — a recitation
+        # with only sifat errors is NOT perfect (see engine-contract.ts).
         return {
             "sura": sura,
             "aya": aya,
@@ -230,7 +232,7 @@ class Muaalem:
             "errors": result["errors"],
             "sifat_errors": result["sifat_errors"],
             "error_count": result["error_count"],
-            "all_correct": len(result["errors"]) == 0,
+            "all_correct": len(result["errors"]) == 0 and len(result["sifat_errors"]) == 0,
             "audio_secs": result["audio_secs"],
             "infer_secs": result["infer_secs"],
         }
