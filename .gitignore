@@ -90,3 +90,6 @@ android/app/src/main/assets/content/
 # tracked — it's public-domain Quran text and is needed to build a fresh clone.)
 .scratch/
 docs.zip
+
+# Supabase CLI local state — machine-specific (project ref/link info), never commit.
+supabase/.temp/
