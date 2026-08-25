@@ -1,5 +1,11 @@
 # AGENTS.md — Android Module
 
+> **STATUS: DISCONTINUED (2026-08-25).** The Android (Kotlin/Jetpack Compose) client is discontinued.
+> The Flutter client (`/flutter`) is the current app — do not build new features here.
+> This module is kept as reference (it still holds features the port may not have carried,
+> e.g. the QCF mushaf renderer — see `docs/CODEBASE_MAP.md`) and for the historical record.
+> Only critical fixes allowed, and only with explicit go-ahead.
+
 You are an AI coding agent operating inside the `/android` directory of Bayaan. This file is your scope and rulebook. Read [`../AGENTS.md`](../AGENTS.md) first for project-wide rules — this file extends them.
 
 ---
