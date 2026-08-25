@@ -83,6 +83,29 @@ class Muaalem:
         os.environ["HF_HOME"] = CACHE_DIR
         from quran_muaalem import Muaalem as _Muaalem
 
+        # Upstream bug (quran-muaalem 0.1.0, decode.py align_predicted_sequence):
+        # the m == 0 branch returns ONE list instead of a (ids, mask) tuple, so the
+        # caller's 2-target unpack raises "ValueError: too many values to unpack".
+        # Fires when a sifat level decodes to an empty sequence — data-dependent,
+        # which is why the spike clips never hit it. Patch: return the aligned
+        # placeholder list plus an all-False mask (nothing predicted = nothing
+        # matches), matching the shape of every other return path.
+        import quran_muaalem.decode as _decode_mod
+
+        _orig_align = _decode_mod.align_predicted_sequence
+
+        def _align_predicted_sequence_fixed(ref, predicted, missing_placeholder=-100):
+            n, m = len(ref), len(predicted)
+            if n == m:
+                return predicted, [True] * n
+            if m == 0:
+                return [missing_placeholder] * n, [False] * n
+            return _orig_align(ref, predicted, missing_placeholder)
+
+        _decode_mod.align_predicted_sequence = _align_predicted_sequence_fixed
+        # Only call site is decode.py:506, which resolves via module globals —
+        # patching the module attribute is sufficient.
+
         t0 = time.perf_counter()
         self.model = _Muaalem(device="cuda")
         print(f"[load] muaalem ready in {time.perf_counter() - t0:.1f}s")
