@@ -9,6 +9,8 @@ import '../../services/auth_controller.dart';
 import '../../services/quran_translation.dart';
 import '../../services/recitation_controller.dart';
 import '../../shared/widgets/ornamental_divider.dart';
+import '../../shared/widgets/pulsing_rings.dart';
+import '../../shared/widgets/recording_wavebars.dart';
 
 /// bayaan-recording from Figma. The verse card leaves a lot of empty space
 /// below it before the mic button — filled with a translation card (per
@@ -93,6 +95,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
                         _buildVerseCard(state.verse),
                         const SizedBox(height: 20),
                         _buildCaption(state),
+                        const SizedBox(height: 8),
+                        RecordingWavebars(active: state is Recording),
                         const SizedBox(height: 20),
                         if (state is Ready) _buildTranslationCard(),
                         const SizedBox(height: 24),
@@ -293,29 +297,42 @@ class _RecordingScreenState extends State<RecordingScreen> {
               widget.controller.start(widget.sura, widget.aya);
             }
           },
-          child: Container(
-            width: 84,
-            height: 84,
+          child: Stack(
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: (recording ? AppColors.tajweedError : AppColors.tealStart)
-                  .withOpacity(0.15),
-            ),
-            child: Container(
-              width: 64,
-              height: 64,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: recording ? AppColors.tajweedError : AppColors.tealStart,
+            children: [
+              if (recording)
+                PulsingRings(
+                  active: true,
+                  color: AppColors.tajweedError,
+                ),
+              Container(
+                width: 84,
+                height: 84,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color:
+                      (recording ? AppColors.tajweedError : AppColors.tealStart)
+                          .withOpacity(0.15),
+                ),
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: recording
+                        ? AppColors.tajweedError
+                        : AppColors.tealStart,
+                  ),
+                  child: Icon(
+                    recording ? Icons.stop : Icons.mic,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
               ),
-              child: Icon(
-                recording ? Icons.stop : Icons.mic,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
