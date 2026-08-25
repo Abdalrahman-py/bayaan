@@ -39,5 +39,14 @@ void main() {
       final v = QuranText.verseFor(1, 1);
       expect(v.surahNameEn, 'Al-Fatihah');
     });
+
+    test('every verse carries its real mushaf page number', () async {
+      await QuranText.ensureLoaded();
+      final v = QuranText.verse(2, 255); // Ayat al-Kursi
+      expect(v, isNotNull);
+      expect(v!.pageNumber, 42);
+      expect(QuranText.verse(67, 1)!.pageNumber, 562); // Surah Mulk
+      expect(QuranText.verse(1, 7)!.pageNumber, 1); // last ayah of Fatihah
+    });
   });
 }

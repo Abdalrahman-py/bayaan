@@ -15,6 +15,7 @@ class QuranText {
   static Map<String, String> _texts = {};
   static List<Chapter> _chapters = [];
   static Map<int, Chapter>? _byId; // id → chapter, immune to list ordering
+  static Map<String, int> _pages = {}; // "sura:aya" → mushaf page number
 
   static Future<void> ensureLoaded() async {
     if (_texts.isNotEmpty) return;
@@ -37,7 +38,15 @@ class QuranText {
         )
         .toList();
     _byId = {for (final c in _chapters) c.id: c};
+
+    final pageRaw = await rootBundle.loadString('assets/quran/pages.json');
+    final pageObj = jsonDecode(pageRaw) as Map<String, dynamic>;
+    final inner = pageObj['sura:aya'] as Map<String, dynamic>;
+    _pages = inner.map((k, v) => MapEntry(k, v as int));
   }
+
+  /// Mushaf page number for (sura, aya), or null if assets never loaded.
+  static int? pageFor(int sura, int aya) => _pages['$sura:$aya'];
 
   static int verseCount(int sura) => _byId?[sura]?.versesCount ?? 0;
 
@@ -51,6 +60,7 @@ class QuranText {
       surahNameEn: ch.nameEn,
       surahNameAr: ch.nameAr,
       uthmani: text,
+      pageNumber: _pages['$sura:$aya'] ?? 1,
     );
   }
 

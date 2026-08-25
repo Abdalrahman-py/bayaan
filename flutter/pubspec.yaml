@@ -28,6 +28,7 @@ flutter:
   assets:
     - assets/quran/uthmani.json
     - assets/quran/chapters.json
+    - assets/quran/pages.json
     - assets/icons/google_logo.png
     - assets/content/curriculum.json
     - assets/content/lessons/

@@ -5,12 +5,16 @@ class Verse {
   final String surahNameEn;
   final String surahNameAr;
   final String uthmani;
+
+  /// Real mushaf page number (Madani 604-page convention), e.g. 2:255 → 42.
+  final int pageNumber;
   const Verse({
     required this.sura,
     required this.aya,
     required this.surahNameEn,
     required this.surahNameAr,
     required this.uthmani,
+    this.pageNumber = 1,
   });
 
   Verse copyWith({String? uthmani}) => Verse(
@@ -19,6 +23,7 @@ class Verse {
     surahNameEn: surahNameEn,
     surahNameAr: surahNameAr,
     uthmani: uthmani ?? this.uthmani,
+    pageNumber: pageNumber,
   );
 }
 
