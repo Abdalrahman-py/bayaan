@@ -5,12 +5,8 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../services/recitation_controller.dart';
+import '../../shared/animation/score_math.dart';
 import '../../shared/widgets/dashed_circle_painter.dart';
-
-/// Linear interpolation of an animated score counter.
-/// Exposed for tests; [t] is the animation value in [0, 1].
-int interpolateScore(double t, {required int from, required int to}) =>
-    (from + (to - from) * t).round();
 
 /// bayaan-celebration from Figma — shown when ResultState.allCorrect.
 /// Polish ported from the bayyan client: count-up score, dashed gold ring,

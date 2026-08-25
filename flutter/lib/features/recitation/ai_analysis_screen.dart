@@ -9,9 +9,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
 import '../../services/recitation_controller.dart';
+import '../../shared/widgets/animated_score_ring.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
 import '../../shared/widgets/ornamental_divider.dart';
-import '../../shared/widgets/progress_ring_painter.dart';
 
 /// bayaan-ai-analysis from Figma — the mistakes-found result screen. Shown
 /// when ResultState.allCorrect is false; CelebrationScreen handles the
@@ -205,27 +205,14 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
       child: Column(
         children: [
           SizedBox(
-            width: 120,
-            height: 120,
+            width: 170,
+            height: 150,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                CustomPaint(
-                  size: const Size(120, 120),
-                  painter: ProgressRingPainter(
-                    progress: score / 100,
-                    strokeWidth: 10,
-                    color: AppColors.tealStart,
-                  ),
-                ),
-                Text(
-                  '$score',
-                  style: pjs(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.tealStart,
-                  ),
-                ),
+                _buildDecorSquare(22.5),
+                _buildDecorSquare(67.5),
+                AnimatedScoreRing(score: score),
               ],
             ),
           ),
@@ -239,6 +226,20 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDecorSquare(double degrees) {
+    return Transform.rotate(
+      angle: degrees * 3.14159 / 180,
+      child: Container(
+        width: 150,
+        height: 140,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.gold.withOpacity(0.15)),
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
     );
   }

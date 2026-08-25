@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bayaan/features/recitation/celebration_screen.dart';
+import 'package:bayaan/shared/animation/score_math.dart';
 import 'package:bayaan/services/recitation_controller.dart';
 import 'package:bayaan/shared/widgets/dashed_circle_painter.dart';
 
