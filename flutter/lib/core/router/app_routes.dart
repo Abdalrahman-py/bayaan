@@ -18,6 +18,9 @@ class AppRoutes {
   static const placement = '/learn/placement';
   static const lesson = '/learn/lesson/:lessonId';
   static const lessonResult = '/learn/lesson/:lessonId/result';
+  static const quiz = '/quiz';
+  static const quizSession = '/quiz/session';
+  static const quizResult = '/quiz/result';
 
   static String recordingPath(int sura, int aya) => '/recite/$sura/$aya';
   static String aiAnalysisPath(int sura, int aya) =>
