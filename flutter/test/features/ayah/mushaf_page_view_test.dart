@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bayaan/features/ayah/widgets/mushaf_page_view.dart';
 import 'package:bayaan/features/ayah/models/ayah.dart';
+import 'package:bayaan/core/theme/app_colors.dart';
 
 void main() {
   group('groupAyahsByMushafPage', () {
@@ -92,6 +93,60 @@ void main() {
       await tester.pumpAndSettle();
       expect(tapped, hasLength(1));
       expect(tapped.single.number, 1);
+    });
+
+    testWidgets('the selected ayah renders a highlighted medallion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MushafPageView(
+              ayahs: [v(1, 1), v(2, 1)],
+              selectedNumber: 2,
+              onAyahTap: (_) {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Selected medallion is gold-filled (2 medallions: 1 unselected, 1 selected).
+      final goldMedallions = tester.widgetList<Container>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).color == AppColors.gold,
+        ),
+      );
+      expect(goldMedallions, hasLength(1));
+    });
+
+    testWidgets('no selectedNumber means no highlighted medallion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MushafPageView(
+              ayahs: [v(1, 1), v(2, 1)],
+              onAyahTap: (_) {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final goldMedallions = tester.widgetList<Container>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).color == AppColors.gold,
+        ),
+      );
+      expect(goldMedallions, isEmpty);
     });
   });
 }

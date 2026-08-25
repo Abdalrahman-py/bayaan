@@ -32,6 +32,7 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
   late final Animation<double> _headerFade;
   late final Animation<double> _bannerFade;
   late final Animation<double> _bannerScale;
+  int? _selectedNumber; // mushaf is for reading; tap only selects
 
   @override
   void initState() {
@@ -72,11 +73,12 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
             Expanded(
               child: MushafPageView(
                 ayahs: widget.ayahs,
-                onAyahTap: (ayah) => context.push(
-                  AppRoutes.recordingPath(widget.surahNumber, ayah.number),
-                ),
+                selectedNumber: _selectedNumber,
+                onAyahTap: (ayah) =>
+                    setState(() => _selectedNumber = ayah.number),
               ),
             ),
+            _buildPracticeBar(context),
             AppBottomNav(
               currentIndex: 1,
               onTap: (i) {
@@ -87,6 +89,41 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPracticeBar(BuildContext context) {
+    final selected = _selectedNumber;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton.icon(
+          onPressed: selected == null
+              ? null
+              : () => context.push(
+                    AppRoutes.recordingPath(widget.surahNumber, selected),
+                  ),
+          icon: const Icon(Icons.mic_rounded, size: 18),
+          label: Text(
+            selected == null
+                ? 'Tap an ayah to select it'
+                : 'Practice Ayah $selected',
+            style: pjs(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.tealStart,
+            disabledBackgroundColor: const Color(0xFFE0DCD3),
+            disabledForegroundColor: AppColors.textMuted,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(100),
+            ),
+          ),
         ),
       ),
     );

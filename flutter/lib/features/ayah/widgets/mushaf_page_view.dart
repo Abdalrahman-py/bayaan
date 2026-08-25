@@ -21,11 +21,16 @@ List<List<Ayah>> groupAyahsByMushafPage(List<Ayah> ayahs) {
 /// gold-framed, ayah-number medallions, tappable ayahs. No QCF glyph fonts.
 class MushafPageView extends StatefulWidget {
   final List<Ayah> ayahs;
+
+  /// Ayah number currently selected (for reading); null when nothing is
+  /// selected. Selection is purely visual — navigation happens elsewhere.
+  final int? selectedNumber;
   final ValueChanged<Ayah> onAyahTap;
 
   const MushafPageView({
     super.key,
     required this.ayahs,
+    this.selectedNumber,
     required this.onAyahTap,
   });
 
@@ -68,6 +73,7 @@ class _MushafPageViewState extends State<MushafPageView> {
                   child: _MushafPage(
                     ayahs: _pages[index],
                     mushafPageNumber: _pages[index].first.pageNumber,
+                    selectedNumber: widget.selectedNumber,
                     onAyahTap: widget.onAyahTap,
                   ),
                 );
@@ -115,11 +121,13 @@ class _MushafPageViewState extends State<MushafPageView> {
 class _MushafPage extends StatefulWidget {
   final List<Ayah> ayahs;
   final int mushafPageNumber;
+  final int? selectedNumber;
   final ValueChanged<Ayah> onAyahTap;
 
   const _MushafPage({
     required this.ayahs,
     required this.mushafPageNumber,
+    this.selectedNumber,
     required this.onAyahTap,
   });
 
@@ -267,8 +275,17 @@ class _MushafPageState extends State<_MushafPage> {
     final spans = <InlineSpan>[];
     for (var i = 0; i < widget.ayahs.length; i++) {
       final ayah = widget.ayahs[i];
+      final bool selected = ayah.number == widget.selectedNumber;
       spans.add(
-        TextSpan(text: '${ayah.arabicText} ', recognizer: _recognizers[i]),
+        TextSpan(
+          text: '${ayah.arabicText} ',
+          recognizer: _recognizers[i],
+          style: selected
+              ? TextStyle(
+                  backgroundColor: AppColors.gold.withOpacity(0.18),
+                )
+              : null,
+        ),
       );
       spans.add(
         WidgetSpan(
@@ -280,7 +297,7 @@ class _MushafPageState extends State<_MushafPage> {
               height: 22,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.lightBg,
+                color: selected ? AppColors.gold : AppColors.lightBg,
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.gold, width: 1),
               ),
@@ -289,7 +306,7 @@ class _MushafPageState extends State<_MushafPage> {
                 style: pjs(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.tealStart,
+                  color: selected ? Colors.white : AppColors.tealStart,
                 ),
               ),
             ),
