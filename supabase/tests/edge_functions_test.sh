@@ -198,6 +198,35 @@ code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$FN/speech-grade" "${AUTH
 assert_status "POST /speech-grade missing audio field" 400 "$code"
 
 echo
+echo "== regression: direct RPC calls must NOT accept a forged p_user_id (backend/sql/0006) =="
+# The learn/progress RPCs are SECURITY DEFINER and take p_user_id as a parameter.
+# Before 0006 revoked the grants, any client with the anon key + a user JWT could
+# call them directly via PostgREST with an arbitrary user id: forge XP/streaks/
+# completions/placements, or read any user's progress summary. These probes assert
+# the hole stays closed. A forged zero-UUID means a pre-fix run would pollute the
+# DB, so the write probe is safe to run only against a fixed deployment.
+FORGED=00000000-0000-0000-0000-000000000000
+code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/rest/v1/rpc/progress_summary" \
+  -H "apikey: $ANON_KEY" -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" -d "{\"p_user_id\":\"$FORGED\"}")
+assert_status "direct rpc progress_summary with forged user id -> 403 (read hole closed)" 403 "$code"
+code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/rest/v1/rpc/learn_complete" \
+  -H "apikey: $ANON_KEY" -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{"p_user_id":"'"$FORGED"'","p_lesson_id":"ar.1.1","p_is_checkpoint":false,"p_score":1.0,"p_item_results":"[]","p_xp_amount":999,"p_xp_reason":"forged","p_weak_refs":[]}')
+assert_status "direct rpc learn_complete with forged user id -> 403 (write hole closed)" 403 "$code"
+code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/rest/v1/rpc/review_record_result" \
+  -H "apikey: $ANON_KEY" -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d "{\"p_user_id\":\"$FORGED\",\"p_review_id\":\"$FORGED\",\"p_correct\":true}")
+assert_status "direct rpc review_record_result with forged user id -> 403 (write hole closed)" 403 "$code"
+code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/rest/v1/rpc/record_placement" \
+  -H "apikey: $ANON_KEY" -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d "{\"p_user_id\":\"$FORGED\",\"p_level\":8,\"p_items_json\":\"[]\"}")
+assert_status "direct rpc record_placement with forged user id -> 403 (write hole closed)" 403 "$code"
+
+echo
 echo "=================================="
 echo "PASS: $PASS  FAIL: $FAIL"
 echo "test user id (for cleanup): $USER_ID"
