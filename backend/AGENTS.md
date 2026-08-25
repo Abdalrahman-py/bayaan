@@ -1,5 +1,12 @@
 # AGENTS.md — Backend Module
 
+> **STATUS: LEGACY (2026-08-25).** The Ktor backend is no longer the app's backend.
+> The app now talks to **Supabase Edge Functions** (`/supabase/functions`), which give
+> better auth (gateway JWT verification) and latency (no Render cold start).
+> This module is kept as legacy: all hosting info (Render, env vars, Dockerfile) below
+> remains accurate for what it is — a retired implementation. Do not add new routes here;
+> new backend work goes to `supabase/functions`.
+
 You are an AI coding agent operating inside the `/backend` directory of Bayaan. Read [`../AGENTS.md`](../AGENTS.md) first for project-wide rules — this file extends them.
 
 ---
