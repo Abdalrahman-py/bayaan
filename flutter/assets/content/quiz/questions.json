@@ -1,0 +1,244 @@
+{
+  "questions": [
+    {
+      "id": "tajweed-1",
+      "category": "tajweed",
+      "question": "What is the rule of noon sakinah or tanween before the letter ب?",
+      "choices": ["Idhar Halqi", "Iqlab", "Ikhfa", "Idgham"],
+      "correctIndex": 1,
+      "explanation": "Iqlab: noon sakinah/tanween before ب turns into a meem with ghunnah."
+    },
+    {
+      "id": "tajweed-2",
+      "category": "tajweed",
+      "question": "What is the rule of noon sakinah or tanween before the letters ل or ر?",
+      "choices": ["Idgham with ghunnah", "Ikhfa", "Idgham without ghunnah", "Idhar Halqi"],
+      "correctIndex": 2,
+      "explanation": "Before ل and ر the noon is merged without ghunnah (إدغام بغير غنة)."
+    },
+    {
+      "id": "tajweed-3",
+      "category": "tajweed",
+      "question": "Which letters make up the Idhar Halqi group (noon sakinah before them is shown clearly)?",
+      "choices": ["ب ج د ط ق", "ء هـ ع ح غ خ", "ي ن م و", "ل ر"],
+      "correctIndex": 1,
+      "explanation": "Idhar Halqi letters are the six throat letters: ء هـ ع ح غ خ."
+    },
+    {
+      "id": "tajweed-4",
+      "category": "tajweed",
+      "question": "Which letters are the letters of Qalqalah?",
+      "choices": ["ق ط ب ج د", "خ ص ض ظ غ ق", "ء هـ ع ح غ خ", "ي ن م و"],
+      "correctIndex": 0,
+      "explanation": "Qalqalah letters: ق ط ب ج د — they echo when sakin."
+    },
+    {
+      "id": "tajweed-5",
+      "category": "tajweed",
+      "question": "How many harakat (counts) is the natural madd (المد الطبيعي) held?",
+      "choices": ["1", "2", "4", "6"],
+      "correctIndex": 1,
+      "explanation": "The natural madd is held two harakat."
+    },
+    {
+      "id": "tajweed-6",
+      "category": "tajweed",
+      "question": "How many harakat is the compulsory madd (المد اللازم) held?",
+      "choices": ["2", "3", "4", "6"],
+      "correctIndex": 3,
+      "explanation": "The compulsory madd is held six harakat."
+    },
+    {
+      "id": "tajweed-7",
+      "category": "tajweed",
+      "question": "The ghunnah (nasal sound) comes from which two letters?",
+      "choices": ["ب and م", "ن and م", "ن and و", "ي and و"],
+      "correctIndex": 1,
+      "explanation": "Ghunnah is the nasal sound produced from ن and م (especially when mushaddad)."
+    },
+    {
+      "id": "tajweed-8",
+      "category": "tajweed",
+      "question": "Which letters are the letters of Isti'laa (heavy, mufakhkham)?",
+      "choices": ["خ ص ض ط ظ غ ق", "ب ج د ط ق", "ء هـ ع ح غ خ", "ف ق ك ل م"],
+      "correctIndex": 0,
+      "explanation": "Isti'laa letters: خ ص ض ط ظ غ ق — always recited heavy."
+    },
+    {
+      "id": "tajweed-9",
+      "category": "tajweed",
+      "question": "What is the rule of meem sakinah before the letter ب?",
+      "choices": ["Idhar shafawi", "Idgham", "Ikhfa shafawi", "Iqlab"],
+      "correctIndex": 2,
+      "explanation": "Meem sakinah before ب is hidden with ghunnah (إخفاء شفوي)."
+    },
+    {
+      "id": "tajweed-10",
+      "category": "tajweed",
+      "question": "Which letters make up the Idgham with ghunnah group?",
+      "choices": ["ي ن م و", "ل ر", "ب ج د ط ق", "ء هـ ع ح غ خ"],
+      "correctIndex": 0,
+      "explanation": "Idgham with ghunnah applies before ي ن م و."
+    },
+    {
+      "id": "quran-1",
+      "category": "quranTrivia",
+      "question": "How many surahs are in the Quran?",
+      "choices": ["110", "112", "113", "114"],
+      "correctIndex": 3,
+      "explanation": "The Quran contains 114 surahs."
+    },
+    {
+      "id": "quran-2",
+      "category": "quranTrivia",
+      "question": "Which is the longest surah in the Quran?",
+      "choices": ["Al-Imran", "Al-Baqarah", "An-Nisa", "Al-Ma'idah"],
+      "correctIndex": 1,
+      "explanation": "Al-Baqarah is the longest surah, with 286 ayahs."
+    },
+    {
+      "id": "quran-3",
+      "category": "quranTrivia",
+      "question": "Which is the shortest surah in the Quran?",
+      "choices": ["Al-Ikhlas", "Al-Kawthar", "Al-Asr", "An-Nasr"],
+      "correctIndex": 1,
+      "explanation": "Al-Kawthar has just 3 ayahs."
+    },
+    {
+      "id": "quran-4",
+      "category": "quranTrivia",
+      "question": "Which surah contains the first verses revealed to the Prophet (peace be upon him)?",
+      "choices": ["Al-Muddaththir", "Al-Fatihah", "Al-Alaq", "Al-Qalam"],
+      "correctIndex": 2,
+      "explanation": "The first revelation was the opening of Surah Al-Alaq (Iqra)."
+    },
+    {
+      "id": "quran-5",
+      "category": "quranTrivia",
+      "question": "Which surah is equal to a third of the Quran?",
+      "choices": ["Al-Falaq", "Al-Ikhlas", "An-Nas", "Al-Kafirun"],
+      "correctIndex": 1,
+      "explanation": "The Prophet (peace be upon him) said Al-Ikhlas equals a third of the Quran."
+    },
+    {
+      "id": "quran-6",
+      "category": "quranTrivia",
+      "question": "How many juz (parts) is the Quran divided into?",
+      "choices": ["20", "25", "30", "60"],
+      "correctIndex": 2,
+      "explanation": "The Quran is divided into 30 juz."
+    },
+    {
+      "id": "quran-7",
+      "category": "quranTrivia",
+      "question": "How many ayahs does Surah Al-Fatihah have?",
+      "choices": ["5", "6", "7", "8"],
+      "correctIndex": 2,
+      "explanation": "Al-Fatihah has 7 ayahs."
+    },
+    {
+      "id": "quran-8",
+      "category": "quranTrivia",
+      "question": "Which surah is known as the heart of the Quran?",
+      "choices": ["Ar-Rahman", "Ya-Sin", "Al-Mulk", "Al-Waqi'ah"],
+      "correctIndex": 1,
+      "explanation": "Ya-Sin is called the heart of the Quran."
+    },
+    {
+      "id": "quran-9",
+      "category": "quranTrivia",
+      "question": "Which surah is named after an insect?",
+      "choices": ["An-Nahl", "An-Naml", "Al-Ankabut", "Adh-Dhariyat"],
+      "correctIndex": 1,
+      "explanation": "An-Naml (The Ant) is named after the ant."
+    },
+    {
+      "id": "quran-10",
+      "category": "quranTrivia",
+      "question": "Ayat al-Kursi is found in which surah?",
+      "choices": ["Al-Imran", "Al-Baqarah", "An-Nisa", "Al-Hadid"],
+      "correctIndex": 1,
+      "explanation": "Ayat al-Kursi is ayah 255 of Al-Baqarah."
+    },
+    {
+      "id": "islamic-1",
+      "category": "islamicTrivia",
+      "question": "How many rak'ahs are in the Fajr prayer?",
+      "choices": ["2", "3", "4", "5"],
+      "correctIndex": 0,
+      "explanation": "Fajr consists of two rak'ahs."
+    },
+    {
+      "id": "islamic-2",
+      "category": "islamicTrivia",
+      "question": "How many pillars does Islam have?",
+      "choices": ["3", "4", "5", "6"],
+      "correctIndex": 2,
+      "explanation": "Islam is built on five pillars."
+    },
+    {
+      "id": "islamic-3",
+      "category": "islamicTrivia",
+      "question": "In which month was the Quran revealed?",
+      "choices": ["Shawwal", "Ramadan", "Dhul-Hijjah", "Muharram"],
+      "correctIndex": 1,
+      "explanation": "The Quran was revealed in Ramadan."
+    },
+    {
+      "id": "islamic-4",
+      "category": "islamicTrivia",
+      "question": "How many times does the basmalah appear in the Quran?",
+      "choices": ["112", "113", "114", "115"],
+      "correctIndex": 2,
+      "explanation": "The basmalah appears 114 times (113 at surah openings plus one inside An-Naml)."
+    },
+    {
+      "id": "islamic-5",
+      "category": "islamicTrivia",
+      "question": "How many names of Allah (Al-Asma' ul-Husna) are there?",
+      "choices": ["90", "99", "100", "101"],
+      "correctIndex": 1,
+      "explanation": "Allah has 99 beautiful names."
+    },
+    {
+      "id": "islamic-6",
+      "category": "islamicTrivia",
+      "question": "How many prophets are mentioned by name in the Quran?",
+      "choices": ["20", "25", "30", "40"],
+      "correctIndex": 1,
+      "explanation": "25 prophets are mentioned by name in the Quran."
+    },
+    {
+      "id": "islamic-7",
+      "category": "islamicTrivia",
+      "question": "What was the name of the mother of the Prophet Muhammad (peace be upon him)?",
+      "choices": ["Khadijah", "Aminah bint Wahb", "Fatimah", "Aisha"],
+      "correctIndex": 1,
+      "explanation": "His mother was Aminah bint Wahb."
+    },
+    {
+      "id": "islamic-8",
+      "category": "islamicTrivia",
+      "question": "How many gates does Paradise have?",
+      "choices": ["6", "7", "8", "9"],
+      "correctIndex": 2,
+      "explanation": "Paradise has eight gates."
+    },
+    {
+      "id": "islamic-9",
+      "category": "islamicTrivia",
+      "question": "Zakah is which pillar of Islam in order?",
+      "choices": ["First", "Second", "Third", "Fourth"],
+      "correctIndex": 2,
+      "explanation": "The pillars are: Shahada, Salah, Zakah, Sawm, Hajj."
+    },
+    {
+      "id": "islamic-10",
+      "category": "islamicTrivia",
+      "question": "Which prayer is the first thing a servant is held to account for on the Day of Judgment?",
+      "choices": ["Fasting", "Zakah", "Prayer (Salah)", "Hajj"],
+      "correctIndex": 2,
+      "explanation": "The first thing accounted for is the prayer, per the hadith."
+    }
+  ]
+}

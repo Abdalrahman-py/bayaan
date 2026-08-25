@@ -32,6 +32,7 @@ flutter:
     - assets/icons/google_logo.png
     - assets/content/curriculum.json
     - assets/content/lessons/
+    - assets/content/quiz/questions.json
     - assets/content/audio/letters/
   fonts:
     - family: AmiriQuran
