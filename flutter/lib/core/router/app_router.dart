@@ -13,6 +13,9 @@ import '../../features/learn/roadmap_screen.dart';
 import '../../features/onboarding/onboarding_flow_screen.dart';
 import '../../features/recitation/ai_analysis_screen.dart';
 import '../../features/recitation/celebration_screen.dart';
+import '../../features/audio_compare/audio_compare_screen.dart';
+import '../../models/models.dart';
+import '../../services/quran_text.dart';
 import '../../features/recitation/recording_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
@@ -122,6 +125,19 @@ final GoRouter appRouter = GoRouter(
         sura: int.parse(state.pathParameters['sura']!),
         aya: int.parse(state.pathParameters['aya']!),
       ),
+    ),
+    GoRoute(
+      path: AppRoutes.audioCompare,
+      builder: (context, state) {
+        final sura = int.parse(state.pathParameters['sura']!);
+        final aya = int.parse(state.pathParameters['aya']!);
+        final st = appState.recitation.stateFor(sura, aya);
+        final result = st is ResultState ? st : null;
+        return AudioCompareScreen(
+          verse: result?.verse ?? QuranText.verseFor(sura, aya),
+          mistakes: result?.mistakes ?? const [],
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.learn,

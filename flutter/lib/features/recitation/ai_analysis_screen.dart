@@ -117,6 +117,8 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                         _buildVerseCard(result),
                         const SizedBox(height: 16),
                         _buildInfoBanner(),
+                        const SizedBox(height: 16),
+                        _buildCompareButton(),
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -269,6 +271,29 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
           const SizedBox(height: 16),
           const OrnamentalDivider(width: double.infinity, opacity: 0.3),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCompareButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: OutlinedButton.icon(
+        onPressed: () =>
+            context.push(AppRoutes.audioComparePath(widget.sura, widget.aya)),
+        icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+        label: Text(
+          'Compare with Master',
+          style: pjs(fontSize: 15, fontWeight: FontWeight.bold),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.tealStart,
+          side: const BorderSide(color: AppColors.gold, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(100),
+          ),
+        ),
       ),
     );
   }
