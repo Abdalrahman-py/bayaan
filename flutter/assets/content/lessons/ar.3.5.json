@@ -1,0 +1,19 @@
+{
+  "lesson_id": "ar.3.5",
+  "unit_id": "ar.3",
+  "title_en": "Two-syllable chains",
+  "title_ar": "مقاطع مزدوجة",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Now chain two vowelled letters into a syllable, then a third. Read left letter to right: ka-ta-b, sa-mi-ʿ. These are real Arabic word shapes you will meet again.",
+    "glyphs": ["كَتَبْ", "سَمِعْ", "نَصَرْ"],
+    "focus_en": "Blend vowelled letters into two-syllable words."
+  },
+  "items": [
+    { "item_ref": "ar.3.5.listen.ba", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_fatha.ogg", "answer": "بَ", "options": ["بَ", "بِ", "بُ"] },
+    { "item_ref": "ar.3.5.odd.chain", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "بَ", "options": ["كَتَبْ", "سَمِعْ", "نَصَرْ", "بَ"] },
+    { "item_ref": "ar.3.5.read_aloud.katab", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَتَبْ" },
+    { "item_ref": "ar.3.5.read_aloud.samia", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "سَمِعْ" },
+    { "item_ref": "ar.3.5.read_aloud.nasar", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "نَصَرْ" }
+  ]
+}

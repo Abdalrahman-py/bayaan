@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.6.1",
+  "unit_id": "ar.6",
+  "title_en": "Alif madd",
+  "title_ar": "مد الألف",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "An alif ا right after a fatha stretches the sound — hold it for about two counts instead of snapping shut. بَ is short (ba), بَا is long (baa). Same letter, same vowel, the only difference is length — and length is something the engine listens for very closely, so it's worth getting right from day one.",
+    "glyphs": ["بَا", "بَ", "مَا"],
+    "focus_en": "Alif after fatha = hold it, about two counts."
+  },
+  "items": [
+    { "item_ref": "ar.6.1.listen.ba_madd", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_madd.ogg", "answer": "بَا", "options": ["بَا", "بَ", "بِ"] },
+    { "item_ref": "ar.6.1.disc.ba_length", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/ba_madd.ogg", "answer": "بَا", "options": ["بَا", "بَ"] },
+    { "item_ref": "ar.6.1.disc.mim_length", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/mim_madd.ogg", "answer": "مَا", "options": ["مَا", "مَ"] },
+    { "item_ref": "ar.6.1.odd.length", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "بَ", "options": ["بَا", "مَا", "سَا", "بَ"] },
+    { "item_ref": "ar.6.1.read_aloud.baa", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بَا" },
+    { "item_ref": "ar.6.1.read_aloud.maa", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "مَا" },
+    { "item_ref": "ar.6.1.read_aloud.qaa", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَا" }
+  ]
+}

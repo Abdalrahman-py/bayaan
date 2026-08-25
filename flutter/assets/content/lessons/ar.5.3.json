@@ -1,0 +1,19 @@
+{
+  "lesson_id": "ar.5.3",
+  "unit_id": "ar.5",
+  "title_en": "Tanween",
+  "title_ar": "التنوين",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Tanween doubles a vowel sign and adds an 'n' sound: ً fathatan (an), ٌ dammatan (un), ٍ kasratan (in). You'll see it on the very last letter of a word — كِتَابٌ ends in -un, بَيْتًا ends in -an, بَابٍ ends in -in. It only shows up word-finally, so for now just learn to spot the three shapes — you'll read them aloud for real once we start reading full ayat.",
+    "glyphs": ["كِتَابٌ", "بَيْتًا", "بَابٍ"],
+    "focus_en": "Tanween = doubled vowel + n sound, always at a word's end."
+  },
+  "items": [
+    { "item_ref": "ar.5.3.odd.tanween_word", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "كَمْ", "options": ["كِتَابٌ", "بَيْتًا", "بَابٍ", "كَمْ"] },
+    { "item_ref": "ar.5.3.odd.tanween_shape", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "بَ", "options": ["بًا", "بٌ", "بٍ", "بَ"] },
+    { "item_ref": "ar.5.3.odd.which_un", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "بَابٍ", "options": ["كِتَابٌ", "قَلَمٌ", "بَابٍ", "بَيْتٌ"] },
+    { "item_ref": "ar.5.3.read_aloud.qad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَدْ" },
+    { "item_ref": "ar.5.3.read_aloud.min", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "مِنْ" }
+  ]
+}

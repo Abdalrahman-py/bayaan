@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.4.1",
+  "unit_id": "ar.4",
+  "title_en": "Letter forms",
+  "title_ar": "أشكال الحروف",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "A letter changes its shape depending on where it sits in a word — alone, at the start, in the middle, or at the end — but the sound never changes. ب is still 'ba' whether it stands alone or joins into a word. Learn to spot the same letter across its different shapes.",
+    "glyphs": ["ب", "بـ", "ـبـ", "ـب"],
+    "focus_en": "Same letter, same sound, four shapes."
+  },
+  "items": [
+    { "item_ref": "ar.4.1.listen.ba", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_fatha.ogg", "answer": "بَ", "options": ["بَ", "نَ", "تَ"] },
+    { "item_ref": "ar.4.1.odd.ba_shapes", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ت", "options": ["ب", "بـ", "ـبـ", "ت"] },
+    { "item_ref": "ar.4.1.odd.nun_shapes", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ـه", "options": ["ن", "نـ", "ـنـ", "ـه"] },
+    { "item_ref": "ar.4.1.odd.ta_shapes", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ـث", "options": ["ت", "تـ", "ـتـ", "ـث"] },
+    { "item_ref": "ar.4.1.disc.ta_tha", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/ta_fatha.ogg", "answer": "تَ", "options": ["تَ", "ثَ"] },
+    { "item_ref": "ar.4.1.read_aloud.ban", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بَنْ" },
+    { "item_ref": "ar.4.1.read_aloud.tan", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "تَنْ" }
+  ]
+}

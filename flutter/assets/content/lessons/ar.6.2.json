@@ -1,0 +1,22 @@
+{
+  "lesson_id": "ar.6.2",
+  "unit_id": "ar.6",
+  "title_en": "Ya & Waw madd",
+  "title_ar": "مد الياء والواو",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "ي after kasra and و after damma stretch the same way alif does — بِي is a long 'ee', بُو is a long 'oo'. These two letters have a second job: sitting quietly with sukoon right after a fatha, they soften into a gentle glide called leen — بَيْ، بَوْ. We'll polish leen fully in the Tajweed track; for now just get the long ي and و solid.",
+    "glyphs": ["بِي", "بُو", "بَيْ"],
+    "focus_en": "ي after kasra, و after damma — both stretch long."
+  },
+  "items": [
+    { "item_ref": "ar.6.2.listen.ba_ya", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_madd_ya.ogg", "answer": "بِي", "options": ["بِي", "بِ", "بُو"] },
+    { "item_ref": "ar.6.2.listen.ba_waw", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ba_madd_waw.ogg", "answer": "بُو", "options": ["بُو", "بُ", "بِي"] },
+    { "item_ref": "ar.6.2.disc.sin_ya", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/sin_madd_ya.ogg", "answer": "سِي", "options": ["سِي", "سِ"] },
+    { "item_ref": "ar.6.2.odd.length", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "بِ", "options": ["بِي", "سِي", "قِي", "بِ"] },
+    { "item_ref": "ar.6.2.read_aloud.bii", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بِي" },
+    { "item_ref": "ar.6.2.read_aloud.buu", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بُو" },
+    { "item_ref": "ar.6.2.read_aloud.sii", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "سِي" },
+    { "item_ref": "ar.6.2.read_aloud.qii", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قِي" }
+  ]
+}

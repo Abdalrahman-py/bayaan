@@ -1,0 +1,28 @@
+{
+  "lesson_id": "ar.7.6",
+  "unit_id": "ar.7",
+  "title_en": "Checkpoint: real words",
+  "title_ar": "اختبار الكلمات",
+  "is_checkpoint": true,
+  "teach": {
+    "narration_en": "The Unit 7 checkpoint — twelve real Quranic words, everything from this unit at once. I'm grading your letters, your vowels, your lengths, and the little quirks you just learned. Take it slow and read each one clean.",
+    "glyphs": ["اللَّهْ", "الرَّحْمَٰنْ", "هَٰذَا"],
+    "focus_en": "Unit 7 checkpoint — 12 real words, read aloud (Tier 1 graded)."
+  },
+  "items": [
+    { "item_ref": "ar.7.6.listen.allah", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "words/allah.ogg", "answer": "اللَّهْ", "options": ["اللَّهْ", "رَبّْ", "آدَمْ"] },
+    { "item_ref": "ar.7.6.odd.review", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "قَامْ", "options": ["هَٰذَا", "الرَّحْمَٰنْ", "قَامْ"] },
+    { "item_ref": "ar.7.6.read_aloud.allah", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "اللَّهْ" },
+    { "item_ref": "ar.7.6.read_aloud.rabb", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "رَبّْ" },
+    { "item_ref": "ar.7.6.read_aloud.qamar", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "القَمَرْ" },
+    { "item_ref": "ar.7.6.read_aloud.shams", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "الشَّمْسْ" },
+    { "item_ref": "ar.7.6.read_aloud.kitab", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "الكِتَابْ" },
+    { "item_ref": "ar.7.6.read_aloud.rahma", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "رَحْمَة" },
+    { "item_ref": "ar.7.6.read_aloud.musa", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "مُوسَى" },
+    { "item_ref": "ar.7.6.read_aloud.adam", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "آدَمْ" },
+    { "item_ref": "ar.7.6.read_aloud.ibn", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "ٱبْنْ" },
+    { "item_ref": "ar.7.6.read_aloud.katabu", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَتَبُوا" },
+    { "item_ref": "ar.7.6.read_aloud.hadha", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "هَٰذَا" },
+    { "item_ref": "ar.7.6.read_aloud.rahman", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "الرَّحْمَٰنْ" }
+  ]
+}

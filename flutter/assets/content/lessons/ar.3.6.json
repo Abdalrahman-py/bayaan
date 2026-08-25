@@ -1,0 +1,24 @@
+{
+  "lesson_id": "ar.3.6",
+  "unit_id": "ar.3",
+  "title_en": "Checkpoint: read aloud",
+  "title_ar": "اختبار القراءة",
+  "is_checkpoint": true,
+  "teach": {
+    "narration_en": "The Unit 3 checkpoint. You will read short syllables aloud and I will grade your vowels and letters. Read clearly, one syllable at a time. Ready when you are.",
+    "glyphs": ["كَمْ", "مِنْ", "كُلْ"],
+    "focus_en": "Unit 3 checkpoint — read short syllables aloud (Tier 1 graded)."
+  },
+  "items": [
+    { "item_ref": "ar.3.6.listen.mix", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/qaf_kasra.ogg", "answer": "قِ", "options": ["قِ", "قَ", "قُ"] },
+    { "item_ref": "ar.3.6.odd.vowel", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "سُ", "options": ["نَ", "مَ", "لَ", "سُ"] },
+    { "item_ref": "ar.3.6.read_aloud.kam", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَمْ" },
+    { "item_ref": "ar.3.6.read_aloud.min", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "مِنْ" },
+    { "item_ref": "ar.3.6.read_aloud.kul", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كُلْ" },
+    { "item_ref": "ar.3.6.read_aloud.qif", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قِفْ" },
+    { "item_ref": "ar.3.6.read_aloud.rud", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "رُدْ" },
+    { "item_ref": "ar.3.6.read_aloud.nam", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "نَمْ" },
+    { "item_ref": "ar.3.6.read_aloud.lan", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "لَنْ" },
+    { "item_ref": "ar.3.6.read_aloud.qum", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قُمْ" }
+  ]
+}

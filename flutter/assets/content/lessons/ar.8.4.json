@@ -1,0 +1,19 @@
+{
+  "lesson_id": "ar.8.4",
+  "unit_id": "ar.8",
+  "title_en": "Al-Falaq",
+  "title_ar": "الفلق",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Al-Falaq — 'Daybreak.' An-Nas's sister surah, five ayat asking refuge from harm in the dark. Read together, these two are called Al-Mu'awwidhatayn — 'the two protections' — and most reciters pair them. Full recitation now.",
+    "glyphs": ["قُلْ أَعُوذُ بِرَبِّ الْفَلَقْ", "مِنْ شَرِّ مَا خَلَقْ"],
+    "focus_en": "Surah Al-Falaq, ayah by ayah — full recitation, tajweed errors softened."
+  },
+  "items": [
+    { "item_ref": "ar.8.4.echo.1", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/113_1.ogg", "reference_text": "قُلْ أَعُوذُ بِرَبِّ الْفَلَقْ" },
+    { "item_ref": "ar.8.4.echo.2", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/113_2.ogg", "reference_text": "مِنْ شَرِّ مَا خَلَقْ" },
+    { "item_ref": "ar.8.4.echo.3", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/113_3.ogg", "reference_text": "وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبْ" },
+    { "item_ref": "ar.8.4.echo.4", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/113_4.ogg", "reference_text": "وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدْ" },
+    { "item_ref": "ar.8.4.echo.5", "type": "ECHO", "grading_tier": 2, "prompt_asset": "quran/113_5.ogg", "reference_text": "وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدْ" }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.4.4",
+  "unit_id": "ar.4",
+  "title_en": "Non-connectors in words",
+  "title_ar": "الحروف المنفصلة",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Non-connecting letters — د ذ ر ز و ا — still leave their small gap in the middle of a word, but the word stays one word. وَرَدْ ('arrived') has three non-connectors in a row, three visual gaps, and yet it reads as a single flowing word.",
+    "glyphs": ["دَرَسْ", "وَرَدْ", "زَرَعْ"],
+    "focus_en": "Gaps don't break the word — non-connectors just pause the joining."
+  },
+  "items": [
+    { "item_ref": "ar.4.4.listen.ra", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ra_fatha.ogg", "answer": "رَ", "options": ["رَ", "زَ", "دَ"] },
+    { "item_ref": "ar.4.4.odd.connector", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ب", "options": ["د", "ذ", "ر", "ب"] },
+    { "item_ref": "ar.4.4.disc.zay_ra", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/zay_fatha.ogg", "answer": "زَ", "options": ["زَ", "رَ"] },
+    { "item_ref": "ar.4.4.read_aloud.daras", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "دَرَسْ" },
+    { "item_ref": "ar.4.4.read_aloud.warad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "وَرَدْ" },
+    { "item_ref": "ar.4.4.read_aloud.zaraa", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "زَرَعْ" },
+    { "item_ref": "ar.4.4.read_aloud.wadaa", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "وَضَعْ" }
+  ]
+}

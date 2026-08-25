@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.2.3",
+  "unit_id": "ar.2",
+  "title_en": "ذ/ظ/ز، ث/س",
+  "title_ar": "ذ ظ ز ث س",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Dhal is a soft 'th' as in 'this'. Zaa is its heavy twin. Zay is a plain Z. And tha is the 'th' in 'think', easy to confuse with seen. Listen closely.",
+    "glyphs": ["ذ", "ظ", "ز", "ث", "س"],
+    "focus_en": "The most-confused fricatives for non-natives."
+  },
+  "items": [
+    { "item_ref": "ar.2.3.disc.dhal_zaa", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/zaa_fatha.ogg", "answer": "ظ", "options": ["ذ", "ظ"] },
+    { "item_ref": "ar.2.3.disc.tha_sin", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/tha_fatha.ogg", "answer": "ث", "options": ["ث", "س"] },
+    { "item_ref": "ar.2.3.listen.zay", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/zay_fatha.ogg", "answer": "ز", "options": ["ز", "ذ", "ظ", "س"] },
+    { "item_ref": "ar.2.3.listen.dhal", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/dhal_fatha.ogg", "answer": "ذ", "options": ["ذ", "ز", "ظ", "د"] },
+    { "item_ref": "ar.2.3.odd.fricatives", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ق", "options": ["ذ", "ظ", "ز", "ق"] },
+    { "item_ref": "ar.2.3.echo.dhal", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/dhal_madd.ogg", "reference_text": "ذَا" },
+    { "item_ref": "ar.2.3.echo.zaa", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/zaa_madd.ogg", "reference_text": "ظَا" }
+  ]
+}

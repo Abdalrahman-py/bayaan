@@ -1,0 +1,22 @@
+{
+  "lesson_id": "ar.1.5",
+  "unit_id": "ar.1",
+  "title_en": "Deep-throat & heavy sounds",
+  "title_ar": "ط ظ ع غ ف ق",
+  "is_checkpoint": false,
+  "teach": {
+    "narration_en": "Taa is a heavy T, zaa a heavy dh. Ayn is a deep sound from the middle of the throat, ghayn a gargle above it. Fa is F, and qaf is a K made far back.",
+    "glyphs": ["ط", "ظ", "ع", "غ", "ف", "ق"],
+    "focus_en": "Deepest articulation points in the alphabet."
+  },
+  "items": [
+    { "item_ref": "ar.1.5.listen.taa", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/taa_fatha.ogg", "answer": "ط", "options": ["ط", "ت", "د", "ظ"] },
+    { "item_ref": "ar.1.5.listen.ayn", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/ayn_fatha.ogg", "answer": "ع", "options": ["ع", "غ", "ح", "ء"] },
+    { "item_ref": "ar.1.5.listen.qaf", "type": "LISTEN_PICK", "grading_tier": 0, "prompt_asset": "letters/qaf_fatha.ogg", "answer": "ق", "options": ["ق", "ك", "غ", "ف"] },
+    { "item_ref": "ar.1.5.disc.ayn_ghayn", "type": "DISCRIMINATE", "grading_tier": 0, "prompt_asset": "letters/ayn_fatha.ogg", "answer": "ع", "options": ["ع", "غ"] },
+    { "item_ref": "ar.1.5.odd.deep", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "ب", "options": ["ط", "ظ", "ع", "ب"] },
+    { "item_ref": "ar.1.5.echo.taa", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/taa_madd.ogg", "reference_text": "طَا" },
+    { "item_ref": "ar.1.5.echo.ayn", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/ayn_madd.ogg", "reference_text": "عَا" },
+    { "item_ref": "ar.1.5.echo.qaf", "type": "ECHO", "grading_tier": 1, "prompt_asset": "letters/qaf_madd.ogg", "reference_text": "قَا" }
+  ]
+}

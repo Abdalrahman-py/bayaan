@@ -1,0 +1,21 @@
+{
+  "lesson_id": "ar.5.4",
+  "unit_id": "ar.5",
+  "title_en": "Checkpoint: vowelled words",
+  "title_ar": "اختبار الكلمات",
+  "is_checkpoint": true,
+  "teach": {
+    "narration_en": "The Unit 5 checkpoint. You will read words aloud that close with sukoon and some that hold a doubled letter with shadda — I'm grading your vowels, your letters, and whether you hold the double. Read each one as a single word.",
+    "glyphs": ["قَدْ", "كَبَّرْ", "دَرَّسْ"],
+    "focus_en": "Unit 5 checkpoint — sukoon + shadda, read aloud (Tier 1 graded)."
+  },
+  "items": [
+    { "item_ref": "ar.5.4.odd.shadda", "type": "ODD_ONE_OUT", "grading_tier": 0, "answer": "كَتَبْ", "options": ["كَبَّرْ", "سَبَّحْ", "دَرَّسْ", "كَتَبْ"] },
+    { "item_ref": "ar.5.4.read_aloud.qad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "قَدْ" },
+    { "item_ref": "ar.5.4.read_aloud.baad", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "بَعْدْ" },
+    { "item_ref": "ar.5.4.read_aloud.kabbar", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَبَّرْ" },
+    { "item_ref": "ar.5.4.read_aloud.sabbah", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "سَبَّحْ" },
+    { "item_ref": "ar.5.4.read_aloud.kaddhab", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "كَذَّبْ" },
+    { "item_ref": "ar.5.4.read_aloud.darras", "type": "READ_ALOUD_SYLLABLE", "grading_tier": 1, "reference_text": "دَرَّسْ" }
+  ]
+}
