@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
-import '../../shared/widgets/staggered_fade_slide.dart';
 import '../../shared/widgets/ornamental_divider.dart';
-import '../../shared/widgets/animated_arabic_text.dart';
 import 'models/ayah.dart';
+import 'widgets/mushaf_page_view.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
-import '../../services/quran_translation.dart';
 
 class AyahSelectionScreen extends StatefulWidget {
   final int surahNumber;
@@ -34,12 +32,10 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
   late final Animation<double> _headerFade;
   late final Animation<double> _bannerFade;
   late final Animation<double> _bannerScale;
-  late List<Ayah> _ayahs;
 
   @override
   void initState() {
     super.initState();
-    _ayahs = widget.ayahs;
     _headerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -54,30 +50,6 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
     );
     _bannerScale = _bannerFade;
     _headerController.forward();
-    _loadTranslations();
-  }
-
-  Future<void> _loadTranslations() async {
-    final results = await Future.wait([
-      QuranTranslation.forSurah(widget.surahNumber),
-      QuranTranslation.transliterationForSurah(widget.surahNumber),
-    ]);
-    if (!mounted) return;
-    final translations = results[0];
-    final transliterations = results[1];
-    if (translations == null && transliterations == null) return;
-    setState(() {
-      _ayahs = _ayahs
-          .map(
-            (a) => Ayah(
-              number: a.number,
-              arabicText: a.arabicText,
-              translation: translations?[a.number],
-              transliteration: transliterations?[a.number],
-            ),
-          )
-          .toList();
-    });
   }
 
   @override
@@ -94,31 +66,15 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
         bottom: false,
         child: Column(
           children: [
+            _buildBackHeader(context),
+            _buildTitleBanner(),
+            const SizedBox(height: 4),
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _buildBackHeader(context),
-                  _buildTitleBanner(),
-                  ...List.generate(_ayahs.length, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                      child: StaggeredFadeSlide(
-                        index: index,
-                        child: _AyahRow(
-                          ayah: _ayahs[index],
-                          onTap: () => context.push(
-                            AppRoutes.recordingPath(
-                              widget.surahNumber,
-                              _ayahs[index].number,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 12),
-                ],
+              child: MushafPageView(
+                ayahs: widget.ayahs,
+                onAyahTap: (ayah) => context.push(
+                  AppRoutes.recordingPath(widget.surahNumber, ayah.number),
+                ),
               ),
             ),
             AppBottomNav(
@@ -219,107 +175,6 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
                 const OrnamentalDivider(width: double.infinity, opacity: 0.3),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AyahRow extends StatelessWidget {
-  final Ayah ayah;
-  final VoidCallback onTap;
-
-  const _AyahRow({required this.ayah, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: const Color(0xFFF5F1E6)),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.lightBg,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.gold),
-                    ),
-                    child: Text(
-                      '${ayah.number}',
-                      style: pjs(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.tealStart,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'TAP TO PRACTICE ▸',
-                    style: pjs(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.gold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: AnimatedArabicText(
-                  text: ayah.arabicText,
-                  duration: const Duration(milliseconds: 600),
-                  textAlign: TextAlign.right,
-                  style: arabic(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    height: 1.8,
-                    color: AppColors.tealStart,
-                  ),
-                ),
-              ),
-              if (ayah.transliteration != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  ayah.transliteration!,
-                  style: pjs(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
-                    color: AppColors.tealStart,
-                  ).copyWith(fontStyle: FontStyle.italic),
-                ),
-              ],
-              if (ayah.translation != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  ayah.translation!,
-                  style: pjs(
-                    fontSize: 13,
-                    height: 1.4,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
-            ],
           ),
         ),
       ),

@@ -279,6 +279,8 @@ class _SurahRow extends StatelessWidget {
                   number: i + 1,
                   arabicText:
                       QuranText.verse(surah.number, i + 1)?.uthmani ?? '',
+                  pageNumber:
+                      QuranText.pageFor(surah.number, i + 1) ?? 1,
                 ),
               ),
             ),
