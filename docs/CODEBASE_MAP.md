@@ -10,6 +10,22 @@
 
 ---
 
+## CURRENT STATUS (2026-08-25) — read this first; the rest of this file is legacy
+
+- **Client:** the **Flutter app** (`flutter/`) is the current client. The Android app
+  (`android/`) is **discontinued** — kept only as reference, see `android/AGENTS.md`.
+- **Backend:** the app talks to **Supabase Edge Functions** (`supabase/functions/`) —
+  gateway JWT verification for auth, no Render cold start, lower latency.
+  Decision: `docs/decisions/edge-functions-vs-ktor.md`.
+- **Legacy backend:** the Ktor backend (`backend/`) is a **retired implementation**,
+  kept with all hosting info (Render, Dockerfile, env vars) intact, see `backend/AGENTS.md`.
+  No new routes there.
+- **Engine:** unchanged — Muaalem on Modal (`ml/`); a whisper-based memorization model is planned.
+- Everything below this banner describes the legacy Android + Ktor architecture. It stays
+  as the historical record and as reference for ported behavior.
+
+---
+
 ## 1. What Bayaan is (one breath)
 
 App listen to you recite Quran ayah. App tell you where tajweed wrong, mark it on the
