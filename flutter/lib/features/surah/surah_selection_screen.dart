@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/router/app_router.dart';
 import '../../services/quran_text.dart';
-import '../ayah/models/ayah.dart';
 
 class SurahSelectionScreen extends StatefulWidget {
   const SurahSelectionScreen({super.key});
@@ -267,20 +266,14 @@ class _SurahRow extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
+          final startPage = QuranText.pageFor(surah.number, 1) ?? 1;
           context.push(
             AppRoutes.ayahSelection,
             extra: AyahSelectionArgs(
               surahNumber: surah.number,
               surahNameEnglish: surah.nameEnglish,
               surahNameArabic: 'سُورَةُ ${surah.nameArabic}',
-              ayahs: List.generate(
-                surah.ayahCount,
-                (i) => Ayah(
-                  number: i + 1,
-                  arabicText:
-                      QuranText.verse(surah.number, i + 1)?.uthmani ?? '',
-                ),
-              ),
+              initialPage: startPage,
             ),
           );
         },

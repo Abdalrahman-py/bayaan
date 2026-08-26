@@ -7,7 +7,6 @@ import '../../core/router/app_routes.dart';
 import '../../core/router/app_router.dart';
 import '../../services/auth_controller.dart';
 import '../../services/quran_text.dart';
-import '../ayah/models/ayah.dart';
 
 class HomeScreen extends StatefulWidget {
   final AuthController auth;
@@ -87,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   children: [
                     _buildHeader(),
                     _buildResumeSection(),
+                    _buildQuizSection(),
                     _buildSuggestedSection(),
                   ],
                 ),
@@ -145,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Assalamu Alaikum${_firstName != null ? ', $_firstName' : ''}',
+                      _firstName ?? 'Welcome',
                       overflow: TextOverflow.ellipsis,
                       style: pjs(
                         fontSize: 20,
@@ -214,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.tealStart.withOpacity(0.15),
+                          color: AppColors.tealStart.withValues(alpha: 0.15),
                           blurRadius: 8,
                           offset: const Offset(0, 8),
                         ),
@@ -232,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -313,6 +313,73 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildQuizSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.push(AppRoutes.quiz),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: const Color(0xFFF5F1E6)),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.lightBg,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.gold),
+                  ),
+                  child: Icon(
+                    Icons.quiz_rounded,
+                    size: 20,
+                    color: AppColors.tealStart,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Quizzes & Tests',
+                        style: pjs(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Tajweed tests · Quran trivia · Islamic trivia',
+                        style: pjs(fontSize: 12.5, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: AppColors.textMuted,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSuggestedSection() {
     return FadeTransition(
       opacity: _suggestedAnim,
@@ -342,14 +409,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       surahNumber: 112,
                       surahNameEnglish: 'Al-Ikhlas',
                       surahNameArabic: 'سُورَةُ الإخلاص',
-                      ayahs: List.generate(
-                        QuranText.verseCount(112),
-                        (i) => Ayah(
-                          number: i + 1,
-                          arabicText:
-                              QuranText.verse(112, i + 1)?.uthmani ?? '',
-                        ),
-                      ),
+                      initialPage: QuranText.pageFor(112, 1) ?? 604,
                     ),
                   ),
                   child: Container(

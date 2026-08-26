@@ -90,7 +90,7 @@ class _OnboardingPage3State extends State<OnboardingPage3>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.tealStart.withOpacity(0.08),
+                color: AppColors.tealStart.withValues(alpha: 0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 12),
               ),

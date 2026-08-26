@@ -40,6 +40,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
   final _audio = LessonAudioPlayer();
   bool _submitting = false;
   bool? _lastCorrect;
+  String? _selectedOption;
 
   @override
   void initState() {
@@ -66,9 +67,11 @@ class _PlacementScreenState extends State<PlacementScreen> {
   Future<void> _play(String promptAsset) => _audio.play(promptAsset);
 
   void _answer(LessonItem item, String selected) {
+    if (_lastCorrect != null) return;
     final correct = selected == item.answer;
     _results.add({'item_ref': item.itemRef, 'correct': correct});
     setState(() {
+      _selectedOption = selected;
       _lastCorrect = correct;
       if (correct) {
         _hits++;
@@ -96,6 +99,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
     setState(() {
       _index++;
       _lastCorrect = null;
+      _selectedOption = null;
     });
     _preloadCurrent();
   }
@@ -122,17 +126,25 @@ class _PlacementScreenState extends State<PlacementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bank = _bank;
     return Scaffold(
       backgroundColor: AppColors.lightBg,
       body: SafeArea(
-        child: bank == null
+        child: _submitting
             ? const Center(child: CircularProgressIndicator())
-            : bank.isEmpty
+            : _bank == null
+            ? const Center(child: CircularProgressIndicator())
+            : _bank!.isEmpty
             ? _buildSkip()
-            : _submitting
-            ? const Center(child: CircularProgressIndicator())
-            : _buildItem(bank[_index]),
+            : Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: _buildItem(_bank![_index]),
+                    ),
+                  ),
+                  if (_lastCorrect != null) _buildDuolingoFeedbackBanner(),
+                ],
+              ),
       ),
     );
   }
@@ -162,6 +174,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
   }
 
   Widget _buildItem(LessonItem item) {
+    final bool answered = _lastCorrect != null;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -217,7 +230,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.tealStart.withOpacity(0.12),
+                    color: AppColors.tealStart.withValues(alpha: 0.12),
                   ),
                   child: Icon(
                     Icons.volume_up,
@@ -228,71 +241,139 @@ class _PlacementScreenState extends State<PlacementScreen> {
               ),
             ),
           const SizedBox(height: 32),
-          if (_lastCorrect == null)
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 12,
-              runSpacing: 12,
-              children: item.options.map((opt) {
-                final isAudio = opt.endsWith('.ogg');
-                return GestureDetector(
-                  onTap: () => _answer(item, opt),
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: const Color(0xFFF5F1E6)),
-                      borderRadius: BorderRadius.circular(16),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 12,
+            children: item.options.map((opt) {
+              final isAudio = opt.endsWith('.ogg');
+              final bool isCorrect = opt == item.answer;
+              final bool isPicked = opt == _selectedOption;
+
+              Color? bg;
+              Color? border;
+              Color textColor = AppColors.tealStart;
+
+              if (answered) {
+                if (isCorrect) {
+                  bg = AppColors.success.withValues(alpha: 0.12);
+                  border = AppColors.success;
+                  textColor = AppColors.success;
+                } else if (isPicked) {
+                  bg = AppColors.tajweedError.withValues(alpha: 0.12);
+                  border = AppColors.tajweedError;
+                  textColor = AppColors.tajweedError;
+                }
+              }
+
+              return GestureDetector(
+                onTap: answered
+                    ? null
+                    : () {
+                        if (isAudio) _play(opt);
+                        _answer(item, opt);
+                      },
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: bg ?? Colors.white,
+                    border: Border.all(
+                      color: border ?? const Color(0xFFF5F1E6),
+                      width: border != null ? 2 : 1,
                     ),
-                    child: isAudio
-                        ? Icon(
-                            Icons.volume_up,
-                            color: AppColors.tealStart,
-                            size: 28,
-                          )
-                        : Text(
-                            opt,
-                            textDirection: TextDirection.rtl,
-                            style: arabic(
-                              fontSize: 30,
-                              color: AppColors.tealStart,
-                            ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: isAudio
+                      ? Icon(
+                          Icons.volume_up,
+                          color: textColor,
+                          size: 28,
+                        )
+                      : Text(
+                          opt,
+                          textDirection: TextDirection.rtl,
+                          style: arabic(
+                            fontSize: 30,
+                            color: textColor,
                           ),
-                  ),
-                );
-              }).toList(),
-            )
-          else ...[
-            Center(
-              child: Icon(
-                _lastCorrect! ? Icons.check_circle : Icons.cancel,
-                size: 48,
-                color: _lastCorrect!
-                    ? AppColors.success
-                    : AppColors.tajweedError,
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _next,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.tealStart,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(100),
-                  ),
+                        ),
                 ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Duolingo-style bottom banner matching QuizSessionScreen.
+  Widget _buildDuolingoFeedbackBanner() {
+    final bool correct = _lastCorrect ?? false;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
+        color: correct
+            ? const Color(0xFFE8F5E9)
+            : const Color(0xFFFFEBEE),
+        border: Border(
+          top: BorderSide(
+            color: correct ? AppColors.success : AppColors.tajweedError,
+            width: 1.5,
+          ),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                correct ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                color: correct ? AppColors.success : AppColors.tajweedError,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
                 child: Text(
-                  'Continue',
-                  style: pjs(fontWeight: FontWeight.bold, color: Colors.white),
+                  correct ? 'MashaAllah! Correct!' : 'Not quite right',
+                  style: pjs(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: correct ? AppColors.success : AppColors.tajweedError,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _next,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    correct ? AppColors.success : AppColors.tealStart,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+              ),
+              child: Text(
+                'Continue',
+                style: pjs(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-          ],
+          ),
         ],
       ),
     );

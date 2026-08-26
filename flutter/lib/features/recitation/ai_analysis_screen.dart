@@ -9,9 +9,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
 import '../../services/recitation_controller.dart';
+import '../../shared/widgets/animated_score_ring.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
 import '../../shared/widgets/ornamental_divider.dart';
-import '../../shared/widgets/progress_ring_painter.dart';
 
 /// bayaan-ai-analysis from Figma — the mistakes-found result screen. Shown
 /// when ResultState.allCorrect is false; CelebrationScreen handles the
@@ -61,6 +61,11 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
   }
 
   List<InlineSpan> _buildSpans(Verse verse, List<Mistake> mistakes) {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+
     final text = verse.uthmani;
     final ranges = List.of(mistakes)
       ..sort((a, b) => a.charRange.start.compareTo(b.charRange.start));
@@ -80,7 +85,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         TextSpan(
           text: text.substring(start, end),
           style: TextStyle(
-            backgroundColor: color.withOpacity(0.15),
+            backgroundColor: color.withValues(alpha: 0.15),
             color: color,
             fontWeight: FontWeight.bold,
           ),
@@ -117,6 +122,8 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                         _buildVerseCard(result),
                         const SizedBox(height: 16),
                         _buildInfoBanner(),
+                        const SizedBox(height: 16),
+                        _buildCompareButton(),
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -194,7 +201,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.tealStart.withOpacity(0.08),
+            color: AppColors.tealStart.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 8),
           ),
@@ -203,27 +210,14 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
       child: Column(
         children: [
           SizedBox(
-            width: 120,
-            height: 120,
+            width: 170,
+            height: 150,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                CustomPaint(
-                  size: const Size(120, 120),
-                  painter: ProgressRingPainter(
-                    progress: score / 100,
-                    strokeWidth: 10,
-                    color: AppColors.tealStart,
-                  ),
-                ),
-                Text(
-                  '$score',
-                  style: pjs(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.tealStart,
-                  ),
-                ),
+                _buildDecorSquare(22.5),
+                _buildDecorSquare(67.5),
+                AnimatedScoreRing(score: score),
               ],
             ),
           ),
@@ -237,6 +231,20 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDecorSquare(double degrees) {
+    return Transform.rotate(
+      angle: degrees * 3.14159 / 180,
+      child: Container(
+        width: 150,
+        height: 140,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.15)),
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
     );
   }
@@ -273,12 +281,35 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
     );
   }
 
+  Widget _buildCompareButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: OutlinedButton.icon(
+        onPressed: () =>
+            context.push(AppRoutes.audioComparePath(widget.sura, widget.aya)),
+        icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+        label: Text(
+          'Compare with Master',
+          style: pjs(fontSize: 15, fontWeight: FontWeight.bold),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.tealStart,
+          side: const BorderSide(color: AppColors.gold, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(100),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildInfoBanner() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.sifatError.withOpacity(0.08),
+        color: AppColors.sifatError.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

@@ -5,12 +5,16 @@ class Verse {
   final String surahNameEn;
   final String surahNameAr;
   final String uthmani;
+
+  /// Real mushaf page number (Madani 604-page convention), e.g. 2:255 → 42.
+  final int pageNumber;
   const Verse({
     required this.sura,
     required this.aya,
     required this.surahNameEn,
     required this.surahNameAr,
     required this.uthmani,
+    this.pageNumber = 1,
   });
 
   Verse copyWith({String? uthmani}) => Verse(
@@ -19,6 +23,7 @@ class Verse {
     surahNameEn: surahNameEn,
     surahNameAr: surahNameAr,
     uthmani: uthmani ?? this.uthmani,
+    pageNumber: pageNumber,
   );
 }
 
@@ -101,4 +106,22 @@ class ResultState extends RecitationUiState {
 class ErrorState extends RecitationUiState {
   final String message;
   ErrorState(super.verse, this.message);
+}
+
+/// One printed mushaf page (Madani 604-page convention): the ayahs that
+/// appear on it and the surah its opening line belongs to.
+class MushafPage {
+  final int pageNumber;
+  final int sura;
+  final String surahNameEn;
+  final String surahNameAr;
+  final List<Verse> ayahs;
+
+  const MushafPage({
+    required this.pageNumber,
+    required this.sura,
+    required this.surahNameEn,
+    required this.surahNameAr,
+    required this.ayahs,
+  });
 }

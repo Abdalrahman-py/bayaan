@@ -19,7 +19,7 @@ class ProgressRingPainter extends CustomPainter {
     final radius = size.width / 2 - strokeWidth - 6;
 
     final trackPaint = Paint()
-      ..color = color.withOpacity(0.15)
+      ..color = color.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;

@@ -145,7 +145,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
             decoration: BoxDecoration(
               color: isActive
                   ? AppColors.tealStart
-                  : AppColors.gold.withOpacity(0.35),
+                  : AppColors.gold.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(100),
             ),
           ),

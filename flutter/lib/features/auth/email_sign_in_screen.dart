@@ -38,7 +38,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
           builder: (context, _) {
             final s = widget.auth.state;
             final loggedOut = s is LoggedOut ? s : const LoggedOut();
-            return Padding(
+            return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

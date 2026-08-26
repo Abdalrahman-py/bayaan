@@ -11,8 +11,15 @@ import '../../features/learn/lesson_screen.dart';
 import '../../features/learn/placement_screen.dart';
 import '../../features/learn/roadmap_screen.dart';
 import '../../features/onboarding/onboarding_flow_screen.dart';
+import '../../features/quiz/models/quiz_question.dart';
+import '../../features/quiz/quiz_home_screen.dart';
+import '../../features/quiz/quiz_result_screen.dart';
+import '../../features/quiz/quiz_session_screen.dart';
 import '../../features/recitation/ai_analysis_screen.dart';
 import '../../features/recitation/celebration_screen.dart';
+import '../../features/audio_compare/audio_compare_screen.dart';
+import '../../models/models.dart';
+import '../../services/quran_text.dart';
 import '../../features/recitation/recording_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
@@ -28,12 +35,37 @@ class AyahSelectionArgs {
   final String surahNameEnglish;
   final String surahNameArabic;
   final List<Ayah> ayahs;
+  final int initialPage;
 
   const AyahSelectionArgs({
     required this.surahNumber,
     required this.surahNameEnglish,
     required this.surahNameArabic,
-    required this.ayahs,
+    this.ayahs = const [],
+    this.initialPage = 1,
+  });
+}
+
+/// Data passed to the quiz session screen (category + its question set).
+class QuizSessionArgs {
+  final QuizCategory category;
+  final List<QuizQuestion> questions;
+
+  const QuizSessionArgs({required this.category, required this.questions});
+}
+
+/// Data passed to the quiz result screen (final score + streak + the set).
+class QuizResultArgs {
+  final QuizCategory category;
+  final int score;
+  final int bestStreak;
+  final List<QuizQuestion> questions;
+
+  const QuizResultArgs({
+    required this.category,
+    required this.score,
+    required this.bestStreak,
+    required this.questions,
   });
 }
 
@@ -90,11 +122,13 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.ayahSelection,
       builder: (context, state) {
         final args = state.extra as AyahSelectionArgs?;
+        final sura = args?.surahNumber ?? 1;
         return AyahSelectionScreen(
-          surahNumber: args?.surahNumber ?? 1,
+          surahNumber: sura,
           surahNameEnglish: args?.surahNameEnglish ?? 'Al-Fatihah',
           surahNameArabic: args?.surahNameArabic ?? 'سُورَةُ الفَاتِحَة',
           ayahs: args?.ayahs ?? const [],
+          initialPage: args?.initialPage ?? (QuranText.pageFor(sura, 1) ?? 1),
         );
       },
     ),
@@ -122,6 +156,65 @@ final GoRouter appRouter = GoRouter(
         sura: int.parse(state.pathParameters['sura']!),
         aya: int.parse(state.pathParameters['aya']!),
       ),
+    ),
+    GoRoute(
+      path: AppRoutes.audioCompare,
+      builder: (context, state) {
+        final sura = int.parse(state.pathParameters['sura']!);
+        final aya = int.parse(state.pathParameters['aya']!);
+        final st = appState.recitation.stateFor(sura, aya);
+        final result = st is ResultState ? st : null;
+        return AudioCompareScreen(
+          verse: result?.verse ?? QuranText.verseFor(sura, aya),
+          mistakes: result?.mistakes ?? const [],
+        );
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.quiz,
+      builder: (context, state) => QuizHomeScreen(
+        onStart: (category, questions) => context.push(
+          AppRoutes.quizSession,
+          extra: QuizSessionArgs(category: category, questions: questions),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.quizSession,
+      builder: (context, state) {
+        final args = state.extra as QuizSessionArgs;
+        return QuizSessionScreen(
+          questions: args.questions,
+          onComplete: (score, streak) => context.pushReplacement(
+            AppRoutes.quizResult,
+            extra: QuizResultArgs(
+              category: args.category,
+              score: score,
+              bestStreak: streak,
+              questions: args.questions,
+            ),
+          ),
+        );
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.quizResult,
+      builder: (context, state) {
+        final args = state.extra as QuizResultArgs;
+        return QuizResultScreen(
+          score: args.score,
+          total: args.questions.length,
+          bestStreak: args.bestStreak,
+          onPlayAgain: () => context.pushReplacement(
+            AppRoutes.quizSession,
+            extra: QuizSessionArgs(
+              category: args.category,
+              questions: args.questions,
+            ),
+          ),
+          onDone: () => context.go(AppRoutes.home),
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.learn,

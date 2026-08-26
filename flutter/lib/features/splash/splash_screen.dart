@@ -114,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen>
                     style: pjs(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.cream.withOpacity(0.8),
+                      color: AppColors.cream.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -194,7 +194,7 @@ class _SplashScreenState extends State<SplashScreen>
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.gold.withOpacity(0.2)),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.2)),
               borderRadius: BorderRadius.circular(16),
             ),
           ),
@@ -215,7 +215,7 @@ class _SplashScreenState extends State<SplashScreen>
             style: pjs(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: AppColors.cream.withOpacity(0.5),
+              color: AppColors.cream.withValues(alpha: 0.5),
             ),
           ),
         ],
