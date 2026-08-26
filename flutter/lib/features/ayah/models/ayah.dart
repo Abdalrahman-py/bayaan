@@ -1,4 +1,7 @@
+import '../../../models/models.dart';
+
 class Ayah {
+  final int sura;
   final int number;
   final String arabicText;
   final String? translation; // null while translation fetch is pending/failed
@@ -8,10 +11,19 @@ class Ayah {
   final int pageNumber;
 
   const Ayah({
+    this.sura = 1,
     required this.number,
     required this.arabicText,
     this.translation,
     this.transliteration,
     this.pageNumber = 1,
   });
+
+  factory Ayah.fromVerse(Verse v) => Ayah(
+    sura: v.sura,
+    number: v.aya,
+    arabicText: v.uthmani,
+    pageNumber: v.pageNumber,
+  );
 }
+

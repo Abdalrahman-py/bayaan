@@ -10,12 +10,10 @@ import '../../services/quran_translation.dart';
 import '../../services/recitation_controller.dart';
 import '../../shared/widgets/ornamental_divider.dart';
 import '../../shared/widgets/pulsing_rings.dart';
-import '../../shared/widgets/recording_wavebars.dart';
 
-/// bayaan-recording from Figma. The verse card leaves a lot of empty space
-/// below it before the mic button — filled with a translation card (per
-/// Ramzi's suggestion) so a non-Arabic speaker knows what they're about to
-/// recite, instead of sitting empty.
+/// bayaan-recording from Figma. The verse card is followed by the transliteration
+/// ("HOW TO SAY IT") and translation ("MEANING") explanation card so the learner
+/// knows the pronunciation and meaning before and during reciting.
 class RecordingScreen extends StatefulWidget {
   final RecitationController controller;
   final AuthController auth;
@@ -60,8 +58,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 
   void _onControllerChange() {
+    if (!mounted || _navigated) return;
     final s = widget.controller.stateFor(widget.sura, widget.aya);
-    if (_navigated) return;
     if (s is ResultState) {
       _navigated = true;
       final path = s.allCorrect
@@ -69,7 +67,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
           : AppRoutes.aiAnalysisPath(widget.sura, widget.aya);
       context.push(path).then((_) {
         _navigated = false;
-        widget.controller.retry(widget.sura, widget.aya);
+        if (mounted) {
+          widget.controller.retry(widget.sura, widget.aya);
+        }
       });
     }
   }
@@ -93,13 +93,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
                       children: [
                         const SizedBox(height: 4),
                         _buildVerseCard(state.verse),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         _buildCaption(state),
-                        const SizedBox(height: 8),
-                        RecordingWavebars(active: state is Recording),
+                        const SizedBox(height: 16),
+                        _buildTranslationCard(),
                         const SizedBox(height: 20),
-                        if (state is Ready) _buildTranslationCard(),
-                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
@@ -122,7 +120,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
           GestureDetector(
             onTap: () async {
               await widget.controller.discard(widget.sura, widget.aya);
-              if (!context.mounted) return;
+              if (!mounted) return;
               context.canPop() ? context.pop() : context.go(AppRoutes.home);
             },
             child: Container(
@@ -212,7 +210,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cream.withOpacity(0.5),
+        color: AppColors.cream.withValues(alpha: 0.5),
         border: Border.all(color: const Color(0xFFF5F1E6)),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -313,7 +311,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                   shape: BoxShape.circle,
                   color:
                       (recording ? AppColors.tajweedError : AppColors.tealStart)
-                          .withOpacity(0.15),
+                          .withValues(alpha: 0.15),
                 ),
                 child: Container(
                   width: 64,

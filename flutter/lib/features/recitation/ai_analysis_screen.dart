@@ -61,6 +61,11 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
   }
 
   List<InlineSpan> _buildSpans(Verse verse, List<Mistake> mistakes) {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+
     final text = verse.uthmani;
     final ranges = List.of(mistakes)
       ..sort((a, b) => a.charRange.start.compareTo(b.charRange.start));
@@ -80,7 +85,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         TextSpan(
           text: text.substring(start, end),
           style: TextStyle(
-            backgroundColor: color.withOpacity(0.15),
+            backgroundColor: color.withValues(alpha: 0.15),
             color: color,
             fontWeight: FontWeight.bold,
           ),
@@ -196,7 +201,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.tealStart.withOpacity(0.08),
+            color: AppColors.tealStart.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 8),
           ),
@@ -237,7 +242,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         width: 150,
         height: 140,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.gold.withOpacity(0.15)),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.15)),
           borderRadius: BorderRadius.circular(16),
         ),
       ),
@@ -304,7 +309,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.sifatError.withOpacity(0.08),
+        color: AppColors.sifatError.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

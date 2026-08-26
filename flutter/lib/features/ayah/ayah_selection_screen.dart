@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../models/models.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
-import '../../shared/widgets/ornamental_divider.dart';
+import '../../services/quran_text.dart';
 import 'models/ayah.dart';
 import 'widgets/mushaf_page_view.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ class AyahSelectionScreen extends StatefulWidget {
   final String surahNameEnglish;
   final String surahNameArabic;
   final List<Ayah> ayahs;
+  final int initialPage;
 
   const AyahSelectionScreen({
     super.key,
@@ -20,6 +22,7 @@ class AyahSelectionScreen extends StatefulWidget {
     this.surahNameEnglish = 'Al-Fatihah',
     this.surahNameArabic = 'سُورَةُ الفَاتِحَة',
     this.ayahs = const [],
+    this.initialPage = 1,
   });
 
   @override
@@ -30,13 +33,16 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _headerController;
   late final Animation<double> _headerFade;
-  late final Animation<double> _bannerFade;
-  late final Animation<double> _bannerScale;
-  int? _selectedNumber; // mushaf is for reading; tap only selects
+  Ayah? _selectedAyah;
+  late int _currentPageNumber;
 
   @override
   void initState() {
     super.initState();
+    _currentPageNumber = widget.initialPage > 0
+        ? widget.initialPage
+        : (QuranText.pageFor(widget.surahNumber, 1) ?? 1);
+
     _headerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -45,11 +51,6 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
       parent: _headerController,
       curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     );
-    _bannerFade = CurvedAnimation(
-      parent: _headerController,
-      curve: const Interval(0.3, 1.0, curve: Curves.easeOutBack),
-    );
-    _bannerScale = _bannerFade;
     _headerController.forward();
   }
 
@@ -59,26 +60,39 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
     super.dispose();
   }
 
+  MushafPage? get _currentPageInfo {
+    final pages = QuranText.mushafPages();
+    for (final p in pages) {
+      if (p.pageNumber == _currentPageNumber) return p;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final startPage = widget.initialPage > 0
+        ? widget.initialPage
+        : (QuranText.pageFor(widget.surahNumber, 1) ?? 1);
+
     return Scaffold(
       backgroundColor: AppColors.lightBg,
       body: SafeArea(
-        bottom: false,
         child: Column(
           children: [
             _buildBackHeader(context),
-            _buildTitleBanner(),
-            const SizedBox(height: 4),
             Expanded(
               child: MushafPageView(
-                ayahs: widget.ayahs,
-                selectedNumber: _selectedNumber,
-                onAyahTap: (ayah) =>
-                    setState(() => _selectedNumber = ayah.number),
+                ayahs: widget.ayahs.isNotEmpty ? widget.ayahs : null,
+                initialPage: startPage,
+                selectedNumber: _selectedAyah?.number,
+                onPageChanged: (page) => setState(() {
+                  _currentPageNumber = page;
+                  _selectedAyah = null;
+                }),
+                onAyahTap: (ayah) => setState(() => _selectedAyah = ayah),
               ),
             ),
-            _buildPracticeBar(context),
+            if (_selectedAyah != null) _buildPracticeBar(context),
             AppBottomNav(
               currentIndex: 1,
               onTap: (i) {
@@ -95,29 +109,25 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
   }
 
   Widget _buildPracticeBar(BuildContext context) {
-    final selected = _selectedNumber;
+    final selected = _selectedAyah;
+    if (selected == null) return const SizedBox.shrink();
+    final int sura = selected.sura > 0 ? selected.sura : widget.surahNumber;
+    final int aya = selected.number;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
       child: SizedBox(
         width: double.infinity,
-        height: 50,
+        height: 48,
         child: ElevatedButton.icon(
-          onPressed: selected == null
-              ? null
-              : () => context.push(
-                    AppRoutes.recordingPath(widget.surahNumber, selected),
-                  ),
+          onPressed: () => context.push(AppRoutes.recordingPath(sura, aya)),
           icon: const Icon(Icons.mic_rounded, size: 18),
           label: Text(
-            selected == null
-                ? 'Tap an ayah to select it'
-                : 'Practice Ayah $selected',
+            'Practice Ayah $aya',
             style: pjs(fontSize: 15, fontWeight: FontWeight.bold),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.tealStart,
-            disabledBackgroundColor: const Color(0xFFE0DCD3),
-            disabledForegroundColor: AppColors.textMuted,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -130,10 +140,14 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
   }
 
   Widget _buildBackHeader(BuildContext context) {
+    final pageInfo = _currentPageInfo;
+    final surahEn = pageInfo?.surahNameEn ?? widget.surahNameEnglish;
+    final surahAr = pageInfo?.surahNameAr ?? widget.surahNameArabic;
+
     return FadeTransition(
       opacity: _headerFade,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Row(
           children: [
             GestureDetector(
@@ -157,64 +171,38 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
               ),
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.surahNameEnglish,
-                  style: pjs(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    surahEn,
+                    style: pjs(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                    ),
                   ),
-                ),
-                Text(
-                  'Choose an ayah to practice',
-                  style: pjs(fontSize: 13, color: AppColors.textMuted),
-                ),
-              ],
+                  Text(
+                    'Page $_currentPageNumber · Choose an ayah to practice',
+                    style: pjs(fontSize: 12, color: AppColors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              surahAr,
+              textDirection: TextDirection.rtl,
+              style: arabic(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.gold,
+              ),
             ),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildTitleBanner() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: FadeTransition(
-        opacity: _bannerFade,
-        child: ScaleTransition(
-          scale: _bannerScale,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: AppColors.gold),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                const OrnamentalDivider(width: double.infinity, opacity: 0.3),
-                const SizedBox(height: 12),
-                Text(
-                  widget.surahNameArabic,
-                  textDirection: TextDirection.rtl,
-                  style: arabic(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.tealStart,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const OrnamentalDivider(width: double.infinity, opacity: 0.3),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
+

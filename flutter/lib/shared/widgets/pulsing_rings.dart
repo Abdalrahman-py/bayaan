@@ -66,7 +66,7 @@ class _PulsingRingsState extends State<PulsingRings>
                     height: 110,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: widget.color.withOpacity(opacity + 0.05),
+                      color: widget.color.withValues(alpha: opacity + 0.05),
                     ),
                   ),
                 );
@@ -77,7 +77,7 @@ class _PulsingRingsState extends State<PulsingRings>
             height: 110,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: widget.color.withOpacity(0.08),
+              color: widget.color.withValues(alpha: 0.08),
             ),
           ),
           Container(
@@ -85,7 +85,7 @@ class _PulsingRingsState extends State<PulsingRings>
             height: 90,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: widget.color.withOpacity(0.12),
+              color: widget.color.withValues(alpha: 0.12),
             ),
           ),
         ],

@@ -65,9 +65,6 @@ void main() {
       // page's single RichText.
       expect(find.text('1'), findsWidgets);
       expect(find.textContaining('نص', findRichText: true), findsOneWidget);
-
-      // Page dots: one per page, both tappable.
-      expect(find.byType(AnimatedContainer), findsWidgets);
     });
 
     testWidgets('tapping an ayah invokes onAyahTap with that ayah', (

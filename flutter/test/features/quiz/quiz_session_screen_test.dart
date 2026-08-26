@@ -10,6 +10,7 @@ QuizQuestion q(String id, String text, int correct) => QuizQuestion(
   question: text,
   choices: const ['Alpha', 'Beta', 'Gamma', 'Delta'],
   correctIndex: correct,
+  explanation: 'Explanation for $id',
 );
 
 void main() {
@@ -18,7 +19,7 @@ void main() {
       MaterialApp(
         home: QuizSessionScreen(
           questions: [q('1', 'What rule applies?', 2)],
-          onComplete: (_, __) {},
+          onComplete: (score, streak) {},
         ),
       ),
     );
@@ -30,14 +31,14 @@ void main() {
     }
   });
 
-  testWidgets('tapping the correct choice shows the next button', (
+  testWidgets('tapping the correct choice shows celebration and Continue button', (
     tester,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: QuizSessionScreen(
-          questions: [q('1', 'One?', 1), q('2', 'Two?', 0)],
-          onComplete: (_, __) {},
+          questions: [q('1', 'One?', 1)],
+          onComplete: (score, streak) {},
         ),
       ),
     );
@@ -45,7 +46,34 @@ void main() {
 
     await tester.tap(find.text('Beta'));
     await tester.pumpAndSettle();
-    expect(find.text('Next'), findsOneWidget);
+    expect(find.textContaining('Correct!'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+  });
+
+  testWidgets('tapping wrong choice shows Try Again and Continue buttons', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: QuizSessionScreen(
+          questions: [q('1', 'One?', 0)],
+          onComplete: (score, streak) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Tap wrong choice ('Beta', index 1 instead of index 0)
+    await tester.tap(find.text('Beta'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Not quite right'), findsOneWidget);
+    expect(find.text('Try Again'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+
+    // Tap Try Again to reset selection
+    await tester.tap(find.text('Try Again'));
+    await tester.pumpAndSettle();
+    expect(find.text('Try Again'), findsNothing);
   });
 
   testWidgets('completing the last question fires onComplete with results', (
@@ -67,7 +95,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // The session shuffles questions; answer whichever is displayed correctly.
     for (var i = 0; i < 2; i++) {
       final visible = qs.firstWhere(
         (x) => tester.any(find.text(x.question)),
@@ -76,11 +103,10 @@ void main() {
       await tester.ensureVisible(find.text(correctLabel));
       await tester.tap(find.text(correctLabel));
       await tester.pumpAndSettle();
-      if (i == 0) {
-        await tester.ensureVisible(find.text('Next'));
-        await tester.tap(find.text('Next'));
-        await tester.pumpAndSettle();
-      }
+
+      await tester.ensureVisible(find.text('Continue'));
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
     }
     await tester.ensureVisible(find.text('Finish'));
     await tester.tap(find.text('Finish'));
@@ -90,3 +116,4 @@ void main() {
     expect(completedStreak, 2);
   });
 }
+

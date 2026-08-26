@@ -5,10 +5,10 @@ import '../../core/theme/app_fonts.dart';
 import 'models/quiz_question.dart';
 import 'quiz_session_controller.dart';
 
-/// One quiz run. [questions] is the (pre-filtered) set for the chosen
-/// category; the screen shuffles and drives them via QuizSessionController.
-/// When the last question is answered, [onComplete] fires with the score and
-/// best streak so the parent can navigate.
+/// One quiz run with Duolingo-style interactive feedback:
+/// 1. Pick choice -> immediate feedback (correct celebration / wrong try-again).
+/// 2. Explanation is presented.
+/// 3. Tap "Continue" to proceed to next question.
 class QuizSessionScreen extends StatefulWidget {
   final List<QuizQuestion> questions;
   final void Function(int score, int bestStreak) onComplete;
@@ -25,24 +25,28 @@ class QuizSessionScreen extends StatefulWidget {
 
 class _QuizSessionScreenState extends State<QuizSessionScreen> {
   late final QuizSessionController _controller;
-  int? _picked;
 
   @override
   void initState() {
     super.initState();
     _controller = QuizSessionController(questions: widget.questions);
+    _controller.addListener(_onStateChange);
+  }
+
+  void _onStateChange() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onStateChange);
     _controller.dispose();
     super.dispose();
   }
 
   void _choose(int index) {
-    if (_picked != null) return;
-    setState(() => _picked = index);
-    _controller.answer(index);
+    if (_controller.isCurrentAnswered) return;
+    _controller.submitChoice(index);
   }
 
   void _next() {
@@ -50,14 +54,20 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
       widget.onComplete(_controller.score, _controller.bestStreak);
       return;
     }
-    setState(() => _picked = null);
+    _controller.next();
+    if (_controller.isComplete) {
+      widget.onComplete(_controller.score, _controller.bestStreak);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_controller.isComplete) return _buildFinishedView();
     final question = _controller.currentQuestion;
     if (question == null) return _buildFinishedView();
-    final answered = _picked != null;
+
+    final answered = _controller.isCurrentAnswered;
+    final picked = _controller.currentSelection;
 
     return Scaffold(
       backgroundColor: AppColors.lightBg,
@@ -67,50 +77,25 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildProgressBar(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     _buildQuestionCard(question),
                     const SizedBox(height: 20),
                     ...List.generate(question.choices.length, (i) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildChoice(question, i, answered),
+                        child: _buildChoice(question, i, answered, picked),
                       );
                     }),
-                    if (answered) ...[
-                      const SizedBox(height: 4),
-                      _buildExplanation(question),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _next,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.tealStart,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                          ),
-                          child: Text(
-                            'Next',
-                            style: pjs(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
             ),
+            if (answered) _buildDuolingoFeedbackBanner(question),
           ],
         ),
       ),
@@ -126,7 +111,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.emoji_events_rounded, size: 64, color: AppColors.gold),
+              Icon(Icons.emoji_events_rounded, size: 72, color: AppColors.gold),
               const SizedBox(height: 16),
               Text(
                 'Quiz complete!',
@@ -142,10 +127,10 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
                 'best streak ${_controller.bestStreak}',
                 style: pjs(fontSize: 15, color: AppColors.textMuted),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 52,
                 child: ElevatedButton(
                   onPressed: () =>
                       widget.onComplete(_controller.score, _controller.bestStreak),
@@ -159,7 +144,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
                   ),
                   child: Text(
                     'Finish',
-                    style: pjs(fontSize: 15, fontWeight: FontWeight.bold),
+                    style: pjs(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -172,7 +157,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
         children: [
           GestureDetector(
@@ -205,7 +190,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border.all(color: const Color(0xFFF5F1E6)),
@@ -227,14 +212,14 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
 
   Widget _buildProgressBar() {
     final total = widget.questions.length;
-    final done = _controller.answeredCount;
+    final done = _controller.currentIndex;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
-            value: done / total,
+            value: total > 0 ? (done / total).clamp(0.0, 1.0) : 0,
             minHeight: 8,
             backgroundColor: const Color(0xFFF5F1E6),
             valueColor: const AlwaysStoppedAnimation(AppColors.tealStart),
@@ -262,7 +247,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
         question.question,
         textAlign: TextAlign.center,
         style: pjs(
-          fontSize: 18,
+          fontSize: 17,
           fontWeight: FontWeight.w700,
           height: 1.5,
           color: AppColors.textDark,
@@ -271,22 +256,23 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
     );
   }
 
-  Widget _buildChoice(QuizQuestion question, int index, bool answered) {
-    final picked = _picked == index;
-    final correct = question.correctIndex == index;
+  Widget _buildChoice(QuizQuestion question, int index, bool answered, int? picked) {
+    final bool isPicked = picked == index;
+    final bool isCorrect = question.correctIndex == index;
 
     Color? bg;
     Color? border;
     Color? textColor = AppColors.textDark;
     IconData? icon;
+
     if (answered) {
-      if (correct) {
-        bg = AppColors.success.withOpacity(0.12);
+      if (isCorrect) {
+        bg = AppColors.success.withValues(alpha: 0.12);
         border = AppColors.success;
         textColor = AppColors.success;
         icon = Icons.check_circle_rounded;
-      } else if (picked) {
-        bg = AppColors.tajweedError.withOpacity(0.12);
+      } else if (isPicked) {
+        bg = AppColors.tajweedError.withValues(alpha: 0.12);
         border = AppColors.tajweedError;
         textColor = AppColors.tajweedError;
         icon = Icons.cancel_rounded;
@@ -324,7 +310,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
                   style: pjs(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: textColor ?? AppColors.tealStart,
+                    color: textColor,
                   ),
                 ),
               ),
@@ -347,27 +333,111 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
     );
   }
 
-  Widget _buildExplanation(QuizQuestion question) {
-    final correct = _picked == question.correctIndex;
-    final explanation = question.explanation;
+  /// Duolingo-style bottom banner with celebration / try-again and continue button.
+  Widget _buildDuolingoFeedbackBanner(QuizQuestion question) {
+    final bool correct = _controller.isCurrentCorrect;
+    final String? explanation = question.explanation;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: BoxDecoration(
-        color: (correct ? AppColors.success : AppColors.tajweedError)
-            .withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        explanation == null
-            ? (correct ? 'Correct!' : 'Not quite — keep going.')
-            : (correct ? 'Correct! ' : 'Not quite. ') + explanation,
-        style: pjs(
-          fontSize: 13,
-          height: 1.4,
-          color: correct ? AppColors.success : AppColors.tajweedError,
+        color: correct
+            ? const Color(0xFFE8F5E9) // soft green
+            : const Color(0xFFFFEBEE), // soft red
+        border: Border(
+          top: BorderSide(
+            color: correct ? AppColors.success : AppColors.tajweedError,
+            width: 1.5,
+          ),
         ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                correct ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                color: correct ? AppColors.success : AppColors.tajweedError,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  correct ? 'MashaAllah! Correct!' : 'Not quite right',
+                  style: pjs(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: correct ? AppColors.success : AppColors.tajweedError,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (explanation != null && explanation.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              explanation,
+              style: pjs(
+                fontSize: 13,
+                height: 1.4,
+                color: AppColors.textDark,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              if (!correct) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _controller.retryCurrent(),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.tajweedError,
+                      side: const BorderSide(color: AppColors.tajweedError),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      'Try Again',
+                      style: pjs(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: _next,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        correct ? AppColors.success : AppColors.tealStart,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'Continue',
+                    style: pjs(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
+

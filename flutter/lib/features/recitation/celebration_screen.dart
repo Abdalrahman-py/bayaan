@@ -151,7 +151,7 @@ class _CelebrationScreenState extends State<CelebrationScreen>
             border: Border.all(color: AppColors.gold, width: 2),
             boxShadow: [
               BoxShadow(
-                color: AppColors.gold.withOpacity(0.14),
+                color: AppColors.gold.withValues(alpha: 0.14),
                 blurRadius: 20,
                 offset: const Offset(0, 12),
               ),
@@ -165,7 +165,7 @@ class _CelebrationScreenState extends State<CelebrationScreen>
                 height: 200,
                 child: CustomPaint(
                   painter: DashedCirclePainter(
-                    color: AppColors.gold.withOpacity(0.5),
+                    color: AppColors.gold.withValues(alpha: 0.5),
                   ),
                 ),
               ),

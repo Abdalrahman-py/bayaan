@@ -87,7 +87,7 @@ class _OnboardingPage1State extends State<OnboardingPage1>
             border: Border.all(color: AppColors.gold, width: 1),
             boxShadow: [
               BoxShadow(
-                color: AppColors.tealStart.withOpacity(0.08),
+                color: AppColors.tealStart.withValues(alpha: 0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 12),
               ),
@@ -110,7 +110,7 @@ class _OnboardingPage1State extends State<OnboardingPage1>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.gold.withOpacity(0.4),
+                      color: AppColors.gold.withValues(alpha: 0.4),
                       width: 1,
                     ),
                   ),

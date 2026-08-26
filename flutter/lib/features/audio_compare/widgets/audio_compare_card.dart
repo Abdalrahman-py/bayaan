@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_fonts.dart';
 
 /// One side of the compare screen: a badge (master vs your recitation), a
@@ -164,7 +163,7 @@ class _AudioCompareCardState extends State<AudioCompareCard>
               } else if (isPlayed) {
                 barColor = widget.waveformColor;
               } else {
-                barColor = widget.waveformColor.withOpacity(
+                barColor = widget.waveformColor.withValues(alpha: 
                   _isPlaying ? 0.35 : 1,
                 );
               }

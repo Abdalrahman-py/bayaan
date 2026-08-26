@@ -107,3 +107,21 @@ class ErrorState extends RecitationUiState {
   final String message;
   ErrorState(super.verse, this.message);
 }
+
+/// One printed mushaf page (Madani 604-page convention): the ayahs that
+/// appear on it and the surah its opening line belongs to.
+class MushafPage {
+  final int pageNumber;
+  final int sura;
+  final String surahNameEn;
+  final String surahNameAr;
+  final List<Verse> ayahs;
+
+  const MushafPage({
+    required this.pageNumber,
+    required this.sura,
+    required this.surahNameEn,
+    required this.surahNameAr,
+    required this.ayahs,
+  });
+}

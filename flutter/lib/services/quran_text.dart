@@ -78,6 +78,37 @@ class QuranText {
   }
 
   static List<Chapter> get chapters => _chapters;
+
+  static List<MushafPage>? _mushafPages;
+
+  /// The full mushaf as 604 continuous pages (quran.com-style global
+  /// pagination): every ayah grouped onto its real printed page, in page
+  /// order, with the surah its opening line belongs to.
+  static List<MushafPage> mushafPages() {
+    if (_mushafPages != null) return _mushafPages!;
+    final grouped = <int, List<Verse>>{};
+    for (final key in _pages.keys) {
+      final parts = key.split(':');
+      final sura = int.parse(parts[0]);
+      final aya = int.parse(parts[1]);
+      final v = verse(sura, aya);
+      if (v == null) continue;
+      grouped.putIfAbsent(_pages[key]!, () => []).add(v);
+    }
+    final sortedPages = grouped.keys.toList()..sort();
+    _mushafPages = sortedPages.map((page) {
+      final ayahs = grouped[page]!;
+      final first = ayahs.first;
+      return MushafPage(
+        pageNumber: page,
+        sura: first.sura,
+        surahNameEn: first.surahNameEn,
+        surahNameAr: first.surahNameAr,
+        ayahs: ayahs,
+      );
+    }).toList();
+    return _mushafPages!;
+  }
 }
 
 class Chapter {

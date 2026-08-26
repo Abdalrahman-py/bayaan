@@ -35,12 +35,14 @@ class AyahSelectionArgs {
   final String surahNameEnglish;
   final String surahNameArabic;
   final List<Ayah> ayahs;
+  final int initialPage;
 
   const AyahSelectionArgs({
     required this.surahNumber,
     required this.surahNameEnglish,
     required this.surahNameArabic,
-    required this.ayahs,
+    this.ayahs = const [],
+    this.initialPage = 1,
   });
 }
 
@@ -120,11 +122,13 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.ayahSelection,
       builder: (context, state) {
         final args = state.extra as AyahSelectionArgs?;
+        final sura = args?.surahNumber ?? 1;
         return AyahSelectionScreen(
-          surahNumber: args?.surahNumber ?? 1,
+          surahNumber: sura,
           surahNameEnglish: args?.surahNameEnglish ?? 'Al-Fatihah',
           surahNameArabic: args?.surahNameArabic ?? 'سُورَةُ الفَاتِحَة',
           ayahs: args?.ayahs ?? const [],
+          initialPage: args?.initialPage ?? (QuranText.pageFor(sura, 1) ?? 1),
         );
       },
     ),

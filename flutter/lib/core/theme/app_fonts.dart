@@ -13,7 +13,7 @@ TextStyle pjs({
   fontFamily: 'PlusJakartaSans',
   fontSize: fontSize,
   // Only 500/600/700/800 are bundled — anything lighter falls back to 500.
-  fontWeight: fontWeight.index < FontWeight.w500.index
+  fontWeight: fontWeight.value < FontWeight.w500.value
       ? FontWeight.w500
       : fontWeight,
   color: color,

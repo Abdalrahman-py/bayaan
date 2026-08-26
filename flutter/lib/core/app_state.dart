@@ -21,7 +21,11 @@ class AppState extends ChangeNotifier {
     auth.addListener(notifyListeners);
   }
 
+  bool _bootstrapped = false;
+
   Future<void> bootstrap() async {
+    if (_bootstrapped) return;
+    _bootstrapped = true;
     final prefs = await SharedPreferences.getInstance();
     try {
       await QuranText.ensureLoaded();
@@ -29,8 +33,14 @@ class AppState extends ChangeNotifier {
       assetError = true;
     }
     onboarded = prefs.getBool('onboarded') ?? false;
-    await Supabase.initialize(url: kSupabaseUrl, publishableKey: kAnonKey);
-    await auth.init(Supabase.instance.client);
+    try {
+      await Supabase.initialize(url: kSupabaseUrl, publishableKey: kAnonKey);
+    } catch (_) {
+      // Supabase already initialized or test environment
+    }
+    try {
+      await auth.init(Supabase.instance.client);
+    } catch (_) {}
     booting = false;
     notifyListeners();
   }

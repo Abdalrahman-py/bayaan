@@ -35,17 +35,22 @@ class _LessonScreenState extends State<LessonScreen> {
   }
 
   void _onChange() {
+    if (!mounted) return;
     if (_controller.phase == LessonPhase.summary && !_navigatedToSummary) {
       _navigatedToSummary = true;
       context
           .push(AppRoutes.lessonResultPath(widget.lessonId), extra: _controller)
-          .then((_) => context.pop());
+          .then((_) {
+        if (mounted && context.canPop()) {
+          context.pop();
+        }
+      });
     }
     if (_controller.phase == LessonPhase.exercise) {
       final asset = _controller.currentItem.promptAsset;
       if (asset != null) _audio.preload(asset);
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Future<void> _play(String promptAsset) => _audio.play(promptAsset);
@@ -58,8 +63,11 @@ class _LessonScreenState extends State<LessonScreen> {
     super.dispose();
   }
 
+  String? _selectedOption;
+
   @override
   Widget build(BuildContext context) {
+    final showFeedback = _controller.phase == LessonPhase.itemFeedback;
     return Scaffold(
       backgroundColor: AppColors.lightBg,
       body: SafeArea(
@@ -67,6 +75,7 @@ class _LessonScreenState extends State<LessonScreen> {
           children: [
             _buildHeader(),
             Expanded(child: _buildBody()),
+            if (showFeedback) _buildDuolingoFeedbackBanner(),
           ],
         ),
       ),
@@ -134,13 +143,12 @@ class _LessonScreenState extends State<LessonScreen> {
       case LessonPhase.teaching:
         return _buildTeach();
       case LessonPhase.exercise:
-        return _buildExercise();
+      case LessonPhase.itemFeedback:
+        return SingleChildScrollView(child: _buildExercise());
       case LessonPhase.recording:
         return _buildRecording();
       case LessonPhase.grading:
         return const Center(child: CircularProgressIndicator());
-      case LessonPhase.itemFeedback:
-        return _buildFeedback();
       case LessonPhase.summary:
         return const Center(child: CircularProgressIndicator());
     }
@@ -261,7 +269,7 @@ class _LessonScreenState extends State<LessonScreen> {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.tealStart.withOpacity(0.12),
+                    color: AppColors.tealStart.withValues(alpha: 0.12),
                   ),
                   child: Icon(
                     Icons.volume_up,
@@ -339,32 +347,58 @@ class _LessonScreenState extends State<LessonScreen> {
   }
 
   Widget _buildOptions(LessonItem item) {
+    final bool isFeedback = _controller.phase == LessonPhase.itemFeedback;
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 12,
       runSpacing: 12,
       children: item.options.map((opt) {
         final isAudio = opt.endsWith('.ogg');
+        final bool isCorrect = opt == item.answer;
+        final bool isPicked = opt == _selectedOption;
+
+        Color? bg;
+        Color? border;
+        Color textColor = AppColors.tealStart;
+
+        if (isFeedback) {
+          if (isCorrect) {
+            bg = AppColors.success.withValues(alpha: 0.12);
+            border = AppColors.success;
+            textColor = AppColors.success;
+          } else if (isPicked) {
+            bg = AppColors.tajweedError.withValues(alpha: 0.12);
+            border = AppColors.tajweedError;
+            textColor = AppColors.tajweedError;
+          }
+        }
+
         return GestureDetector(
-          onTap: () {
-            if (isAudio) _play(opt);
-            _controller.answerChoice(opt);
-          },
+          onTap: isFeedback
+              ? null
+              : () {
+                  setState(() => _selectedOption = opt);
+                  if (isAudio) _play(opt);
+                  _controller.answerChoice(opt);
+                },
           child: Container(
             width: 72,
             height: 72,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFF5F1E6)),
+              color: bg ?? Colors.white,
+              border: Border.all(
+                color: border ?? const Color(0xFFF5F1E6),
+                width: border != null ? 2 : 1,
+              ),
               borderRadius: BorderRadius.circular(16),
             ),
             child: isAudio
-                ? Icon(Icons.volume_up, color: AppColors.tealStart, size: 28)
+                ? Icon(Icons.volume_up, color: textColor, size: 28)
                 : Text(
                     opt,
                     textDirection: TextDirection.rtl,
-                    style: arabic(fontSize: 30, color: AppColors.tealStart),
+                    style: arabic(fontSize: 30, color: textColor),
                   ),
           ),
         );
@@ -406,57 +440,113 @@ class _LessonScreenState extends State<LessonScreen> {
     );
   }
 
-  Widget _buildFeedback() {
+  /// Duolingo-style bottom banner matching QuizSessionScreen.
+  Widget _buildDuolingoFeedbackBanner() {
     final correct = _controller.lastCorrect ?? false;
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            correct ? Icons.check_circle : Icons.cancel,
-            size: 64,
+    final feedback = _controller.lastFeedback;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
+        color: correct
+            ? const Color(0xFFE8F5E9)
+            : const Color(0xFFFFEBEE),
+        border: Border(
+          top: BorderSide(
             color: correct ? AppColors.success : AppColors.tajweedError,
+            width: 1.5,
           ),
-          const SizedBox(height: 16),
-          Text(
-            correct ? 'Correct!' : 'Not quite',
-            style: pjs(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                correct ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                color: correct ? AppColors.success : AppColors.tajweedError,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  correct ? 'MashaAllah! Correct!' : 'Not quite right',
+                  style: pjs(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: correct ? AppColors.success : AppColors.tajweedError,
+                  ),
+                ),
+              ),
+            ],
           ),
-          if (_controller.lastFeedback != null) ...[
-            const SizedBox(height: 8),
+          if (feedback != null && feedback.isNotEmpty) ...[
+            const SizedBox(height: 6),
             Text(
-              _controller.lastFeedback!,
-              textAlign: TextAlign.center,
-              style: pjs(fontSize: 14, color: AppColors.textMuted),
+              feedback,
+              style: pjs(
+                fontSize: 13,
+                height: 1.4,
+                color: AppColors.textDark,
+              ),
             ),
           ],
-          const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: correct ? _controller.next : _controller.retryItem,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.tealStart,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              if (!correct) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(() => _selectedOption = null);
+                      _controller.retryItem();
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.tajweedError,
+                      side: const BorderSide(color: AppColors.tajweedError),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      'Try Again',
+                      style: pjs(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() => _selectedOption = null);
+                    _controller.next();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        correct ? AppColors.success : AppColors.tealStart,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'Continue',
+                    style: pjs(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-              child: Text(
-                correct ? 'Continue' : 'Try Again',
-                style: pjs(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+            ],
           ),
         ],
       ),

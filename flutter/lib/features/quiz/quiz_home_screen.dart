@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import 'models/quiz_question.dart';
@@ -78,22 +80,53 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      child: Row(
         children: [
-          Text(
-            'Quizzes & Tests',
-            style: pjs(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
+          GestureDetector(
+            onTap: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRoutes.home);
+              }
+            },
+            child: Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFF5F1E6)),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.chevron_left,
+                size: 20,
+                color: AppColors.textDark,
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Test your tajweed and Quran knowledge',
-            style: pjs(fontSize: 13, color: AppColors.textMuted),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quizzes & Tests',
+                  style: pjs(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Test your tajweed and Quran knowledge',
+                  style: pjs(fontSize: 12, color: AppColors.textMuted),
+                ),
+              ],
+            ),
           ),
         ],
       ),

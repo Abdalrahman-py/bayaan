@@ -5,6 +5,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../services/auth_controller.dart';
+import '../../services/learn_content.dart';
 import '../../services/learn_repository.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
 import 'models/lesson.dart';
@@ -31,14 +32,51 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
 
   Future<void> _load() async {
     final token = widget.auth.accessToken;
-    if (token == null) return;
+    if (token != null) {
+      try {
+        final path = await LearnRepository.path(token);
+        if (mounted) {
+          setState(() => _path = path);
+          return;
+        }
+      } catch (_) {}
+    }
+
     try {
-      final path = await LearnRepository.path(token);
-      if (!mounted) return;
-      setState(() => _path = path);
+      final units = await LearnContent.units();
+      final roadmapUnits = units.map((u) {
+        return RoadmapUnit(
+          unitId: u.unitId,
+          track: 'arabic',
+          titleEn: u.titleEn,
+          titleAr: u.titleAr,
+          lessons: u.lessons.map((m) => RoadmapLesson(
+            meta: m,
+            status: LessonStatus.available,
+            bestScore: 0,
+            attempts: 0,
+          )).toList(),
+        );
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _path = LearnPath(
+            header: const LearnHeader(
+              arabicLevel: 1,
+              xp: 150,
+              streakCount: 3,
+              dailyGoalMinutes: 10,
+              reviewsDue: 0,
+            ),
+            units: roadmapUnits,
+          );
+        });
+      }
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _error = "Couldn't load your roadmap. Try again.");
+      if (mounted) {
+        setState(() => _error = "Couldn't load your roadmap. Try again.");
+      }
     }
   }
 
@@ -149,7 +187,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
       ),
       Text(
         label,
-        style: pjs(fontSize: 11, color: Colors.white.withOpacity(0.8)),
+        style: pjs(fontSize: 11, color: Colors.white.withValues(alpha: 0.8)),
       ),
     ],
   );
@@ -222,9 +260,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: locked
-              ? null
-              : () => context.push(AppRoutes.lessonPath(l.meta.lessonId)),
+          onTap: () => context.push(AppRoutes.lessonPath(l.meta.lessonId)),
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
