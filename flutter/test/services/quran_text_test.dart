@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bayaan/services/quran_text.dart';
 
 void main() {
+  mushafOrdering();
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('QuranText', () {
@@ -79,3 +80,22 @@ void main() {
 }
 
 // Appended: continuous mushaf pagination tests (quran.com-style global pages).
+
+void mushafOrdering() {
+  group('QuranText.mushafPages', () {
+    setUpAll(QuranText.ensureLoaded);
+
+    test('keeps ayahs in numeric order within a page', () {
+      final page3 = QuranText.mushafPages().firstWhere((p) => p.pageNumber == 3);
+      final numbers = page3.ayahs.map((a) => a.aya).toList();
+      expect(numbers, equals([...numbers]..sort()));
+      expect(numbers.first, 6);
+    });
+
+    test('orders pages ascending and covers the whole mushaf', () {
+      final pages = QuranText.mushafPages();
+      expect(pages.first.pageNumber, 1);
+      expect(pages.last.pageNumber, 604);
+    });
+  });
+}

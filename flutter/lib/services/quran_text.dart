@@ -97,7 +97,12 @@ class QuranText {
     }
     final sortedPages = grouped.keys.toList()..sort();
     _mushafPages = sortedPages.map((page) {
-      final ayahs = grouped[page]!;
+      // pages.json keys are string-sorted ("2:10" before "2:6"), so grouping
+      // by iteration order alone puts a page's ayahs out of sequence.
+      final ayahs = grouped[page]!
+        ..sort((a, b) => a.sura != b.sura
+            ? a.sura.compareTo(b.sura)
+            : a.aya.compareTo(b.aya));
       final first = ayahs.first;
       return MushafPage(
         pageNumber: page,

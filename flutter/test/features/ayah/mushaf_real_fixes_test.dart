@@ -40,35 +40,32 @@ void main() {
       expect(tapped.single.number, 5);
     });
 
-    testWidgets('a full page of text scrolls instead of being clipped', (
+    testWidgets('a dense page shrinks its text to fit instead of overflowing', (
       tester,
     ) async {
-      // 15 long ayahs on one page — more text than the viewport can show.
-      final ayahs = List.generate(
-        15,
-        (i) => v(
-          i + 1,
-          1,
-          text:
-              'هذا نص طويل جدا لآية قرآنية ممتدة على عدة أسطر لضمان تجاوز الارتفاع المحدد للصفحة في بيئة الاختبار',
-        ),
+      const long =
+          'هذا نص طويل جدا لآية قرآنية ممتدة على عدة أسطر لضمان تجاوز الارتفاع المحدد للصفحة في بيئة الاختبار';
+
+      double firstWordSize() => tester
+          .widgetList<Text>(find.textContaining('هذا'))
+          .first
+          .style!
+          .fontSize!;
+
+      await tester.pumpWidget(
+        wrap([v(1, 1, text: long), v(2, 1, text: long)], (_) {}),
       );
-      await tester.pumpWidget(wrap(ayahs, (_) {}));
+      await tester.pumpAndSettle();
+      final sparse = firstWordSize();
+
+      // 15 of the same long ayahs on one page — far more than fits at that size.
+      await tester.pumpWidget(
+        wrap(List.generate(15, (i) => v(i + 1, 1, text: long)), (_) {}),
+      );
       await tester.pumpAndSettle();
 
-      final scrollable = find.descendant(
-        of: find.byType(MushafPageView),
-        matching: find.byType(SingleChildScrollView),
-      );
-      final before = tester.state<ScrollableState>(
-        find.descendant(of: scrollable, matching: find.byType(Scrollable)),
-      ).position.pixels;
-      await tester.drag(scrollable.first, const Offset(0, -200));
-      await tester.pumpAndSettle();
-      final after = tester.state<ScrollableState>(
-        find.descendant(of: scrollable, matching: find.byType(Scrollable)),
-      ).position.pixels;
-      expect(after, greaterThan(before));
+      expect(firstWordSize(), lessThan(sparse));
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('swiping navigates between pages and renders page medallion', (

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
-import '../../shared/widgets/app_bottom_nav.dart';
 import '../../services/quran_text.dart';
 import 'models/ayah.dart';
 import 'widgets/mushaf_page_view.dart';
@@ -84,23 +83,14 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
               child: MushafPageView(
                 ayahs: widget.ayahs.isNotEmpty ? widget.ayahs : null,
                 initialPage: startPage,
-                selectedNumber: _selectedAyah?.number,
+                selected: _selectedAyah,
                 onPageChanged: (page) => setState(() {
                   _currentPageNumber = page;
                   _selectedAyah = null;
                 }),
                 onAyahTap: (ayah) => setState(() => _selectedAyah = ayah),
+                onAyahLongPress: _showAyahMenu,
               ),
-            ),
-            if (_selectedAyah != null) _buildPracticeBar(context),
-            AppBottomNav(
-              currentIndex: 1,
-              onTap: (i) {
-                if (i == 0) context.go(AppRoutes.home);
-                if (i == 1) context.go(AppRoutes.surahs);
-                if (i == 2) context.go(AppRoutes.stats);
-                if (i == 3) context.go(AppRoutes.settings);
-              },
             ),
           ],
         ),
@@ -108,35 +98,44 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
     );
   }
 
-  Widget _buildPracticeBar(BuildContext context) {
-    final selected = _selectedAyah;
-    if (selected == null) return const SizedBox.shrink();
-    final int sura = selected.sura > 0 ? selected.sura : widget.surahNumber;
-    final int aya = selected.number;
+  /// Anchored to the pressed ayah rather than docked under the page — a bar
+  /// below the mushaf would shrink it and re-fit the text at a smaller size.
+  Future<void> _showAyahMenu(Ayah ayah, Offset at) async {
+    setState(() => _selectedAyah = ayah);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: ElevatedButton.icon(
-          onPressed: () => context.push(AppRoutes.recordingPath(sura, aya)),
-          icon: const Icon(Icons.mic_rounded, size: 18),
-          label: Text(
-            'Practice Ayah $aya',
-            style: pjs(fontSize: 15, fontWeight: FontWeight.bold),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.tealStart,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(100),
-            ),
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final choice = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        at.dx,
+        at.dy,
+        overlay.size.width - at.dx,
+        overlay.size.height - at.dy,
+      ),
+      items: [
+        PopupMenuItem(
+          value: 'practice',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.mic_rounded, size: 18, color: AppColors.tealStart),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  'Practice this ayah',
+                  style: pjs(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
+      ],
     );
+
+    if (choice != 'practice' || !mounted) return;
+    final sura = ayah.sura > 0 ? ayah.sura : widget.surahNumber;
+    if (!mounted) return;
+    context.push(AppRoutes.recordingPath(sura, ayah.number));
   }
 
   Widget _buildBackHeader(BuildContext context) {
