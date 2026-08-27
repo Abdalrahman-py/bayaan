@@ -24,6 +24,11 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
 
   // ponytail: Favorites/Recent are visual-only — no favorites/history backend yet.
   String _selectedFilter = 'All';
+
+  /// The row entrance is a one-shot effect for when the list appears. Rows are
+  /// inflated lazily, so without this a surah scrolled to later would replay
+  /// the whole stagger and sit blank for about a second.
+  bool _entranceDone = false;
   final TextEditingController _searchController = TextEditingController();
   late final List<Surah> _allSurahs;
 
@@ -31,6 +36,10 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
   void initState() {
     super.initState();
     _allSurahs = QuranText.chapters.map(Surah.fromChapter).toList();
+    // Longest row delay (capped at 12 steps) plus one row's fade.
+    Future.delayed(const Duration(milliseconds: 12 * 60 + 400), () {
+      if (mounted) setState(() => _entranceDone = true);
+    });
     _searchController.addListener(() => setState(() {}));
     _headerController = AnimationController(
       vsync: this,
@@ -90,6 +99,7 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
                       child: StaggeredFadeSlide(
                         index: index,
+                        animate: !_entranceDone,
                         child: _SurahRow(surah: surahs[index]),
                       ),
                     );

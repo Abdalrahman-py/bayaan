@@ -6,12 +6,18 @@ class StaggeredFadeSlide extends StatefulWidget {
   final Duration delayStep;
   final Duration itemDuration;
 
+  /// Whether to play the entrance at all. The stagger belongs to the moment
+  /// the list appears; a row built later — because the user scrolled to it —
+  /// passes false and renders finished instead of replaying it.
+  final bool animate;
+
   const StaggeredFadeSlide({
     super.key,
     required this.index,
     required this.child,
     this.delayStep = const Duration(milliseconds: 60),
     this.itemDuration = const Duration(milliseconds: 400),
+    this.animate = true,
   });
 
   @override
@@ -36,6 +42,11 @@ class _StaggeredFadeSlideState extends State<StaggeredFadeSlide>
       begin: const Offset(0, 0.08),
       end: Offset.zero,
     ).animate(_fade);
+
+    if (!widget.animate) {
+      _controller.value = 1;
+      return;
+    }
 
     // نحدد سقف أقصى للتأخير حتى لو القايمة طويلة كتير (114 سورة)
     final cappedIndex = widget.index.clamp(0, 12);
