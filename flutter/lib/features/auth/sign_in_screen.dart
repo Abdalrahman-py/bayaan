@@ -201,29 +201,52 @@ class _SignInScreenState extends State<SignInScreen>
   }
 
   Widget _buildAuthButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          FadeTransition(
-            opacity: _googleAnim,
-            child: SlideTransition(
-              position: _googleSlide,
-              child: _AuthButton(
-                label: 'Continue with Google',
-                backgroundColor: Colors.white,
-                textColor: AppColors.textDark,
-                borderColor: const Color(0xFFF5F1E6),
-                icon: Image.asset(
-                  'assets/icons/google_logo.png',
-                  width: 20,
-                  height: 20,
+    return ListenableBuilder(
+      listenable: widget.auth,
+      builder: (context, _) {
+        final s = widget.auth.state;
+        final loggedOut = s is LoggedOut ? s : const LoggedOut();
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              if (loggedOut.error != null) ...[
+                Text(
+                  loggedOut.error!,
+                  textAlign: TextAlign.center,
+                  style: pjs(fontSize: 13, color: AppColors.tajweedError),
                 ),
-                onTap: () => _comingSoon(context, 'Google sign-in'),
+                const SizedBox(height: 12),
+              ],
+              FadeTransition(
+                opacity: _googleAnim,
+                child: SlideTransition(
+                  position: _googleSlide,
+                  child: _AuthButton(
+                    label: loggedOut.submitting
+                        ? 'Connecting...'
+                        : 'Continue with Google',
+                    backgroundColor: Colors.white,
+                    textColor: AppColors.textDark,
+                    borderColor: const Color(0xFFF5F1E6),
+                    icon: loggedOut.submitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Image.asset(
+                            'assets/icons/google_logo.png',
+                            width: 20,
+                            height: 20,
+                          ),
+                    onTap: loggedOut.submitting
+                        ? () {}
+                        : () => widget.auth.signInWithGoogle(),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 14),
+              const SizedBox(height: 14),
           FadeTransition(
             opacity: _appleAnim,
             child: SlideTransition(
@@ -258,7 +281,9 @@ class _SignInScreenState extends State<SignInScreen>
         ],
       ),
     );
-  }
+  },
+);
+}
 
   Widget _buildFooter() {
     return FadeTransition(

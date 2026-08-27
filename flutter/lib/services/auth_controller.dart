@@ -76,6 +76,29 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  /// Where Google sends the user back to. The `bayaan://` scheme only works
+  /// where the OS can route it to the app; a browser cannot follow it, so on
+  /// web we let supabase_flutter fall back to the page's own origin.
+  static String? get oauthRedirect =>
+      kIsWeb ? null : 'bayaan://login-callback';
+
+  Future<void> signInWithGoogle() async {
+    _set(const LoggedOut(submitting: true));
+    try {
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: oauthRedirect,
+      );
+      // listener flips to LoggedIn upon deep link callback
+    } catch (e) {
+      _set(
+        LoggedOut(
+          error: friendly(e, "Couldn't sign in with Google. Please try again."),
+        ),
+      );
+    }
+  }
+
   Future<void> signup(String email, String password) async {
     _set(const LoggedOut(submitting: true));
     try {
