@@ -2,45 +2,122 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../services/auth_controller.dart';
+import '../../services/learn_repository.dart';
+import '../../services/progress_repository.dart';
+import '../../services/quran_text.dart';
+import '../learn/models/lesson.dart';
 
-/// Comprehensive progress, Tajweed accuracy, and recitation stats dashboard.
-class StatsScreen extends StatelessWidget {
-  const StatsScreen({super.key});
+/// Progress, Tajweed accuracy, and recitation stats — all read from the
+/// `progress` Edge Function (summary + sessions) and the `learn` header
+/// (xp / streak / level). Nothing on this screen is synthetic.
+class StatsScreen extends StatefulWidget {
+  final AuthController auth;
+  const StatsScreen({super.key, required this.auth});
+
+  @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _Stats {
+  final LearnHeader header;
+  final ProgressSummary summary;
+  final List<RecitationSession> sessions;
+  const _Stats(this.header, this.summary, this.sessions);
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  _Stats? _stats;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final token = widget.auth.accessToken;
+    if (token == null) {
+      setState(() => _error = 'Sign in to see your progress.');
+      return;
+    }
+    if (_error != null) setState(() => _error = null);
+    try {
+      // ponytail: three round-trips because the header lives on `learn` and the
+      // stats on `progress`. Collapse into one endpoint if this ever feels slow.
+      final results = await Future.wait([
+        LearnRepository.path(token),
+        ProgressRepository.summary(token),
+        ProgressRepository.sessions(token),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _stats = _Stats(
+          (results[0] as LearnPath).header,
+          results[1] as ProgressSummary,
+          results[2] as List<RecitationSession>,
+        );
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = "Couldn't load your progress. Pull to retry.");
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final stats = _stats;
     return Scaffold(
       backgroundColor: AppColors.lightBg,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(),
-                    const SizedBox(height: 20),
-                    _buildMetricsGrid(),
-                    const SizedBox(height: 24),
-                    _buildWeeklyActivityCard(),
-                    const SizedBox(height: 24),
-                    _buildTajweedMasteryCard(),
-                    const SizedBox(height: 24),
-                    _buildRecentSessionsCard(),
-                    const SizedBox(height: 24),
-                    _buildAchievementsCard(),
-                  ],
-                ),
-              ),
+        child: RefreshIndicator(
+          onRefresh: _load,
+          color: AppColors.tealStart,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 20),
+                if (_error != null)
+                  _message(_error!)
+                else if (stats == null)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 60),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else ...[
+                  _buildMetricsGrid(stats),
+                  const SizedBox(height: 24),
+                  _buildWeeklyActivityCard(stats.sessions),
+                  const SizedBox(height: 24),
+                  _buildFocusAreasCard(stats.summary),
+                  const SizedBox(height: 24),
+                  _buildRecentSessionsCard(stats.sessions),
+                ],
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
+
+  Widget _message(String text) => Padding(
+    padding: const EdgeInsets.only(top: 60),
+    child: Center(
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: pjs(fontSize: 14, color: AppColors.textMuted),
+      ),
+    ),
+  );
 
   Widget _buildHeader() {
     return Row(
@@ -78,7 +155,14 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricsGrid() {
+  Widget _buildMetricsGrid(_Stats stats) {
+    final summary = stats.summary;
+    final header = stats.header;
+    final weekStart = _startOfDay(DateTime.now()).subtract(const Duration(days: 6));
+    final thisWeek = stats.sessions
+        .where((s) => !s.createdAt.isBefore(weekStart))
+        .length;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final double itemWidth = (constraints.maxWidth - 12) / 2;
@@ -91,36 +175,37 @@ class StatsScreen extends StatelessWidget {
               icon: Icons.local_fire_department_rounded,
               iconColor: const Color(0xFFF97316),
               iconBgColor: const Color(0xFFFFF7ED),
-              value: '7 Days',
+              value: '${header.streakCount} ${header.streakCount == 1 ? "Day" : "Days"}',
               label: 'Streak',
-              sublabel: 'Best: 14 days',
+              sublabel: '${header.dailyGoalMinutes}m daily goal',
             ),
             _buildMetricTile(
               width: itemWidth,
               icon: Icons.mic_rounded,
               iconColor: AppColors.tealStart,
               iconBgColor: AppColors.tealStart.withValues(alpha: 0.1),
-              value: '48',
-              label: 'Ayahs Practiced',
-              sublabel: '+12 this week',
+              value: '${summary.totalSessions}',
+              label: 'Ayahs Recited',
+              sublabel: thisWeek == 0 ? 'None this week' : '+$thisWeek this week',
             ),
             _buildMetricTile(
               width: itemWidth,
               icon: Icons.verified_rounded,
               iconColor: AppColors.success,
               iconBgColor: AppColors.success.withValues(alpha: 0.1),
-              value: '94%',
+              value: '${(summary.overallAccuracy * 100).round()}%',
               label: 'Tajweed Accuracy',
-              sublabel: 'Top 5% reciter',
+              sublabel:
+                  '${summary.perfectSessions}/${summary.totalSessions} flawless',
             ),
             _buildMetricTile(
               width: itemWidth,
               icon: Icons.bolt_rounded,
               iconColor: AppColors.gold,
               iconBgColor: AppColors.gold.withValues(alpha: 0.15),
-              value: '650',
+              value: '${header.xp}',
               label: 'Total XP',
-              sublabel: 'Level 4 Explorer',
+              sublabel: 'Level ${header.arabicLevel}',
             ),
           ],
         );
@@ -161,12 +246,15 @@ class StatsScreen extends StatelessWidget {
                 ),
                 child: Icon(icon, color: iconColor, size: 22),
               ),
-              Text(
-                sublabel,
-                style: pjs(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
+              Flexible(
+                child: Text(
+                  sublabel,
+                  textAlign: TextAlign.end,
+                  style: pjs(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ),
             ],
@@ -194,316 +282,266 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWeeklyActivityCard() {
-    final List<Map<String, dynamic>> days = [
-      {'day': 'Mon', 'mins': 25, 'active': true},
-      {'day': 'Tue', 'mins': 40, 'active': true},
-      {'day': 'Wed', 'mins': 15, 'active': true},
-      {'day': 'Thu', 'mins': 50, 'active': true},
-      {'day': 'Fri', 'mins': 35, 'active': true},
-      {'day': 'Sat', 'mins': 60, 'active': true},
-      {'day': 'Sun', 'mins': 20, 'active': true, 'isToday': true},
-    ];
+  static DateTime _startOfDay(DateTime d) => DateTime(d.year, d.month, d.day);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF5F1E6)),
-        borderRadius: BorderRadius.circular(20),
+  static const _dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  Widget _buildWeeklyActivityCard(List<RecitationSession> sessions) {
+    final today = _startOfDay(DateTime.now());
+    // Last 7 days, oldest first — a bucket per day of recitation counts.
+    final days = List.generate(7, (i) => today.subtract(Duration(days: 6 - i)));
+    final counts = days
+        .map((d) => sessions.where((s) => _startOfDay(s.createdAt) == d).length)
+        .toList();
+    final total = counts.fold<int>(0, (a, b) => a + b);
+    final maxCount = counts.fold<int>(0, (a, b) => a > b ? a : b);
+
+    return _card(
+      title: 'Weekly Recitation',
+      trailing: _pill(
+        '$total ${total == 1 ? "ayah" : "ayahs"}',
+        AppColors.tealStart,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Weekly Recitation',
-                style: pjs(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.tealStart.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Text(
-                  '4h 5m total',
-                  style: pjs(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.tealStart,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: days.map((d) {
-              final double height = ((d['mins'] as int) / 60.0) * 80.0 + 12.0;
-              final bool isToday = d['isToday'] == true;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${d['mins']}m',
-                    style: pjs(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: isToday ? AppColors.tealStart : AppColors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    width: 28,
-                    height: height,
-                    decoration: BoxDecoration(
-                      color: isToday
-                          ? AppColors.tealStart
-                          : AppColors.tealStart.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    d['day'] as String,
-                    style: pjs(
-                      fontSize: 12,
-                      fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
-                      color: isToday ? AppColors.textDark : AppColors.textMuted,
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTajweedMasteryCard() {
-    final rules = [
-      {'name': 'Ghunnah (غنة)', 'percent': 0.98, 'color': AppColors.success},
-      {'name': 'Qalqalah (قلقلة)', 'percent': 0.92, 'color': AppColors.success},
-      {'name': 'Madd Rules (المدود)', 'percent': 0.88, 'color': AppColors.tealStart},
-      {'name': 'Ikhfa & Idgham (الإخفاء والإدغام)', 'percent': 0.85, 'color': AppColors.tealStart},
-      {'name': 'Makharij & Sifat (المخارج والصفات)', 'percent': 0.90, 'color': AppColors.gold},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF5F1E6)),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Tajweed Mastery',
-                style: pjs(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
-              ),
-              Text(
-                'AI Analysis',
-                style: pjs(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.gold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ...rules.map((r) {
-            final double p = r['percent'] as double;
-            final Color color = r['color'] as Color;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        r['name'] as String,
-                        style: pjs(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      Text(
-                        '${(p * 100).toInt()}%',
-                        style: pjs(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: color,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: p,
-                      minHeight: 7,
-                      backgroundColor: const Color(0xFFF5F1E6),
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentSessionsCard() {
-    final sessions = [
-      {
-        'surah': 'Al-Fatihah',
-        'ayahs': 'Ayahs 1–7',
-        'score': 98,
-        'date': 'Today, 10:24 AM',
-      },
-      {
-        'surah': 'Al-Ikhlas',
-        'ayahs': 'Ayahs 1–4',
-        'score': 95,
-        'date': 'Yesterday',
-      },
-      {
-        'surah': 'Al-Falaq',
-        'ayahs': 'Ayahs 1–5',
-        'score': 91,
-        'date': '2 days ago',
-      },
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF5F1E6)),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Recent Practice Sessions',
-            style: pjs(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...sessions.map((s) {
-            final int score = s['score'] as int;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '$score',
+          for (var i = 0; i < 7; i++)
+            Builder(
+              builder: (_) {
+                final isToday = i == 6;
+                final count = counts[i];
+                final double height = maxCount == 0
+                    ? 12
+                    : (count / maxCount) * 80.0 + 12.0;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$count',
                       style: pjs(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.success,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: isToday
+                            ? AppColors.tealStart
+                            : AppColors.textMuted,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 28,
+                      height: height,
+                      decoration: BoxDecoration(
+                        color: count == 0
+                            ? const Color(0xFFF5F1E6)
+                            : isToday
+                            ? AppColors.tealStart
+                            : AppColors.tealStart.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _dayNames[days[i].weekday - 1],
+                      style: pjs(
+                        fontSize: 12,
+                        fontWeight: isToday
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        color: isToday
+                            ? AppColors.textDark
+                            : AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Tajweed rules and sifat the reciter misses most — the only per-rule signal
+  /// the backend records is a mistake count, so this is "where to focus", not
+  /// a mastery percentage.
+  Widget _buildFocusAreasCard(ProgressSummary summary) {
+    final entries = [
+      ...summary.mistakeBreakdown.entries.map((e) => (e.key, e.value, AppColors.tajweedError)),
+      ...summary.sifatBreakdown.entries.map((e) => (e.key, e.value, AppColors.sifatError)),
+    ]..sort((a, b) => b.$2.compareTo(a.$2));
+    final top = entries.take(5).toList();
+    final maxCount = top.isEmpty ? 0 : top.first.$2;
+
+    return _card(
+      title: 'Focus Areas',
+      trailing: Text(
+        '${summary.totalMistakes} total',
+        style: pjs(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppColors.gold,
+        ),
+      ),
+      child: top.isEmpty
+          ? _emptyLine(
+              summary.totalSessions == 0
+                  ? 'Recite an ayah to see where to focus.'
+                  : 'No mistakes recorded — keep it up.',
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final (name, count, color) in top)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          s['surah'] as String,
-                          style: pjs(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textDark,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                name,
+                                style: pjs(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '$count ${count == 1 ? "miss" : "misses"}',
+                              style: pjs(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: color,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          s['ayahs'] as String,
-                          style: pjs(fontSize: 12, color: AppColors.textMuted),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: maxCount == 0 ? 0 : count / maxCount,
+                            minHeight: 7,
+                            backgroundColor: const Color(0xFFF5F1E6),
+                            valueColor: AlwaysStoppedAnimation<Color>(color),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Text(
-                    s['date'] as String,
-                    style: pjs(fontSize: 11, color: AppColors.textMuted),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
+              ],
+            ),
     );
   }
 
-  Widget _buildAchievementsCard() {
-    final badges = [
-      {
-        'title': 'First Recitation',
-        'icon': Icons.star_rounded,
-        'color': AppColors.gold,
-        'unlocked': true,
-      },
-      {
-        'title': '7-Day Streak',
-        'icon': Icons.local_fire_department_rounded,
-        'color': const Color(0xFFF97316),
-        'unlocked': true,
-      },
-      {
-        'title': 'Tajweed Starter',
-        'icon': Icons.school_rounded,
-        'color': AppColors.tealStart,
-        'unlocked': true,
-      },
-      {
-        'title': 'Juz Amma Master',
-        'icon': Icons.emoji_events_rounded,
-        'color': AppColors.textMuted,
-        'unlocked': false,
-      },
-    ];
+  Widget _buildRecentSessionsCard(List<RecitationSession> sessions) {
+    final recent = sessions.take(5).toList();
+    return _card(
+      title: 'Recent Practice Sessions',
+      child: recent.isEmpty
+          ? _emptyLine('No recitations yet.')
+          : Column(
+              children: [
+                for (final s in recent)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: (s.allCorrect
+                                    ? AppColors.success
+                                    : AppColors.tajweedError)
+                                .withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            s.allCorrect
+                                ? Icons.check_rounded
+                                : Icons.priority_high_rounded,
+                            size: 20,
+                            color: s.allCorrect
+                                ? AppColors.success
+                                : AppColors.tajweedError,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                QuranText.verse(s.sura, s.aya)?.surahNameEn ??
+                                    'Surah ${s.sura}',
+                                style: pjs(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                              Text(
+                                s.allCorrect
+                                    ? 'Ayah ${s.aya} · no mistakes'
+                                    : 'Ayah ${s.aya} · ${s.mistakesCount} '
+                                          '${s.mistakesCount == 1 ? "mistake" : "mistakes"}',
+                                style: pjs(
+                                  fontSize: 12,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          _relativeDate(s.createdAt),
+                          style: pjs(fontSize: 11, color: AppColors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+    );
+  }
 
+  static String _relativeDate(DateTime when) {
+    final days = _startOfDay(DateTime.now()).difference(_startOfDay(when)).inDays;
+    return switch (days) {
+      <= 0 => 'Today',
+      1 => 'Yesterday',
+      < 7 => '$days days ago',
+      < 30 => '${days ~/ 7}w ago',
+      _ => '${when.year}-${when.month.toString().padLeft(2, '0')}-'
+          '${when.day.toString().padLeft(2, '0')}',
+    };
+  }
+
+  Widget _emptyLine(String text) => Text(
+    text,
+    style: pjs(fontSize: 13, color: AppColors.textMuted),
+  );
+
+  Widget _pill(String text, Color color) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(100),
+    ),
+    child: Text(
+      text,
+      style: pjs(fontSize: 12, fontWeight: FontWeight.w700, color: color),
+    ),
+  );
+
+  Widget _card({required String title, Widget? trailing, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -518,69 +556,18 @@ class StatsScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Milestones & Badges',
+                title,
                 style: pjs(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textDark,
                 ),
               ),
-              Text(
-                '3 / 4 Unlocked',
-                style: pjs(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.tealStart,
-                ),
-              ),
+              ?trailing,
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: badges.map((b) {
-              final bool unlocked = b['unlocked'] as bool;
-              final Color color = b['color'] as Color;
-              return Column(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: unlocked
-                          ? color.withValues(alpha: 0.15)
-                          : const Color(0xFFF5F1E6),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: unlocked ? color : const Color(0xFFE0DCD3),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Icon(
-                      b['icon'] as IconData,
-                      color: unlocked ? color : AppColors.textMuted,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: 68,
-                    child: Text(
-                      b['title'] as String,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      style: pjs(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: unlocked ? AppColors.textDark : AppColors.textMuted,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
+          child,
         ],
       ),
     );

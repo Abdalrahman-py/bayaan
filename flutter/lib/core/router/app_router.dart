@@ -270,7 +270,7 @@ GoRouter createRouter(AppState appState, {String? initialLocation}) => GoRouter(
           routes: [
             GoRoute(
               path: AppRoutes.stats,
-              builder: (context, state) => const StatsScreen(),
+              builder: (context, state) => StatsScreen(auth: appState.auth),
             ),
           ],
         ),
