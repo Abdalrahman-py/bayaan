@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
-import '../../shared/widgets/app_bottom_nav.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/router/app_router.dart';
@@ -91,19 +90,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ],
                 ),
               ),
-            ),
-            AppBottomNav(
-              currentIndex: 0,
-              onTap: (index) {
-                switch (index) {
-                  case 1:
-                    context.go(AppRoutes.surahs);
-                  case 2:
-                    context.go(AppRoutes.stats);
-                  case 3:
-                    context.go(AppRoutes.settings);
-                }
-              },
             ),
           ],
         ),

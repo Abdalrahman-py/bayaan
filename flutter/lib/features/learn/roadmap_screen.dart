@@ -7,7 +7,6 @@ import '../../core/theme/app_fonts.dart';
 import '../../services/auth_controller.dart';
 import '../../services/learn_content.dart';
 import '../../services/learn_repository.dart';
-import '../../shared/widgets/app_bottom_nav.dart';
 import 'models/lesson.dart';
 
 /// The Arabic-track "Learn" roadmap — GET /learn/path, unit -> lesson list
@@ -138,15 +137,6 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
             ),
             if (_path != null) _buildHeaderCard(_path!.header),
             Expanded(child: _buildBody()),
-            AppBottomNav(
-              currentIndex: 0,
-              onTap: (i) {
-                if (i == 0) context.go(AppRoutes.home);
-                if (i == 1) context.go(AppRoutes.surahs);
-                if (i == 2) context.go(AppRoutes.stats);
-                if (i == 3) context.go(AppRoutes.settings);
-              },
-            ),
           ],
         ),
       ),

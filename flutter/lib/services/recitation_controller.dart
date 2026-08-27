@@ -33,7 +33,10 @@ class RecitationController extends ChangeNotifier {
 
   final Map<String, RecitationUiState> _states = {};
   final Map<String, _ActiveRecording> _active = {};
-  final AudioRecorder _recorder = AudioRecorder();
+  // Lazy: the platform recorder is only reachable once recording starts, so
+  // constructing this controller stays safe on hosts without the plugin.
+  AudioRecorder? _recorderOrNull;
+  AudioRecorder get _recorder => _recorderOrNull ??= AudioRecorder();
 
   bool get isRecording => _active.isNotEmpty;
 
@@ -322,7 +325,7 @@ class RecitationController extends ChangeNotifier {
     for (final key in List.of(_active.keys)) {
       _teardown(key);
     }
-    _recorder.dispose();
+    _recorderOrNull?.dispose();
     super.dispose();
   }
 }

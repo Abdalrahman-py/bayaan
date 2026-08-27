@@ -10,7 +10,6 @@ import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
 import '../../services/recitation_controller.dart';
 import '../../shared/widgets/animated_score_ring.dart';
-import '../../shared/widgets/app_bottom_nav.dart';
 import '../../shared/widgets/ornamental_divider.dart';
 
 /// bayaan-ai-analysis from Figma — the mistakes-found result screen. Shown
@@ -127,15 +126,6 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                         const SizedBox(height: 24),
                       ],
                     ),
-            ),
-            AppBottomNav(
-              currentIndex: 0,
-              onTap: (i) {
-                if (i == 0) context.go(AppRoutes.home);
-                if (i == 1) context.go(AppRoutes.surahs);
-                if (i == 2) context.go(AppRoutes.stats);
-                if (i == 3) context.go(AppRoutes.settings);
-              },
             ),
           ],
         ),

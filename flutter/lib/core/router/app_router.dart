@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/ayah/ayah_selection_screen.dart';
@@ -27,6 +28,7 @@ import '../../features/stats/stats_screen.dart';
 import '../../features/surah/surah_selection_screen.dart';
 import '../app_state.dart';
 import '../../services/auth_controller.dart';
+import '../../shared/widgets/app_bottom_nav.dart';
 import 'app_routes.dart';
 
 /// Data passed to the ayah-selection screen (surah name + its ayahs).
@@ -69,12 +71,71 @@ class QuizResultArgs {
   });
 }
 
-final GoRouter appRouter = GoRouter(
-  initialLocation: AppRoutes.splash,
+/// Holds the four tab branches in an IndexedStack, so each tab keeps its own
+/// navigator, scroll offsets and filters across switches.
+class _TabShell extends StatelessWidget {
+  final StatefulNavigationShell shell;
+
+  const _TabShell(this.shell);
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: shell,
+    bottomNavigationBar: AppBottomNav(
+      currentIndex: shell.currentIndex,
+      // Re-tapping the active tab pops it back to its root.
+      onTap: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+    ),
+  );
+}
+
+/// Shown for any location that matches no route, instead of go_router's
+/// unstyled default.
+class _NotFound extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Page not found'),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => context.go(AppRoutes.home),
+            child: const Text('Go home'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// The four `/recite/:sura/:aya` routes parse both params as ints. A hand-typed
+/// or malformed URL would blow up in the builder, so bounce it home instead.
+String? _requireVerseParams(GoRouterState state) {
+  final sura = int.tryParse(state.pathParameters['sura'] ?? '');
+  final aya = int.tryParse(state.pathParameters['aya'] ?? '');
+  return sura == null || aya == null ? AppRoutes.home : null;
+}
+
+QuizHomeScreen _quizHome(BuildContext context) => QuizHomeScreen(
+  onStart: (category, questions) => context.push(
+    AppRoutes.quizSession,
+    extra: QuizSessionArgs(category: category, questions: questions),
+  ),
+);
+
+/// Builds the app router around a given [AppState] so tests can drive
+/// redirects with a state they control instead of the process-wide singleton.
+GoRouter createRouter(AppState appState, {String? initialLocation}) => GoRouter(
+  initialLocation: initialLocation ?? AppRoutes.splash,
+  errorBuilder: (context, state) => _NotFound(),
   refreshListenable: appState,
   redirect: (context, state) {
     final loc = state.matchedLocation;
-    if (appState.booting) {
+    // A failed asset load leaves QuranText empty, which would break every
+    // reading screen downstream — hold on splash and let the user retry.
+    if (appState.booting || appState.assetError) {
       return loc == AppRoutes.splash ? null : AppRoutes.splash;
     }
     if (!appState.onboarded) {
@@ -96,7 +157,7 @@ final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(
       path: AppRoutes.splash,
-      builder: (context, state) => const SplashScreen(),
+      builder: (context, state) => SplashScreen(state: appState),
     ),
     GoRoute(
       path: AppRoutes.onboarding,
@@ -110,13 +171,42 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.emailSignIn,
       builder: (context, state) => EmailSignInScreen(auth: appState.auth),
     ),
-    GoRoute(
-      path: AppRoutes.home,
-      builder: (context, state) => HomeScreen(auth: appState.auth),
-    ),
-    GoRoute(
-      path: AppRoutes.surahs,
-      builder: (context, state) => const SurahSelectionScreen(),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, shell) => _TabShell(shell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.home,
+              builder: (context, state) => HomeScreen(auth: appState.auth),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.surahs,
+              builder: (context, state) => const SurahSelectionScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.stats,
+              builder: (context, state) => const StatsScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.settings,
+              builder: (context, state) => SettingsScreen(auth: appState.auth),
+            ),
+          ],
+        ),
+      ],
     ),
     GoRoute(
       path: AppRoutes.ayahSelection,
@@ -134,6 +224,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.recording,
+      redirect: (context, state) => _requireVerseParams(state),
       builder: (context, state) => RecordingScreen(
         controller: appState.recitation,
         auth: appState.auth,
@@ -143,6 +234,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.aiAnalysis,
+      redirect: (context, state) => _requireVerseParams(state),
       builder: (context, state) => AiAnalysisScreen(
         controller: appState.recitation,
         sura: int.parse(state.pathParameters['sura']!),
@@ -151,6 +243,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.celebration,
+      redirect: (context, state) => _requireVerseParams(state),
       builder: (context, state) => CelebrationScreen(
         controller: appState.recitation,
         sura: int.parse(state.pathParameters['sura']!),
@@ -159,6 +252,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.audioCompare,
+      redirect: (context, state) => _requireVerseParams(state),
       builder: (context, state) {
         final sura = int.parse(state.pathParameters['sura']!);
         final aya = int.parse(state.pathParameters['aya']!);
@@ -172,17 +266,15 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.quiz,
-      builder: (context, state) => QuizHomeScreen(
-        onStart: (category, questions) => context.push(
-          AppRoutes.quizSession,
-          extra: QuizSessionArgs(category: category, questions: questions),
-        ),
-      ),
+      builder: (context, state) => _quizHome(context),
     ),
     GoRoute(
       path: AppRoutes.quizSession,
       builder: (context, state) {
-        final args = state.extra as QuizSessionArgs;
+        // `extra` does not survive a reload or a cold deep link, so fall back
+        // to the quiz picker instead of crashing on a null cast.
+        final args = state.extra as QuizSessionArgs?;
+        if (args == null) return _quizHome(context);
         return QuizSessionScreen(
           questions: args.questions,
           onComplete: (score, streak) => context.pushReplacement(
@@ -200,7 +292,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.quizResult,
       builder: (context, state) {
-        final args = state.extra as QuizResultArgs;
+        final args = state.extra as QuizResultArgs?;
+        if (args == null) return _quizHome(context);
         return QuizResultScreen(
           score: args.score,
           total: args.questions.length,
@@ -233,18 +326,13 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.lessonResult,
-      builder: (context, state) => LessonResultScreen(
-        controller: state.extra as LessonController,
-        auth: appState.auth,
-      ),
-    ),
-    GoRoute(
-      path: AppRoutes.stats,
-      builder: (context, state) => const StatsScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.settings,
-      builder: (context, state) => SettingsScreen(auth: appState.auth),
+      builder: (context, state) {
+        final controller = state.extra as LessonController?;
+        if (controller == null) return RoadmapScreen(auth: appState.auth);
+        return LessonResultScreen(controller: controller, auth: appState.auth);
+      },
     ),
   ],
 );
+
+final appRouter = createRouter(appState);

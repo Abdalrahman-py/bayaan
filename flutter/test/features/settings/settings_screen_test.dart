@@ -34,7 +34,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Header & Profile
-      expect(find.text('Settings'), findsNWidgets(2)); // Title and bottom nav
+      // The tab bar now lives in the router shell, so only the title is here.
+      expect(find.text('Settings'), findsOneWidget);
       expect(find.text('الإعدادات'), findsOneWidget);
       expect(find.text('testuser@example.com'), findsOneWidget);
       expect(find.text('T'), findsOneWidget);

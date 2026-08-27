@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
-import '../../shared/widgets/app_bottom_nav.dart';
 import 'compare_data.dart';
 import 'widgets/audio_compare_card.dart';
 
@@ -108,15 +105,6 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
                   _buildUserCard(),
                 ],
               ),
-            ),
-            AppBottomNav(
-              currentIndex: 0,
-              onTap: (i) {
-                if (i == 0) context.go(AppRoutes.home);
-                if (i == 1) context.go(AppRoutes.surahs);
-                if (i == 2) context.go(AppRoutes.stats);
-                if (i == 3) context.go(AppRoutes.settings);
-              },
             ),
           ],
         ),

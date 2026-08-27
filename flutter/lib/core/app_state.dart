@@ -14,18 +14,23 @@ class AppState extends ChangeNotifier {
   bool assetError = false;
   bool onboarded = false;
 
-  final AuthController auth = AuthController();
+  final AuthController auth;
   final RecitationController recitation = RecitationController();
 
-  AppState() {
-    auth.addListener(notifyListeners);
+  AppState({AuthController? auth}) : auth = auth ?? AuthController() {
+    this.auth.addListener(notifyListeners);
   }
 
   bool _bootstrapped = false;
 
-  Future<void> bootstrap() async {
+  /// Matches the SplashScreen entrance animation. Boot work is usually far
+  /// faster than this, and without a floor the logo flashes and vanishes.
+  static const splashWindow = Duration(milliseconds: 1600);
+
+  Future<void> bootstrap({Duration minSplash = splashWindow}) async {
     if (_bootstrapped) return;
     _bootstrapped = true;
+    final floor = Future<void>.delayed(minSplash);
     final prefs = await SharedPreferences.getInstance();
     try {
       await QuranText.ensureLoaded();
@@ -41,8 +46,19 @@ class AppState extends ChangeNotifier {
     try {
       await auth.init(Supabase.instance.client);
     } catch (_) {}
+    await floor;
     booting = false;
     notifyListeners();
+  }
+
+  /// Re-runs a boot that failed on assets. Clears the failure first so the
+  /// splash drops back to its plain animation while the retry is in flight.
+  Future<void> retryBootstrap() {
+    _bootstrapped = false;
+    assetError = false;
+    booting = true;
+    notifyListeners();
+    return bootstrap();
   }
 
   Future<void> completeOnboarding() async {

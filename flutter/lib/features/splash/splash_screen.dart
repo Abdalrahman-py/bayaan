@@ -5,7 +5,9 @@ import '../../shared/widgets/ornamental_divider.dart';
 import '../../core/app_state.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final AppState state;
+
+  const SplashScreen({super.key, required this.state});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -36,9 +38,10 @@ class _SplashScreenState extends State<SplashScreen>
     _textAnim = _fadeScale(0.60, 1.00);
 
     _controller.forward();
-    // GoRouter's redirect (refreshListenable: appState) moves us off splash
-    // once this resolves — no explicit navigation needed here.
-    appState.bootstrap();
+    // GoRouter's redirect (refreshListenable: the state) moves us off splash
+    // once this resolves — no explicit navigation needed here. Re-entering
+    // splash after a failed boot leaves the retry button to drive it instead.
+    if (widget.state.booting) widget.state.bootstrap();
   }
 
   Animation<double> _fadeScale(double start, double end) {
@@ -67,7 +70,11 @@ class _SplashScreenState extends State<SplashScreen>
             children: [
               const SizedBox(height: 40),
               _buildLogoSection(),
-              _buildFooter(),
+              ListenableBuilder(
+                listenable: widget.state,
+                builder: (context, _) =>
+                    widget.state.assetError ? _buildRetry() : _buildFooter(),
+              ),
             ],
           ),
         ),
@@ -199,6 +206,37 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRetry() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24, left: 32, right: 32),
+      child: Column(
+        children: [
+          Text(
+            "Couldn't load the Quran text",
+            textAlign: TextAlign.center,
+            style: pjs(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.cream,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: widget.state.retryBootstrap,
+            child: Text(
+              'Try again',
+              style: pjs(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.gold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

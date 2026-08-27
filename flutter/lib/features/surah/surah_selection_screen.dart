@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
-import '../../shared/widgets/app_bottom_nav.dart';
 import '../../shared/widgets/staggered_fade_slide.dart';
 import 'models/surah.dart';
 import 'package:go_router/go_router.dart';
@@ -98,14 +97,6 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
                   const SizedBox(height: 12),
                 ],
               ),
-            ),
-            AppBottomNav(
-              currentIndex: 1,
-              onTap: (i) {
-                if (i == 0) context.go(AppRoutes.home);
-                if (i == 2) context.go(AppRoutes.stats);
-                if (i == 3) context.go(AppRoutes.settings);
-              },
             ),
           ],
         ),
