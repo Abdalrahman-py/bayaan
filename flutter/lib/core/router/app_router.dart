@@ -71,22 +71,96 @@ class QuizResultArgs {
   });
 }
 
-/// Holds the four tab branches in an IndexedStack, so each tab keeps its own
-/// navigator, scroll offsets and filters across switches.
-class _TabShell extends StatelessWidget {
+/// Holds the four tab branches in a PageView so they can be swiped between,
+/// with each branch kept alive to preserve its navigator, scroll offsets and
+/// filters — a plain PageView would dispose a branch as it scrolls off.
+class _TabShell extends StatefulWidget {
   final StatefulNavigationShell shell;
+  final List<Widget> branches;
 
-  const _TabShell(this.shell);
+  const _TabShell({required this.shell, required this.branches});
+
+  @override
+  State<_TabShell> createState() => _TabShellState();
+}
+
+class _TabShellState extends State<_TabShell> {
+  late final PageController _controller = PageController(
+    initialPage: widget.shell.currentIndex,
+  );
+
+  /// The branch the PageView last told the shell to go to. The sync below
+  /// compares against this rather than the controller's own page, so a rebuild
+  /// arriving while goBranch is still in flight cannot see a stale
+  /// currentIndex and animate a swipe back where it came from.
+  late int _reported = widget.shell.currentIndex;
+
+  void _onPageChanged(int index) {
+    _reported = index;
+    widget.shell.goBranch(index);
+  }
+
+  @override
+  void didUpdateWidget(covariant _TabShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only follow branch changes that came from somewhere else — the bottom
+    // bar, or a route change.
+    final target = widget.shell.currentIndex;
+    if (target == _reported || !_controller.hasClients) return;
+    _reported = target;
+    _controller.animateToPage(
+      target,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: shell,
+    body: PageView(
+      controller: _controller,
+      onPageChanged: _onPageChanged,
+      children: [
+        for (final branch in widget.branches) _KeepAlive(child: branch),
+      ],
+    ),
     bottomNavigationBar: AppBottomNav(
-      currentIndex: shell.currentIndex,
+      currentIndex: widget.shell.currentIndex,
       // Re-tapping the active tab pops it back to its root.
-      onTap: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+      onTap: (i) => widget.shell.goBranch(
+        i,
+        initialLocation: i == widget.shell.currentIndex,
+      ),
     ),
   );
+}
+
+/// Keeps a branch mounted while it is off-screen in the PageView.
+class _KeepAlive extends StatefulWidget {
+  final Widget child;
+
+  const _KeepAlive({required this.child});
+
+  @override
+  State<_KeepAlive> createState() => _KeepAliveState();
+}
+
+class _KeepAliveState extends State<_KeepAlive>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
 }
 
 /// Shown for any location that matches no route, instead of go_router's
@@ -171,8 +245,10 @@ GoRouter createRouter(AppState appState, {String? initialLocation}) => GoRouter(
       path: AppRoutes.emailSignIn,
       builder: (context, state) => EmailSignInScreen(auth: appState.auth),
     ),
-    StatefulShellRoute.indexedStack(
-      builder: (context, state, shell) => _TabShell(shell),
+    StatefulShellRoute(
+      builder: (context, state, shell) => shell,
+      navigatorContainerBuilder: (context, shell, children) =>
+          _TabShell(shell: shell, branches: children),
       branches: [
         StatefulShellBranch(
           routes: [

@@ -8,6 +8,7 @@ import 'package:bayaan/features/onboarding/onboarding_flow_screen.dart';
 import 'package:bayaan/features/home/home_screen.dart';
 import 'package:bayaan/features/learn/roadmap_screen.dart';
 import 'package:bayaan/features/quiz/quiz_home_screen.dart';
+import 'package:bayaan/features/surah/surah_selection_screen.dart';
 import 'package:bayaan/features/splash/splash_screen.dart';
 import 'package:bayaan/services/auth_controller.dart';
 import 'package:bayaan/services/quran_text.dart';
@@ -107,6 +108,41 @@ void main() {
     await pumpRouter(tester, state, at: '/recite/abc/1');
 
     expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
+
+  testWidgets('swiping the tab shell moves to the next tab', (tester) async {
+    final state = signedInState();
+    addTearDown(state.dispose);
+
+    final router = createRouter(state, initialLocation: AppRoutes.home);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byType(HomeScreen), findsOneWidget);
+
+    // Fling rather than drag: a half-width drag sits exactly on the PageView's
+    // settle threshold, so it can snap back instead of advancing.
+    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1000);
+
+    // A rebuild mid-flight must not disturb the swipe.
+    await tester.pump(const Duration(milliseconds: 40));
+    state.notifyListeners();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SurahSelectionScreen), findsOneWidget);
+    expect(
+      router.routerDelegate.currentConfiguration.uri.path,
+      AppRoutes.surahs,
+    );
+
+    expect(find.byType(HomeScreen), findsNothing);
+
+    // The surah list schedules its one-shot entrance; let it drain before the
+    // tree is torn down.
+    await tester.pump(const Duration(seconds: 2));
   });
 
   testWidgets('a tab keeps its scroll position across a tab switch', (
