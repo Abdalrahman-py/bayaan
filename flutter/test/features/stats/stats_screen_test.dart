@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bayaan/features/stats/stats_screen.dart';
+import 'package:bayaan/services/auth_controller.dart';
+
+/// No Supabase client is wired up in tests, so report a session with no token
+/// and let the screen take its signed-out-of-the-backend path.
+class _NoTokenAuth extends AuthController {
+  @override
+  AuthUiState get state => const LoggedIn();
+
+  @override
+  String? get accessToken => null;
+}
 
 void main() {
   group('StatsScreen', () {
-    testWidgets('renders header, key metrics grid, and Tajweed breakdown', (
+    testWidgets('renders the header and asks for sign-in without a token', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -12,42 +23,33 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        const MaterialApp(
-          home: StatsScreen(),
-        ),
+        MaterialApp(home: StatsScreen(auth: _NoTokenAuth())),
       );
       await tester.pumpAndSettle();
 
-      // Header
       expect(find.text('Your Progress'), findsOneWidget);
       expect(find.text('وَقُل رَّبِّ زِدْنِي عِلْمًا'), findsOneWidget);
+      expect(find.text('Sign in to see your progress.'), findsOneWidget);
+    });
 
-      // Key metrics
-      expect(find.text('7 Days'), findsOneWidget);
-      expect(find.text('Streak'), findsOneWidget);
-      expect(find.text('48'), findsOneWidget);
-      expect(find.text('Ayahs Practiced'), findsOneWidget);
-      expect(find.text('94%'), findsOneWidget);
-      expect(find.text('Tajweed Accuracy'), findsOneWidget);
-      expect(find.text('650'), findsOneWidget);
-      expect(find.text('Total XP'), findsOneWidget);
+    testWidgets('shows no numbers it did not get from the backend', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
 
-      // Weekly activity card
-      expect(find.text('Weekly Recitation'), findsOneWidget);
-      expect(find.text('4h 5m total'), findsOneWidget);
+      await tester.pumpWidget(
+        MaterialApp(home: StatsScreen(auth: _NoTokenAuth())),
+      );
+      await tester.pumpAndSettle();
 
-      // Tajweed Mastery
-      expect(find.text('Tajweed Mastery'), findsOneWidget);
-      expect(find.text('Ghunnah (غنة)'), findsOneWidget);
-      expect(find.text('Qalqalah (قلقلة)'), findsOneWidget);
-
-      // Recent practice
-      expect(find.text('Recent Practice Sessions'), findsOneWidget);
-      expect(find.text('Al-Fatihah'), findsOneWidget);
-
-      // Milestones
-      expect(find.text('Milestones & Badges'), findsOneWidget);
-      expect(find.text('First Recitation'), findsOneWidget);
+      // Guards the regression this screen was built to fix: the old version
+      // hard-coded these, so they rendered for a user with no data at all.
+      for (final placeholder in ['7 Days', '48', '94%', '650', '4h 5m total']) {
+        expect(find.text(placeholder), findsNothing);
+      }
+      expect(find.text('Milestones & Badges'), findsNothing);
     });
   });
 }
