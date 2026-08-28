@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../services/auth_controller.dart';
+import '../../services/reciter_audio.dart';
 
 /// Comprehensive settings, preferences, and account management screen.
 class SettingsScreen extends StatefulWidget {
@@ -14,7 +15,16 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedReciter = 'Sheikh Mahmoud Khalil Al-Husary';
+  Reciter _reciter = Reciter.fallback;
+
+  @override
+  void initState() {
+    super.initState();
+    Reciter.selected().then((r) {
+      if (mounted) setState(() => _reciter = r);
+    });
+  }
+
   String _tajweedSensitivity = 'Standard';
   bool _autoPlayReference = true;
   bool _showTajweedColors = true;
@@ -208,8 +218,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: pjs(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textDark),
                 ),
                 const SizedBox(height: 6),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedReciter,
+                DropdownButtonFormField<Reciter>(
+                  initialValue: _reciter,
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     border: OutlineInputBorder(
@@ -221,22 +231,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       borderSide: const BorderSide(color: Color(0xFFF5F1E6)),
                     ),
                   ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Sheikh Mahmoud Khalil Al-Husary',
-                      child: Text('Al-Husary (Teacher / Mu\'allim)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Sheikh Mishary Rashid Alafasy',
-                      child: Text('Mishary Alafasy'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Sheikh Abdul Basit Abdul Samad',
-                      child: Text('Abdul Basit (Mujawwad)'),
-                    ),
+                  items: [
+                    for (final r in Reciter.all)
+                      DropdownMenuItem(value: r, child: Text(r.name)),
                   ],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _selectedReciter = v);
+                  onChanged: (r) {
+                    if (r == null) return;
+                    setState(() => _reciter = r);
+                    Reciter.select(r);
                   },
                 ),
               ],

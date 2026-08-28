@@ -7,6 +7,7 @@ import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
 import '../../services/auth_controller.dart';
 import '../../services/quran_translation.dart';
+import '../../services/reciter_audio.dart';
 import '../../services/recitation_controller.dart';
 import '../../shared/widgets/ornamental_divider.dart';
 import '../../shared/widgets/pulsing_rings.dart';
@@ -37,10 +38,25 @@ class _RecordingScreenState extends State<RecordingScreen> {
   String? _transliteration;
   bool _navigated = false;
 
+  final ReciterPlayer _player = ReciterPlayer();
+  Reciter _reciter = Reciter.fallback;
+  bool _listening = false;
+  bool _listenFailed = false;
+
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(_onControllerChange);
+    _player.onComplete.listen((_) {
+      if (mounted) setState(() => _listening = false);
+    });
+    Reciter.selected().then((r) {
+      if (!mounted) return;
+      setState(() => _reciter = r);
+      // Warm the source so the tap handler is a bare resume() — see
+      // ReciterPlayer for why that matters on web.
+      _player.preload(r.urlFor(widget.sura, widget.aya)).catchError((_) {});
+    });
     QuranTranslation.forSurah(widget.sura).then((map) {
       if (!mounted || map == null) return;
       setState(() => _translation = map[widget.aya]);
@@ -54,6 +70,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
   @override
   void dispose() {
     widget.controller.removeListener(_onControllerChange);
+    _player.dispose();
     super.dispose();
   }
 
@@ -93,6 +110,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
                       children: [
                         const SizedBox(height: 4),
                         _buildVerseCard(state.verse),
+                        const SizedBox(height: 16),
+                        _buildListenButton(state),
                         const SizedBox(height: 16),
                         _buildCaption(state),
                         const SizedBox(height: 16),
@@ -182,6 +201,79 @@ class _RecordingScreenState extends State<RecordingScreen> {
           const OrnamentalDivider(width: double.infinity, opacity: 0.3),
         ],
       ),
+    );
+  }
+
+  Future<void> _toggleListen() async {
+    if (_listening) {
+      await _player.stop();
+      if (mounted) setState(() => _listening = false);
+      return;
+    }
+    setState(() {
+      _listening = true;
+      _listenFailed = false;
+    });
+    try {
+      await _player.play(_reciter.urlFor(widget.sura, widget.aya));
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _listening = false;
+          _listenFailed = true;
+        });
+      }
+    }
+  }
+
+  /// Hear the ayah in the chosen shaikh's voice, then copy it. Hidden while
+  /// the mic is live so the reference can't bleed into the recording.
+  Widget _buildListenButton(RecitationUiState state) {
+    if (state is Recording || state is Uploading) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _toggleListen,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: AppColors.gold),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _listening ? Icons.stop_rounded : Icons.volume_up_rounded,
+                  size: 18,
+                  color: AppColors.gold,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _listening ? 'Stop' : 'Listen to ${_reciter.shortName}',
+                  style: pjs(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_listenFailed)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              "Couldn't load the recitation. Check your connection.",
+              textAlign: TextAlign.center,
+              style: pjs(fontSize: 12, color: AppColors.tajweedError),
+            ),
+          ),
+      ],
     );
   }
 
