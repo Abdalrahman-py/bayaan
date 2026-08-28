@@ -264,6 +264,10 @@ GoRouter createRouter(AppState appState, {String? initialLocation}) => GoRouter(
           _TabShell(shell: shell, branches: children),
       branches: [
         StatefulShellBranch(
+          // Built at startup instead of on first visit: the PageView can
+          // swipe to a branch before go_router has ever built it, and an
+          // unbuilt branch is a blank page.
+          preload: true,
           routes: [
             GoRoute(
               path: AppRoutes.home,
@@ -272,6 +276,10 @@ GoRouter createRouter(AppState appState, {String? initialLocation}) => GoRouter(
           ],
         ),
         StatefulShellBranch(
+          // Built at startup instead of on first visit: the PageView can
+          // swipe to a branch before go_router has ever built it, and an
+          // unbuilt branch is a blank page.
+          preload: true,
           routes: [
             GoRoute(
               path: AppRoutes.surahs,
@@ -280,6 +288,10 @@ GoRouter createRouter(AppState appState, {String? initialLocation}) => GoRouter(
           ],
         ),
         StatefulShellBranch(
+          // Built at startup instead of on first visit: the PageView can
+          // swipe to a branch before go_router has ever built it, and an
+          // unbuilt branch is a blank page.
+          preload: true,
           routes: [
             GoRoute(
               path: AppRoutes.stats,
@@ -288,6 +300,10 @@ GoRouter createRouter(AppState appState, {String? initialLocation}) => GoRouter(
           ],
         ),
         StatefulShellBranch(
+          // Built at startup instead of on first visit: the PageView can
+          // swipe to a branch before go_router has ever built it, and an
+          // unbuilt branch is a blank page.
+          preload: true,
           routes: [
             GoRoute(
               path: AppRoutes.settings,
