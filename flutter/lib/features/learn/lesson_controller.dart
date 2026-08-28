@@ -44,9 +44,25 @@ class LessonController extends ChangeNotifier {
   String? lastFeedback;
   int elapsedRecordingSec = 0;
 
+  /// Wrong answers on the *current* item. A learner who misses gets to think
+  /// again rather than being shown the answer, so nothing reveals it until
+  /// they ask — see [answerRevealed].
+  int attempts = 0;
+
+  /// Set only when the learner taps "Show answer" (offered from the second
+  /// miss) or when a hint has narrowed the options to one.
+  bool answerRevealed = false;
+
+  /// Options a hint has struck out. Never contains the answer.
+  final Set<String> eliminated = {};
+
   final List<_ItemOutcome> _outcomes = [];
   final Set<String> _attempted = {}; // item_refs attempted at least once
-  final AudioRecorder _recorder = AudioRecorder();
+  // Lazy, like RecitationController: the platform recorder is only reachable
+  // once recording starts, so constructing a lesson stays safe on a host
+  // without the plugin (and a lesson of tap-the-letter items never builds one).
+  AudioRecorder? _recorderOrNull;
+  AudioRecorder get _recorder => _recorderOrNull ??= AudioRecorder();
   StreamSubscription<Uint8List>? _recSub;
   BytesBuilder? _recChunks;
   Timer? _recTimer;
@@ -82,6 +98,7 @@ class LessonController extends ChangeNotifier {
   void answerChoice(String selected) {
     final item = currentItem;
     final correct = selected == item.answer;
+    if (!correct) attempts++;
     _recordOutcome(item.itemRef, correct);
     lastCorrect = correct;
     lastFeedback = null;
@@ -130,6 +147,7 @@ class LessonController extends ChangeNotifier {
     _recChunks = null;
 
     if (pcm.isEmpty) {
+      attempts++;
       lastCorrect = false;
       lastFeedback = 'Recording was too short — try again.';
       phase = LessonPhase.itemFeedback;
@@ -138,6 +156,7 @@ class LessonController extends ChangeNotifier {
       return;
     }
     if (token == null || token.isEmpty) {
+      attempts++;
       lastCorrect = false;
       lastFeedback = 'Please log in again.';
       phase = LessonPhase.itemFeedback;
@@ -158,6 +177,7 @@ class LessonController extends ChangeNotifier {
         token: token,
       );
       lastCorrect = result.passed;
+      if (!result.passed) attempts++;
       lastFeedback = result.passed
           ? null
           : (result.phonemeIssues.isNotEmpty
@@ -165,6 +185,7 @@ class LessonController extends ChangeNotifier {
                 : 'Not quite — try again.');
       _recordOutcome(item.itemRef, result.passed);
     } catch (_) {
+      attempts++;
       lastCorrect = false;
       lastFeedback = "Couldn't reach the grading service.";
       _recordOutcome(item.itemRef, false);
@@ -178,6 +199,34 @@ class LessonController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Strikes out one wrong option. Cheaper than authoring a hint per item, and
+  /// it teaches the same way a teacher does — narrow the field, let the
+  /// learner choose. When only the answer would be left, this reveals instead
+  /// of pretending to be a choice.
+  void requestHint() {
+    final item = currentItem;
+    final wrong = item.options
+        .where((o) => o != item.answer && !eliminated.contains(o))
+        .toList();
+    if (wrong.length <= 1) {
+      answerRevealed = true;
+    } else {
+      eliminated.add(wrong.first);
+    }
+    notifyListeners();
+  }
+
+  void revealAnswer() {
+    answerRevealed = true;
+    notifyListeners();
+  }
+
+  /// True once the learner has earned a way past this item — they got it, they
+  /// asked to see it, or they have missed twice. Until then the only way on is
+  /// another attempt, so a miss can't be skipped past for free.
+  bool get canAdvance =>
+      (lastCorrect ?? false) || answerRevealed || attempts >= 2;
+
   void next() {
     if (isLastItem) {
       phase = LessonPhase.summary;
@@ -185,6 +234,11 @@ class LessonController extends ChangeNotifier {
       itemIndex++;
       phase = LessonPhase.exercise;
     }
+    attempts = 0;
+    answerRevealed = false;
+    eliminated.clear();
+    lastCorrect = null;
+    lastFeedback = null;
     notifyListeners();
   }
 
@@ -219,7 +273,7 @@ class LessonController extends ChangeNotifier {
   void dispose() {
     _recTimer?.cancel();
     _recSub?.cancel();
-    _recorder.dispose();
+    _recorderOrNull?.dispose();
     super.dispose();
   }
 }
