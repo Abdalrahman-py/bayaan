@@ -9,6 +9,7 @@ import { handlePreflight } from "../_shared/cors.ts";
 import { userIdFromRequest } from "../_shared/auth.ts";
 import { err, json } from "../_shared/response.ts";
 import { isUuid, pgRpc, pgSelect, pgUpsert, qs } from "../_shared/db.ts";
+import { placementUnlocks } from "../_shared/placement.ts";
 
 // Ktor deserializes into a non-nullable Double and 400s automatically on a
 // missing/malformed field; req.json() here just gives us `unknown`, so bad
@@ -100,6 +101,7 @@ function toHeader(profile: Record<string, unknown>, reviewsDue: number) {
 async function handlePath(userId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const [profile, units] = await Promise.all([ensureProfile(userId), loadCurriculum()]);
+  const arabicLevel = Number(profile.arabic_level ?? 0);
   const progressRows = await pgSelect<{ lesson_id: string; status: string; best_score: number; attempts: number }>(
     "lesson_progress",
     `select=lesson_id,status,best_score,attempts&user_id=eq.${qs(userId)}`,
@@ -119,7 +121,7 @@ async function handlePath(userId: string) {
         ? "completed"
         : state?.status === "in_progress"
         ? "in_progress"
-        : prevCompleted
+        : (prevCompleted || placementUnlocks(unit, arabicLevel))
         ? "available"
         : "locked";
       prevCompleted = status === "completed";
