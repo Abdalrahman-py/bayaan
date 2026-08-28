@@ -89,15 +89,15 @@ void main() {
       wrap(
         AudioCompareScreen(
           verse: verse(),
-          mistakes: [
+          mistakes: const [
             Mistake(
-              charRange: const CharRange(0, 4),
+              charRange: CharRange(0, 4),
               isTajweed: true,
               kind: 'replace',
               ruleNameEn: 'Ghunnah',
             ),
             Mistake(
-              charRange: const CharRange(5, 9),
+              charRange: CharRange(5, 9),
               isTajweed: true,
               kind: 'replace',
               ruleNameEn: 'Ghunnah',

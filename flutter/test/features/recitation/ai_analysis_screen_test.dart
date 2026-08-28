@@ -32,8 +32,8 @@ Widget wrap(RecitationUiState state) => MaterialApp(
 );
 
 void main() {
-  final tajweed = Mistake(
-    charRange: const CharRange(0, 5),
+  final tajweed = const Mistake(
+    charRange: CharRange(0, 5),
     isTajweed: true,
     kind: 'replace',
     ruleNameEn: 'Madd Munfasil',
@@ -41,8 +41,8 @@ void main() {
     expectedLen: 4,
     gotLen: 2,
   );
-  final plain = Mistake(
-    charRange: const CharRange(8, 12),
+  final plain = const Mistake(
+    charRange: CharRange(8, 12),
     isTajweed: false,
     kind: 'delete',
   );

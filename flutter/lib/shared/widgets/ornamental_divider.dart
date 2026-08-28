@@ -15,7 +15,7 @@ class OrnamentalDivider extends StatelessWidget {
         width: width,
         child: Row(
           children: [
-            Expanded(child: Divider(color: AppColors.gold, height: 1)),
+            const Expanded(child: Divider(color: AppColors.gold, height: 1)),
             const SizedBox(width: 12),
             Transform.rotate(
               angle: 45 * 3.14159 / 180,
@@ -39,7 +39,7 @@ class OrnamentalDivider extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Divider(color: AppColors.gold, height: 1)),
+            const Expanded(child: Divider(color: AppColors.gold, height: 1)),
           ],
         ),
       ),

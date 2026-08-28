@@ -326,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.gold),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.quiz_rounded,
                     size: 20,
                     color: AppColors.tealStart,
@@ -353,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ],
                   ),
                 ),
-                Icon(
+                const Icon(
                   Icons.chevron_right,
                   size: 20,
                   color: AppColors.textMuted,

@@ -15,7 +15,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         wrap(
-          AudioCompareCard(
+          const AudioCompareCard(
             badgeLabel: 'Master Recitation',
             badgeBg: Colors.white,
             badgeTextColor: Colors.black,
@@ -24,7 +24,7 @@ void main() {
             playButtonColor: teal,
             iconColor: Colors.white,
             borderColor: Colors.grey,
-            waveformHeights: const [4, 8, 12, 16],
+            waveformHeights: [4, 8, 12, 16],
             waveformColor: teal,
           ),
         ),
@@ -40,7 +40,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         wrap(
-          AudioCompareCard(
+          const AudioCompareCard(
             badgeLabel: 'Your Recitation',
             badgeBg: Colors.white,
             badgeTextColor: Colors.black,
@@ -49,9 +49,9 @@ void main() {
             playButtonColor: Colors.grey,
             iconColor: Colors.black,
             borderColor: Colors.grey,
-            waveformHeights: const [4, 8, 12, 16],
+            waveformHeights: [4, 8, 12, 16],
             waveformColor: teal,
-            errorBarIndices: const {1, 3},
+            errorBarIndices: {1, 3},
           ),
         ),
       );
@@ -72,7 +72,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         wrap(
-          AudioCompareCard(
+          const AudioCompareCard(
             badgeLabel: 'Your Recitation',
             badgeBg: Colors.white,
             badgeTextColor: Colors.black,
@@ -81,7 +81,7 @@ void main() {
             playButtonColor: Colors.grey,
             iconColor: Colors.black,
             borderColor: Colors.grey,
-            waveformHeights: const [4, 8, 12, 16],
+            waveformHeights: [4, 8, 12, 16],
             waveformColor: teal,
           ),
         ),

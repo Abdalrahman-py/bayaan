@@ -93,7 +93,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.chevron_left,
                 size: 20,
                 color: AppColors.textDark,

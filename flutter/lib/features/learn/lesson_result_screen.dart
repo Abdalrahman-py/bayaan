@@ -62,7 +62,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.emoji_events, size: 72, color: AppColors.gold),
+              const Icon(Icons.emoji_events, size: 72, color: AppColors.gold),
               const SizedBox(height: 20),
               Text(
                 'Lesson Complete',
