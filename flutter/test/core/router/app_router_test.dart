@@ -28,6 +28,26 @@ class _SignedInAuth extends AuthController {
   String? get email => null;
 }
 
+/// Signed out until [signIn] is called, so a test can walk the real
+/// sign-in -> redirect-to-home transition rather than starting past it.
+class _FlippableAuth extends AuthController {
+  AuthUiState _state = const LoggedOut();
+
+  @override
+  AuthUiState get state => _state;
+
+  @override
+  String? get accessToken => null;
+
+  @override
+  String? get email => null;
+
+  void signIn() {
+    _state = const LoggedIn();
+    notifyListeners();
+  }
+}
+
 /// A state that has cleared every redirect gate, so tests can drive the
 /// post-auth routes directly.
 AppState signedInState() => AppState(auth: _SignedInAuth())
@@ -248,5 +268,70 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
       state.dispose();
     }
+  });
+
+  testWidgets('every bottom-nav tab navigates on the first tap', (
+    tester,
+  ) async {
+    final state = signedInState();
+    addTearDown(state.dispose);
+
+    final router = createRouter(state, initialLocation: AppRoutes.home);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(HomeScreen), findsOneWidget);
+
+    // Reported from a real device: the first tap on the mushaf tab did
+    // nothing, and only a second tap after visiting another tab took.
+    for (final (icon, path) in [
+      (Icons.menu_book_rounded, AppRoutes.surahs),
+      (Icons.emoji_events_rounded, AppRoutes.stats),
+      (Icons.settings_rounded, AppRoutes.settings),
+    ]) {
+      await tester.tap(find.byIcon(icon));
+      await tester.pumpAndSettle();
+      expect(
+        router.routerDelegate.currentConfiguration.uri.path,
+        path,
+        reason: 'first tap on $path should navigate',
+      );
+    }
+
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+  });
+
+  testWidgets('the mushaf tab works on the first tap after signing in', (
+    tester,
+  ) async {
+    // Reported from the browser: reload, log in, then the first tap on the
+    // mushaf tab changed the URL but left the page showing home.
+    final auth = _FlippableAuth();
+    final state = AppState(auth: auth)
+      ..booting = false
+      ..onboarded = true;
+    addTearDown(state.dispose);
+
+    final router = createRouter(state, initialLocation: AppRoutes.signIn);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    auth.signIn();
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeScreen), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.menu_book_rounded));
+    await tester.pumpAndSettle();
+
+    expect(
+      router.routerDelegate.currentConfiguration.uri.path,
+      AppRoutes.surahs,
+    );
+    expect(find.byType(SurahSelectionScreen), findsOneWidget);
+    expect(find.byType(HomeScreen), findsNothing);
+
+    await tester.pumpAndSettle(const Duration(seconds: 2));
   });
 }

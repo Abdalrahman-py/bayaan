@@ -85,15 +85,28 @@ class _TabShell extends StatefulWidget {
 }
 
 class _TabShellState extends State<_TabShell> {
-  late final PageController _controller = PageController(
-    initialPage: widget.shell.currentIndex,
-  );
+  late final PageController _controller;
 
   /// The branch the PageView last told the shell to go to. The sync below
   /// compares against this rather than the controller's own page, so a rebuild
   /// arriving while goBranch is still in flight cannot see a stale
   /// currentIndex and animate a swipe back where it came from.
-  late int _reported = widget.shell.currentIndex;
+  ///
+  /// Both are seeded in initState, never as `late` field initialisers: a
+  /// `late` field is evaluated on first *read*, and the first read of
+  /// `_reported` can be inside didUpdateWidget — where `widget` is already the
+  /// new one. It would then initialise to the branch being navigated *to*, the
+  /// guard below would see target == _reported, and the PageView would never
+  /// move. That is the "first tap on a tab changes the URL but not the page"
+  /// bug: it only bit when no earlier rebuild had forced the read.
+  late int _reported;
+
+  @override
+  void initState() {
+    super.initState();
+    _reported = widget.shell.currentIndex;
+    _controller = PageController(initialPage: _reported);
+  }
 
   void _onPageChanged(int index) {
     _reported = index;
