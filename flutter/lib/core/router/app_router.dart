@@ -350,6 +350,8 @@ GoRouter createRouter(AppState appState, {String? initialLocation}) => GoRouter(
         return AudioCompareScreen(
           verse: result?.verse ?? QuranText.verseFor(sura, aya),
           mistakes: result?.mistakes ?? const [],
+          sifatErrors: result?.sifatErrors ?? const [],
+          recording: appState.recitation.recordingFor(sura, aya),
         );
       },
     ),
