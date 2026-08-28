@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 /// A reference reciter, and the everyayah.com folder holding their per-ayah
 /// recordings. everyayah serves the whole Quran as one MP3 per ayah at a
@@ -59,29 +58,6 @@ class Reciter {
     '${sura.toString().padLeft(3, '0')}'
     '${aya.toString().padLeft(3, '0')}.mp3',
   );
-
-  static const prefsKey = 'reference_reciter';
-
-  /// Never throws: a screen asking which reciter to use should fall back to
-  /// the default rather than fail to build if the prefs store is unavailable.
-  static Future<Reciter> selected() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return byId(prefs.getString(prefsKey));
-    } catch (_) {
-      return fallback;
-    }
-  }
-
-  /// Returns whether the choice was persisted.
-  static Future<bool> select(Reciter reciter) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return await prefs.setString(prefsKey, reciter.id);
-    } catch (_) {
-      return false;
-    }
-  }
 }
 
 /// Streams one reciter's ayah recording.

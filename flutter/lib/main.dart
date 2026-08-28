@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'core/router/app_router.dart';
+import 'services/app_settings.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Settings are read synchronously all over the app, so load them before the
+  // first frame rather than making every screen handle a null preference.
+  await AppSettings.instance.load();
   runApp(const BayaanApp());
 }
 

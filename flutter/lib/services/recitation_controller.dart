@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:record/record.dart';
 
 import '../models/models.dart';
+import 'app_settings.dart';
 import 'quran_text.dart';
 
 /// Backend = Supabase Edge Functions (Ktor retired). Same multipart contract
@@ -185,7 +186,11 @@ class RecitationController extends ChangeNotifier {
           ),
         )
         ..fields['sura'] = '$sura'
-        ..fields['aya'] = '$aya';
+        ..fields['aya'] = '$aya'
+        // The learner's madd lengths. The edge function validates these and
+        // forwards them to the engine; omitted or invalid, the engine falls
+        // back to its own Hafs defaults.
+        ..fields.addAll(AppSettings.instance.maddStyle.fields);
       final streamed = await req.send().timeout(const Duration(seconds: 60));
       // The read needs its own timeout — a stalled edge function response
       // must not hang the spinner forever.

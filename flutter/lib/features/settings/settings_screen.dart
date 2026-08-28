@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../services/app_settings.dart';
 import '../../services/auth_controller.dart';
 import '../../services/reciter_audio.dart';
 
@@ -15,28 +16,16 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Reciter _reciter = Reciter.fallback;
-
-  @override
-  void initState() {
-    super.initState();
-    Reciter.selected().then((r) {
-      if (mounted) setState(() => _reciter = r);
-    });
-  }
-
-  String _tajweedSensitivity = 'Standard';
-  bool _autoPlayReference = true;
-  bool _showTajweedColors = true;
-  bool _showTransliteration = true;
-  bool _dailyReminder = true;
-  bool _soundEffects = true;
-  int _dailyGoalMinutes = 10;
+  final AppSettings _settings = AppSettings.instance;
 
   String? get _userEmail => widget.auth.email;
+  String? get _displayName => widget.auth.displayName;
+
+  /// The name if the account has one (given at sign-up), else the email.
+  String get _identity => _displayName ?? _userEmail ?? 'Learner';
   String get _avatarInitial =>
-      (_userEmail != null && _userEmail!.isNotEmpty)
-          ? _userEmail![0].toUpperCase()
+      _identity.isNotEmpty && _identity != 'Learner'
+          ? _identity[0].toUpperCase()
           : 'B';
 
   @override
@@ -61,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _buildSectionHeader('Mushaf & Display', Icons.menu_book_rounded),
                   _buildMushafSection(),
                   const SizedBox(height: 24),
-                  _buildSectionHeader('Practice & Reminders', Icons.notifications_active_rounded),
+                  _buildSectionHeader('Practice Goal', Icons.flag_rounded),
                   _buildPracticeSection(),
                   const SizedBox(height: 24),
                   _buildSectionHeader('About & Support', Icons.info_outline_rounded),
@@ -147,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _userEmail ?? 'Learner',
+                  _identity,
                   overflow: TextOverflow.ellipsis,
                   style: pjs(
                     fontSize: 15,
@@ -155,6 +144,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: AppColors.textDark,
                   ),
                 ),
+                if (_displayName != null && _userEmail != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _userEmail!,
+                    overflow: TextOverflow.ellipsis,
+                    style: pjs(fontSize: 12, color: AppColors.textMuted),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -199,196 +196,182 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// Wraps a settings row's white card. All three sections share it.
+  Widget _card(List<Widget> children) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: const Color(0xFFF5F1E6)),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(children: children),
+  );
+
+  Widget _switchTile({
+    required String title,
+    required String subtitle,
+    required bool value,
+    required Future<void> Function(bool) onChanged,
+  }) => SwitchListTile(
+    title: Text(title, style: pjs(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark)),
+    subtitle: Text(subtitle, style: pjs(fontSize: 11, color: AppColors.textMuted)),
+    value: value,
+    activeTrackColor: AppColors.tealStart,
+    // The in-memory value is set before the write awaits anything, so the
+    // rebuild already shows the new state.
+    onChanged: (v) {
+      onChanged(v);
+      setState(() {});
+    },
+  );
+
   Widget _buildRecitationSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF5F1E6)),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Reference Reciter',
-                  style: pjs(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textDark),
-                ),
-                const SizedBox(height: 6),
-                DropdownButtonFormField<Reciter>(
-                  initialValue: _reciter,
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFFF5F1E6)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFFF5F1E6)),
-                    ),
-                  ),
-                  items: [
-                    for (final r in Reciter.all)
-                      DropdownMenuItem(value: r, child: Text(r.name)),
-                  ],
-                  onChanged: (r) {
-                    if (r == null) return;
-                    setState(() => _reciter = r);
-                    Reciter.select(r);
-                  },
-                ),
-              ],
+    return _card([
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Reference Reciter',
+              style: pjs(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textDark),
             ),
-          ),
-          const Divider(height: 1, color: Color(0xFFF5F1E6)),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'AI Tajweed Sensitivity',
-                  style: pjs(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textDark),
+            const SizedBox(height: 6),
+            DropdownButtonFormField<Reciter>(
+              initialValue: _settings.reciter,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFF5F1E6)),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: ['Lenient', 'Standard', 'Strict'].map((level) {
-                    final bool isSelected = _tajweedSensitivity == level;
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: GestureDetector(
-                          onTap: () => setState(() => _tajweedSensitivity = level),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: isSelected ? AppColors.tealStart : const Color(0xFFF5F1E6),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              level,
-                              style: pjs(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: isSelected ? Colors.white : AppColors.textDark,
-                              ),
-                            ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFF5F1E6)),
+                ),
+              ),
+              items: [
+                for (final r in Reciter.all)
+                  DropdownMenuItem(value: r, child: Text(r.name)),
+              ],
+              onChanged: (r) {
+                if (r == null) return;
+                _settings.setReciter(r);
+                setState(() {});
+              },
+            ),
+          ],
+        ),
+      ),
+      const Divider(height: 1, color: Color(0xFFF5F1E6)),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Madd Length',
+              style: pjs(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textDark),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'How long the coach expects you to hold a madd. '
+              '${_settings.maddStyle.summary}.',
+              style: pjs(fontSize: 11, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: MaddStyle.all.map((style) {
+                final bool isSelected = _settings.maddStyle.id == style.id;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: GestureDetector(
+                      onTap: () {
+                        _settings.setMaddStyle(style);
+                        setState(() {});
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.tealStart : const Color(0xFFF5F1E6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          style.name,
+                          style: pjs(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected ? Colors.white : AppColors.textDark,
                           ),
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-          ),
-          const Divider(height: 1, color: Color(0xFFF5F1E6)),
-          SwitchListTile(
-            title: Text('Auto-play reference audio', style: pjs(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark)),
-            subtitle: Text('Listen to correct recitation after recording', style: pjs(fontSize: 11, color: AppColors.textMuted)),
-            value: _autoPlayReference,
-            activeTrackColor: AppColors.tealStart,
-            onChanged: (v) => setState(() => _autoPlayReference = v),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
+      const Divider(height: 1, color: Color(0xFFF5F1E6)),
+      _switchTile(
+        title: 'Auto-play reference audio',
+        subtitle: 'Play the qari automatically on the compare screen',
+        value: _settings.autoPlayReference,
+        onChanged: _settings.setAutoPlayReference,
+      ),
+    ]);
   }
 
   Widget _buildMushafSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF5F1E6)),
-        borderRadius: BorderRadius.circular(16),
+    return _card([
+      _switchTile(
+        title: 'Show transliteration & translation',
+        subtitle: 'Display "How to say it" card on recitation screen',
+        value: _settings.showTranslation,
+        onChanged: _settings.setShowTranslation,
       ),
-      child: Column(
-        children: [
-          SwitchListTile(
-            title: Text('Tajweed color highlights', style: pjs(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark)),
-            subtitle: Text('Highlight Ghunnah, Madd, and Qalqalah rules in text', style: pjs(fontSize: 11, color: AppColors.textMuted)),
-            value: _showTajweedColors,
-            activeTrackColor: AppColors.tealStart,
-            onChanged: (v) => setState(() => _showTajweedColors = v),
-          ),
-          const Divider(height: 1, color: Color(0xFFF5F1E6)),
-          SwitchListTile(
-            title: Text('Show transliteration & translation', style: pjs(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark)),
-            subtitle: Text('Display "How to say it" card on recitation screen', style: pjs(fontSize: 11, color: AppColors.textMuted)),
-            value: _showTransliteration,
-            activeTrackColor: AppColors.tealStart,
-            onChanged: (v) => setState(() => _showTransliteration = v),
-          ),
-        ],
-      ),
-    );
+    ]);
   }
 
   Widget _buildPracticeSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF5F1E6)),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return _card([
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Daily Practice Goal', style: pjs(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark)),
-                    Text('Commit to daily Quran recitation', style: pjs(fontSize: 11, color: AppColors.textMuted)),
-                  ],
-                ),
-                DropdownButton<int>(
-                  value: _dailyGoalMinutes,
-                  underline: const SizedBox.shrink(),
-                  items: const [
-                    DropdownMenuItem(value: 5, child: Text('5 min')),
-                    DropdownMenuItem(value: 10, child: Text('10 min')),
-                    DropdownMenuItem(value: 15, child: Text('15 min')),
-                    DropdownMenuItem(value: 30, child: Text('30 min')),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _dailyGoalMinutes = v);
-                  },
-                ),
+                Text('Daily Practice Goal', style: pjs(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark)),
+                Text('Shown on your stats screen', style: pjs(fontSize: 11, color: AppColors.textMuted)),
               ],
             ),
-          ),
-          const Divider(height: 1, color: Color(0xFFF5F1E6)),
-          SwitchListTile(
-            title: Text('Daily reminder', style: pjs(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark)),
-            subtitle: Text('Gentle notification at 7:00 AM', style: pjs(fontSize: 11, color: AppColors.textMuted)),
-            value: _dailyReminder,
-            activeTrackColor: AppColors.tealStart,
-            onChanged: (v) => setState(() => _dailyReminder = v),
-          ),
-          const Divider(height: 1, color: Color(0xFFF5F1E6)),
-          SwitchListTile(
-            title: Text('Sound effects & celebrations', style: pjs(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark)),
-            subtitle: Text('Celebratory chimes for correct recitation', style: pjs(fontSize: 11, color: AppColors.textMuted)),
-            value: _soundEffects,
-            activeTrackColor: AppColors.tealStart,
-            onChanged: (v) => setState(() => _soundEffects = v),
-          ),
-        ],
+            DropdownButton<int>(
+              value: _settings.dailyGoalMinutes,
+              underline: const SizedBox.shrink(),
+              items: const [
+                DropdownMenuItem(value: 5, child: Text('5 min')),
+                DropdownMenuItem(value: 10, child: Text('10 min')),
+                DropdownMenuItem(value: 15, child: Text('15 min')),
+                DropdownMenuItem(value: 30, child: Text('30 min')),
+              ],
+              onChanged: (v) {
+                if (v == null) return;
+                _settings.setDailyGoalMinutes(v);
+                setState(() {});
+              },
+            ),
+          ],
+        ),
       ),
-    );
+    ]);
   }
 
   Widget _buildAboutSection() {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: const Color(0xFFF5F1E6)),

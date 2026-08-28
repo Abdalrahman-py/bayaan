@@ -1,6 +1,5 @@
 import 'package:bayaan/services/reciter_audio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   test('pads sura and aya to three digits each', () {
@@ -23,14 +22,6 @@ void main() {
     expect(Reciter.byId(null), Reciter.husary);
     expect(Reciter.byId('nobody'), Reciter.husary);
     expect(Reciter.byId('alafasy'), Reciter.alafasy);
-  });
-
-  test('the chosen reciter survives a round trip through prefs', () async {
-    SharedPreferences.setMockInitialValues({});
-    expect(await Reciter.selected(), Reciter.husary);
-
-    await Reciter.select(Reciter.abdulBasit);
-    expect(await Reciter.selected(), Reciter.abdulBasit);
   });
 
   test('every reciter has a distinct id and folder', () {

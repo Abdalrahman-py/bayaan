@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bayaan/features/recitation/recording_screen.dart';
+import 'package:bayaan/services/app_settings.dart';
 import 'package:bayaan/services/auth_controller.dart';
 import 'package:bayaan/services/recitation_controller.dart';
 import 'package:bayaan/services/reciter_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    await AppSettings.instance.load();
+  });
 
   testWidgets('renders verse card and tap to recite button in ready state', (
     tester,
@@ -37,8 +41,9 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
-      Reciter.prefsKey: Reciter.alafasy.id,
+      'reference_reciter': Reciter.alafasy.id,
     });
+    await AppSettings.instance.load();
 
     await tester.pumpWidget(
       MaterialApp(

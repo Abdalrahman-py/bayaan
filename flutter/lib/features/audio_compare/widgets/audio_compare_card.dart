@@ -29,6 +29,11 @@ class AudioCompareCard extends StatefulWidget {
   /// [audioUrl] when both are somehow set.
   final Uint8List? audioBytes;
 
+  /// Start playing as soon as the card is ready, without a tap. Browsers may
+  /// still refuse — the gesture exemption is spent by the time the source has
+  /// loaded — in which case the card just sits there waiting for the button.
+  final bool autoPlay;
+
   const AudioCompareCard({
     super.key,
     required this.badgeLabel,
@@ -44,6 +49,7 @@ class AudioCompareCard extends StatefulWidget {
     this.errorBarIndices = const {},
     this.audioUrl,
     this.audioBytes,
+    this.autoPlay = false,
   });
 
   @override
@@ -93,7 +99,9 @@ class _AudioCompareCardState extends State<AudioCompareCard>
     });
     final url = widget.audioUrl;
     if (url != null && widget.audioBytes == null) {
-      player.preload(url).catchError((_) {});
+      player.preload(url).then((_) {
+        if (mounted && widget.autoPlay) _togglePlay();
+      }).catchError((_) {});
     }
   }
 

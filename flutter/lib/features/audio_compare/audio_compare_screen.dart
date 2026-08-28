@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
+import '../../services/app_settings.dart';
 import '../../services/reciter_audio.dart';
 import '../../shared/animation/score_math.dart';
 import 'compare_data.dart';
@@ -46,7 +47,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
 
   static const int _barCount = 24;
 
-  Reciter _reciter = Reciter.fallback;
+  final Reciter _reciter = AppSettings.instance.reciter;
 
   int get _score => recitationScore(
     mistakes: widget.mistakes.length,
@@ -87,10 +88,6 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
     ).animate(_userCardAnim);
 
     _entryController.forward();
-
-    Reciter.selected().then((r) {
-      if (mounted) setState(() => _reciter = r);
-    });
   }
 
   @override
@@ -146,7 +143,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
                   border: Border.all(color: const Color(0xFFF5F1E6)),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.chevron_left,
                   size: 16,
                   color: AppColors.textDark,
@@ -229,6 +226,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
           ),
           waveformColor: AppColors.tealStart,
           audioUrl: _reciter.urlFor(widget.verse.sura, widget.verse.aya),
+          autoPlay: AppSettings.instance.autoPlayReference,
         ),
       ),
     );

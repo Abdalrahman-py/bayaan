@@ -5,6 +5,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
+import '../../services/app_settings.dart';
 import '../../services/auth_controller.dart';
 import '../../services/quran_translation.dart';
 import '../../services/reciter_audio.dart';
@@ -39,7 +40,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
   bool _navigated = false;
 
   final ReciterPlayer _player = ReciterPlayer();
-  Reciter _reciter = Reciter.fallback;
+  final Reciter _reciter = AppSettings.instance.reciter;
   bool _listening = false;
   bool _listenFailed = false;
 
@@ -50,13 +51,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
     _player.onComplete.listen((_) {
       if (mounted) setState(() => _listening = false);
     });
-    Reciter.selected().then((r) {
-      if (!mounted) return;
-      setState(() => _reciter = r);
-      // Warm the source so the tap handler is a bare resume() — see
-      // ReciterPlayer for why that matters on web.
-      _player.preload(r.urlFor(widget.sura, widget.aya)).catchError((_) {});
-    });
+    // Warm the source so the tap handler is a bare resume() — see
+    // ReciterPlayer for why that matters on web.
+    _player
+        .preload(_reciter.urlFor(widget.sura, widget.aya))
+        .catchError((_) {});
     QuranTranslation.forSurah(widget.sura).then((map) {
       if (!mounted || map == null) return;
       setState(() => _translation = map[widget.aya]);
@@ -150,7 +149,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.chevron_left,
                 size: 20,
                 color: AppColors.textDark,
@@ -295,6 +294,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 
   Widget _buildTranslationCard() {
+    if (!AppSettings.instance.showTranslation) return const SizedBox.shrink();
     if (_translation == null && _transliteration == null) {
       return const SizedBox.shrink();
     }
@@ -312,7 +312,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
           if (_transliteration != null) ...[
             Row(
               children: [
-                Icon(Icons.record_voice_over, size: 14, color: AppColors.gold),
+                const Icon(Icons.record_voice_over, size: 14, color: AppColors.gold),
                 const SizedBox(width: 6),
                 Text(
                   'HOW TO SAY IT',
@@ -339,7 +339,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
             if (_transliteration != null) const SizedBox(height: 14),
             Row(
               children: [
-                Icon(Icons.translate, size: 14, color: AppColors.tealStart),
+                const Icon(Icons.translate, size: 14, color: AppColors.tealStart),
                 const SizedBox(width: 6),
                 Text(
                   'MEANING',
@@ -391,7 +391,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
             alignment: Alignment.center,
             children: [
               if (recording)
-                PulsingRings(
+                const PulsingRings(
                   active: true,
                   color: AppColors.tajweedError,
                 ),

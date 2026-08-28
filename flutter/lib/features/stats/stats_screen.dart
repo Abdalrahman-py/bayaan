@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../services/app_settings.dart';
 import '../../services/auth_controller.dart';
 import '../../services/learn_repository.dart';
 import '../../services/progress_repository.dart';
@@ -177,7 +178,7 @@ class _StatsScreenState extends State<StatsScreen> {
               iconBgColor: const Color(0xFFFFF7ED),
               value: '${header.streakCount} ${header.streakCount == 1 ? "Day" : "Days"}',
               label: 'Streak',
-              sublabel: '${header.dailyGoalMinutes}m daily goal',
+              sublabel: '${AppSettings.instance.dailyGoalMinutes}m daily goal',
             ),
             _buildMetricTile(
               width: itemWidth,
