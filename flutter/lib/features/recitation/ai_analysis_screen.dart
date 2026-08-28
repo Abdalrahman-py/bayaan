@@ -1,6 +1,4 @@
-import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +7,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
 import '../../services/recitation_controller.dart';
+import 'highlighted_verse.dart';
+import 'mistake_highlights.dart';
+import '../../shared/animation/score_math.dart';
 import '../../shared/widgets/animated_score_ring.dart';
 import '../../shared/widgets/ornamental_divider.dart';
 
@@ -32,70 +33,10 @@ class AiAnalysisScreen extends StatefulWidget {
 }
 
 class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
-  final List<TapGestureRecognizer> _recognizers = [];
-
-  @override
-  void dispose() {
-    for (final r in _recognizers) {
-      r.dispose();
-    }
-    super.dispose();
-  }
-
-  /// issues * 12 points off, floor 15 — a real number derived from the
-  /// actual mistake count, not a fabricated stat.
-  int _score(ResultState r) {
-    final issues = r.mistakes.length + r.sifatErrors.length;
-    return (100 - (issues * 12)).clamp(15, 95);
-  }
-
-  void _showMistakeInfo(Mistake m) {
-    final rule = m.ruleNameEn ?? m.kind;
-    final detail = (m.expectedLen != null && m.gotLen != null)
-        ? 'Expected ${m.expectedLen} · heard ${m.gotLen}'
-        : null;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(detail == null ? rule : '$rule — $detail')),
-    );
-  }
-
-  List<InlineSpan> _buildSpans(Verse verse, List<Mistake> mistakes) {
-    for (final r in _recognizers) {
-      r.dispose();
-    }
-    _recognizers.clear();
-
-    final text = verse.uthmani;
-    final ranges = List.of(mistakes)
-      ..sort((a, b) => a.charRange.start.compareTo(b.charRange.start));
-    final spans = <InlineSpan>[];
-    int cursor = 0;
-    for (final m in ranges) {
-      final start = m.charRange.start.clamp(0, text.length);
-      final end = math.max(start, m.charRange.end.clamp(0, text.length));
-      if (start > cursor) {
-        spans.add(TextSpan(text: text.substring(cursor, start)));
-      }
-      final color = m.isTajweed ? AppColors.tajweedError : AppColors.plainError;
-      final recognizer = TapGestureRecognizer()
-        ..onTap = () => _showMistakeInfo(m);
-      _recognizers.add(recognizer);
-      spans.add(
-        TextSpan(
-          text: text.substring(start, end),
-          style: TextStyle(
-            backgroundColor: color.withValues(alpha: 0.15),
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-          recognizer: recognizer,
-        ),
-      );
-      cursor = end;
-    }
-    if (cursor < text.length) spans.add(TextSpan(text: text.substring(cursor)));
-    return spans;
-  }
+  int _score(ResultState r) => recitationScore(
+    mistakes: r.mistakes.length,
+    sifatErrors: r.sifatErrors.length,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -119,8 +60,10 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                         _buildScoreCard(result),
                         const SizedBox(height: 16),
                         _buildVerseCard(result),
+                        const SizedBox(height: 12),
+                        _buildLegend(result),
                         const SizedBox(height: 16),
-                        _buildInfoBanner(),
+                        _buildMistakeList(result),
                         const SizedBox(height: 16),
                         _buildCompareButton(),
                         const SizedBox(height: 24),
@@ -150,7 +93,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.chevron_left,
                 size: 20,
                 color: AppColors.textDark,
@@ -252,17 +195,19 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         children: [
           const OrnamentalDivider(width: double.infinity, opacity: 0.3),
           const SizedBox(height: 16),
-          Text.rich(
-            TextSpan(
-              style: arabic(
-                fontSize: 24,
-                color: AppColors.tealStart,
-                height: 1.9,
-              ),
-              children: _buildSpans(result.verse, result.mistakes),
+          HighlightedVerse(
+            text: result.verse.uthmani,
+            highlights: mistakeHighlights(
+              result.verse.uthmani,
+              result.mistakes,
             ),
-            textDirection: TextDirection.rtl,
-            textAlign: TextAlign.center,
+            style: arabic(
+              fontSize: 24,
+              color: AppColors.tealStart,
+              height: 1.9,
+            ),
+            tajweedColor: AppColors.tajweedError,
+            plainColor: AppColors.plainError,
           ),
           const SizedBox(height: 16),
           const OrnamentalDivider(width: double.infinity, opacity: 0.3),
@@ -294,27 +239,264 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
     );
   }
 
-  Widget _buildInfoBanner() {
+  static const _tajweedLabel = 'Tajweed rule';
+  static const _pronunciationLabel = 'Pronunciation';
+  static const _sifatLabel = 'Letter quality';
+
+  /// Says what the two highlight colours in the verse above actually mean.
+  /// Tajweed slips and plain mispronunciations are different kinds of error
+  /// and are corrected differently, so they never share a colour.
+  Widget _buildLegend(ResultState result) {
+    final hasTajweed = result.mistakes.any((m) => m.isTajweed);
+    final hasPlain = result.mistakes.any((m) => !m.isTajweed);
+    if (!hasTajweed && !hasPlain) return const SizedBox.shrink();
+    return Row(
+      children: [
+        if (hasTajweed) ...[
+          _legendChip(AppColors.tajweedError, _tajweedLabel),
+          const SizedBox(width: 8),
+        ],
+        if (hasPlain) _legendChip(AppColors.plainError, _pronunciationLabel),
+      ],
+    );
+  }
+
+  Widget _legendChip(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.25),
+            border: Border.all(color: color),
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: pjs(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textMuted,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// The exact sound flagged, snapped to cluster boundaries so a combining
+  /// mark is never severed from its letter.
+  String _snippet(Verse verse, Mistake m) =>
+      mistakeSnippet(verse.uthmani, m);
+
+  /// Leads with the length the rule requires, and says only which direction
+  /// the attempt missed by.
+  ///
+  /// Deliberately never prints the heard count. `predicted_len` is the model's
+  /// estimate from the CTC phoneme sequence, not a measurement of the audio's
+  /// timeline, so "you held 2" can be wrong when the reciter held none at all.
+  /// A learner told that would add two more counts, land on four, and walk
+  /// away believing four is the rule. The target is authoritative and the
+  /// direction is robust; the heard count is neither.
+  static String _maddDetail(int got, int expected) {
+    final target = expected == 1 ? '1 count' : '$expected counts';
+    if (got < expected) return 'Hold $target — yours was too short';
+    if (got > expected) return 'Hold $target — yours was too long';
+    return 'Hold $target';
+  }
+
+  /// The engine reports an edit operation; the reciter needs plain words.
+  static String _kindLabel(String kind) => switch (kind) {
+    'insert' => 'Extra sound added',
+    'delete' => 'Sound left out',
+    'replace' => 'Pronounced differently',
+    _ => kind,
+  };
+
+  /// Every mistake, laid out to be read straight through — tajweed rules
+  /// first, then plain pronunciation, then letter characteristics (sifat),
+  /// which the score already counted but the screen never used to show.
+  Widget _buildMistakeList(ResultState result) {
+    final tajweed = result.mistakes.where((m) => m.isTajweed).toList();
+    final plain = result.mistakes.where((m) => !m.isTajweed).toList();
+    final sifat = result.sifatErrors;
+    if (tajweed.isEmpty && plain.isEmpty && sifat.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'What to fix',
+          style: pjs(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (tajweed.isNotEmpty)
+          _section(
+            title: _tajweedLabel,
+            color: AppColors.tajweedError,
+            count: tajweed.length,
+            rows: [
+              for (final m in tajweed)
+                _mistakeRow(
+                  color: AppColors.tajweedError,
+                  arabicText: _snippet(result.verse, m),
+                  title: m.ruleNameEn ?? _kindLabel(m.kind),
+                  subtitle: m.ruleNameAr,
+                  detail: (m.expectedLen != null && m.gotLen != null)
+                      ? _maddDetail(m.gotLen!, m.expectedLen!)
+                      // Without a rule name the title already says this.
+                      : (m.ruleNameEn != null ? _kindLabel(m.kind) : null),
+                ),
+            ],
+          ),
+        if (plain.isNotEmpty) ...[
+          if (tajweed.isNotEmpty) const SizedBox(height: 12),
+          _section(
+            title: _pronunciationLabel,
+            color: AppColors.plainError,
+            count: plain.length,
+            rows: [
+              for (final m in plain)
+                _mistakeRow(
+                  color: AppColors.plainError,
+                  arabicText: _snippet(result.verse, m),
+                  title: _kindLabel(m.kind),
+                  subtitle: null,
+                  detail: (m.expectedLen != null && m.gotLen != null)
+                      ? _maddDetail(m.gotLen!, m.expectedLen!)
+                      : null,
+                ),
+            ],
+          ),
+        ],
+        if (sifat.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _section(
+            title: _sifatLabel,
+            color: AppColors.sifatError,
+            count: sifat.length,
+            rows: [
+              for (final e in sifat)
+                _mistakeRow(
+                  color: AppColors.sifatError,
+                  arabicText: e.phonemesGroup,
+                  title: e.attribute,
+                  subtitle: null,
+                  detail: 'Heard ${e.predicted} — should be ${e.expected}',
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _section({
+    required String title,
+    required Color color,
+    required int count,
+    required List<Widget> rows,
+  }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.sifatError.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(14),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(13),
+              ),
+            ),
+            child: Text(
+              '$title · $count',
+              style: pjs(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+          ),
+          for (final row in rows) row,
+        ],
+      ),
+    );
+  }
+
+  Widget _mistakeRow({
+    required Color color,
+    required String arabicText,
+    required String title,
+    required String? subtitle,
+    required String? detail,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info, size: 18, color: AppColors.sifatError),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Tap a highlighted word to view pronunciation feedback.',
-              style: pjs(
-                fontSize: 13,
-                color: AppColors.sifatError,
-                height: 1.4,
+          if (arabicText.isNotEmpty)
+            Container(
+              constraints: const BoxConstraints(maxWidth: 110),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
+              child: Text(
+                arabicText,
+                textDirection: TextDirection.rtl,
+                style: arabic(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ),
+          if (arabicText.isNotEmpty) const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: pjs(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                if (subtitle != null)
+                  Text(
+                    subtitle,
+                    textDirection: TextDirection.rtl,
+                    style: arabic(fontSize: 14, color: AppColors.textMuted),
+                  ),
+                if (detail != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      detail,
+                      style: pjs(fontSize: 12, color: AppColors.textMuted),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],

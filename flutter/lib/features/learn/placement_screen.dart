@@ -10,6 +10,7 @@ import '../../services/auth_controller.dart';
 import '../../services/learn_content.dart';
 import '../../services/learn_repository.dart';
 import '../../services/lesson_audio_player.dart';
+import '../../shared/widgets/arabic_tile.dart';
 import '../../shared/widgets/ornamental_divider.dart';
 import 'models/lesson.dart';
 
@@ -39,6 +40,8 @@ class _PlacementScreenState extends State<PlacementScreen> {
   final List<Map<String, dynamic>> _results = [];
   final _audio = LessonAudioPlayer();
   bool _submitting = false;
+  int? _resultLevel;
+  String? _startUnitTitle;
   bool? _lastCorrect;
   String? _selectedOption;
 
@@ -107,15 +110,31 @@ class _PlacementScreenState extends State<PlacementScreen> {
   Future<void> _finish() async {
     setState(() => _submitting = true);
     final token = widget.auth.accessToken;
+    int? level;
     try {
       if (token != null) {
-        await LearnRepository.submitPlacement(token, _results);
+        // The server runs the same ladder over the same answers, so its level
+        // is the one that counts — _level is only what drove item selection.
+        level = await LearnRepository.submitPlacement(token, _results);
       }
     } catch (_) {
       // Best-effort — the roadmap still works at the default level.
     }
     if (!mounted) return;
-    context.go(AppRoutes.learn);
+    if (level == null) {
+      context.go(AppRoutes.learn);
+      return;
+    }
+    // Level N means units 1..N are known, so the learner starts at N+1.
+    final units = (await LearnContent.units())
+        .where((u) => u.track == 'arabic')
+        .toList();
+    if (!mounted) return;
+    final placed = level;
+    setState(() {
+      _resultLevel = placed;
+      _startUnitTitle = placed < units.length ? units[placed].titleEn : null;
+    });
   }
 
   @override
@@ -129,7 +148,9 @@ class _PlacementScreenState extends State<PlacementScreen> {
     return Scaffold(
       backgroundColor: AppColors.lightBg,
       body: SafeArea(
-        child: _submitting
+        child: _resultLevel != null
+            ? _buildResult(_resultLevel!)
+            : _submitting
             ? const Center(child: CircularProgressIndicator())
             : _bank == null
             ? const Center(child: CircularProgressIndicator())
@@ -145,6 +166,56 @@ class _PlacementScreenState extends State<PlacementScreen> {
                   if (_lastCorrect != null) _buildDuolingoFeedbackBanner(),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildResult(int level) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Level $level',
+            style: pjs(
+              fontSize: 40,
+              fontWeight: FontWeight.w800,
+              color: AppColors.tealStart,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const OrnamentalDivider(width: 160, opacity: 0.3),
+          const SizedBox(height: 16),
+          Text(
+            _startUnitTitle != null
+                ? "You'll start at \u201c$_startUnitTitle\u201d. Everything before it "
+                      'is unlocked if you want to go back over it.'
+                : "You've unlocked the whole Arabic track.",
+            textAlign: TextAlign.center,
+            style: pjs(fontSize: 15, color: AppColors.textMuted),
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () => context.go(AppRoutes.learn),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.tealStart,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+              ),
+              child: Text(
+                'See my roadmap',
+                style: pjs(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -186,7 +257,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
               value: (_index + 1) / _bank!.length,
               minHeight: 8,
               backgroundColor: const Color(0xFFF5F1E6),
-              valueColor: AlwaysStoppedAnimation(AppColors.tealStart),
+              valueColor: const AlwaysStoppedAnimation(AppColors.tealStart),
             ),
           ),
           const SizedBox(height: 32),
@@ -214,10 +285,13 @@ class _PlacementScreenState extends State<PlacementScreen> {
           const SizedBox(height: 16),
           if (item.promptTextAr != null)
             Center(
-              child: Text(
-                item.promptTextAr!,
-                textDirection: TextDirection.rtl,
-                style: arabic(fontSize: 56, color: AppColors.tealStart),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  item.promptTextAr!,
+                  textDirection: TextDirection.rtl,
+                  style: arabic(fontSize: 56, color: AppColors.tealStart),
+                ),
               ),
             ),
           if (item.promptAsset != null)
@@ -232,7 +306,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
                     shape: BoxShape.circle,
                     color: AppColors.tealStart.withValues(alpha: 0.12),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.volume_up,
                     size: 36,
                     color: AppColors.tealStart,
@@ -266,40 +340,19 @@ class _PlacementScreenState extends State<PlacementScreen> {
                 }
               }
 
-              return GestureDetector(
+              return ArabicTile(
+                text: opt,
+                icon: isAudio ? Icons.volume_up : null,
+                textColor: textColor,
+                background: bg,
+                borderColor: border ?? kTileBorder,
+                borderWidth: border != null ? 2 : 1,
                 onTap: answered
                     ? null
                     : () {
                         if (isAudio) _play(opt);
                         _answer(item, opt);
                       },
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: bg ?? Colors.white,
-                    border: Border.all(
-                      color: border ?? const Color(0xFFF5F1E6),
-                      width: border != null ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: isAudio
-                      ? Icon(
-                          Icons.volume_up,
-                          color: textColor,
-                          size: 28,
-                        )
-                      : Text(
-                          opt,
-                          textDirection: TextDirection.rtl,
-                          style: arabic(
-                            fontSize: 30,
-                            color: textColor,
-                          ),
-                        ),
-                ),
               );
             }).toList(),
           ),

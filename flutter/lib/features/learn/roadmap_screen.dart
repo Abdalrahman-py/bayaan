@@ -21,6 +21,12 @@ class RoadmapScreen extends StatefulWidget {
 
 class _RoadmapScreenState extends State<RoadmapScreen> {
   LearnPath? _path;
+
+  /// Only ever set from the server. The bundled-curriculum fallback below can
+  /// show the lesson list offline, but it knows nothing about this learner, so
+  /// it leaves this null and the header card stays hidden rather than showing
+  /// invented level/XP/streak numbers.
+  LearnHeader? _header;
   String? _error;
 
   @override
@@ -35,7 +41,10 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
       try {
         final path = await LearnRepository.path(token);
         if (mounted) {
-          setState(() => _path = path);
+          setState(() {
+            _path = path;
+            _header = path.header;
+          });
           return;
         }
       } catch (_) {}
@@ -61,10 +70,12 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
       if (mounted) {
         setState(() {
           _path = LearnPath(
+            // Placeholder only so the units render; never shown, because
+            // _header stays null on this path.
             header: const LearnHeader(
-              arabicLevel: 1,
-              xp: 150,
-              streakCount: 3,
+              arabicLevel: 0,
+              xp: 0,
+              streakCount: 0,
               dailyGoalMinutes: 10,
               reviewsDue: 0,
             ),
@@ -103,7 +114,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.chevron_left,
                         size: 20,
                         color: AppColors.textDark,
@@ -135,7 +146,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                 ],
               ),
             ),
-            if (_path != null) _buildHeaderCard(_path!.header),
+            if (_header != null) _buildHeaderCard(_header!),
             Expanded(child: _buildBody()),
           ],
         ),
@@ -250,6 +261,11 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
+          // ponytail: a locked lesson still opens on tap, deliberately — it is
+          // the only way to reach later units for testing while the track is
+          // being built. The lock styling is honest about the gate; enforcing
+          // it is one line (`onTap: locked ? null : ...`) and must go in
+          // before release.
           onTap: () => context.push(AppRoutes.lessonPath(l.meta.lessonId)),
           child: Container(
             padding: const EdgeInsets.all(14),

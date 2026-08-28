@@ -100,7 +100,7 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                 border: Border.all(color: const Color(0xFFF5F1E6)),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.chevron_left,
                 size: 20,
                 color: AppColors.textDark,
@@ -189,7 +189,7 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.chevron_right,
                 size: 20,
                 color: AppColors.textMuted,

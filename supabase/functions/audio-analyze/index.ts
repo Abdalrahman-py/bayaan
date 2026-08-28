@@ -113,6 +113,23 @@ async function persist(
   }
 }
 
+// Madd lengths are counts in harakāt (docs/CODEBASE_MAP.md:179), not seconds,
+// and the engine only accepts a small range. Anything outside it is dropped so
+// the engine applies its own Hafs default rather than grading against garbage.
+const MADD_KEYS = [
+  "madd_monfasel_len",
+  "madd_mottasel_len",
+  "madd_mottasel_waqf",
+  "madd_aared_len",
+] as const;
+
+function maddQuery(form: FormData): string {
+  return MADD_KEYS.map((k) => {
+    const raw = String(form.get(k) ?? "");
+    return /^[2-6]$/.test(raw) ? `&${k}=${raw}` : "";
+  }).join("");
+}
+
 // Strict integer-or-default parsing for sura/aya: garbage -> default 1, never NaN
 // in the Modal query string (Ktor used toIntOrNull()?.let ?: 1).
 function intParam(form: FormData, name: string): number {
@@ -157,7 +174,10 @@ Deno.serve(async (req) => {
 
   let engineResp;
   try {
-    engineResp = await forwardMultipart(`${MUAALEM_URL}?sura=${sura}&aya=${aya}`, fd);
+    engineResp = await forwardMultipart(
+      `${MUAALEM_URL}?sura=${sura}&aya=${aya}${maddQuery(form)}`,
+      fd,
+    );
   } catch {
     return json({ error: "ml_unavailable", message: "recitation engine did not respond" }, 503);
   }

@@ -34,10 +34,17 @@ class AuthController extends ChangeNotifier {
   AuthUiState get state => _state;
 
   late final SupabaseClient _client;
+
+  /// The client is `late`, so every read of it before [init] would throw a
+  /// LateInitializationError and take the whole screen down with it. Settings
+  /// builds from these getters, and a test (or a very early frame) can reach
+  /// them first — so they answer "nobody is signed in" rather than crash.
+  bool _initialized = false;
   StreamSubscription<AuthState>? _sub;
 
   Future<void> init(SupabaseClient client) async {
     _client = client;
+    _initialized = true;
     // Await the SDK's restored-session read ONCE before subscribing. This is
     // the anti-flash guarantee: the first state we publish is already final —
     // a logged-in user never sees the login screen, even for a frame.
@@ -63,8 +70,18 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  String? get accessToken => _client.auth.currentSession?.accessToken;
-  String? get email => _client.auth.currentUser?.email;
+  String? get accessToken =>
+      _initialized ? _client.auth.currentSession?.accessToken : null;
+  String? get email => _initialized ? _client.auth.currentUser?.email : null;
+
+  /// The name given at sign-up, or from an OAuth provider. Null for accounts
+  /// created before the field existed.
+  String? get displayName {
+    if (!_initialized) return null;
+    final meta = _client.auth.currentUser?.userMetadata;
+    final name = (meta?['full_name'] ?? meta?['name']) as String?;
+    return (name == null || name.trim().isEmpty) ? null : name.trim();
+  }
 
   Future<void> login(String email, String password) async {
     _set(const LoggedOut(submitting: true));
@@ -99,10 +116,20 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> signup(String email, String password) async {
+  /// [name] is stored as `full_name` in the user's Supabase metadata — the
+  /// same place the OAuth providers put it — so a later profiles row or a
+  /// greeting can read one field regardless of how the account was made.
+  Future<void> signup(String email, String password, {String? name}) async {
     _set(const LoggedOut(submitting: true));
     try {
-      final res = await _client.auth.signUp(email: email, password: password);
+      final trimmed = name?.trim();
+      final res = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: (trimmed == null || trimmed.isEmpty)
+            ? null
+            : {'full_name': trimmed},
+      );
       if (res.session == null) {
         _set(const LoggedOut(pendingConfirmation: true));
       }

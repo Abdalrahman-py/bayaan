@@ -111,7 +111,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.emoji_events_rounded, size: 72, color: AppColors.gold),
+              const Icon(Icons.emoji_events_rounded, size: 72, color: AppColors.gold),
               const SizedBox(height: 16),
               Text(
                 'Quiz complete!',
@@ -171,7 +171,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
                 border: Border.all(color: const Color(0xFFF5F1E6)),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.chevron_left,
                 size: 20,
                 color: AppColors.textDark,

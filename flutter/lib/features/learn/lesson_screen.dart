@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../services/auth_controller.dart';
 import '../../services/lesson_audio_player.dart';
+import '../../shared/widgets/arabic_tile.dart';
 import '../../shared/widgets/ornamental_divider.dart';
 import 'lesson_controller.dart';
 import 'models/lesson.dart';
@@ -109,7 +110,7 @@ class _LessonScreenState extends State<LessonScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.close, size: 18, color: AppColors.textDark),
+              child: const Icon(Icons.close, size: 18, color: AppColors.textDark),
             ),
           ),
           const SizedBox(width: 12),
@@ -120,7 +121,7 @@ class _LessonScreenState extends State<LessonScreen> {
                 value: progress,
                 minHeight: 8,
                 backgroundColor: const Color(0xFFF5F1E6),
-                valueColor: AlwaysStoppedAnimation(AppColors.tealStart),
+                valueColor: const AlwaysStoppedAnimation(AppColors.tealStart),
               ),
             ),
           ),
@@ -141,7 +142,11 @@ class _LessonScreenState extends State<LessonScreen> {
           ),
         );
       case LessonPhase.teaching:
-        return _buildTeach();
+        // Scrolls: unit 8's narration plus a full ayah in the glyph tiles is
+        // taller than a phone screen. The button follows the text rather than
+        // being pinned to the bottom, so short lessons don't open on a screen
+        // of empty space.
+        return SingleChildScrollView(child: _buildTeach());
       case LessonPhase.exercise:
       case LessonPhase.itemFeedback:
         return SingleChildScrollView(child: _buildExercise());
@@ -174,23 +179,18 @@ class _LessonScreenState extends State<LessonScreen> {
           if (teach.glyphs.isNotEmpty)
             Wrap(
               alignment: WrapAlignment.center,
-              spacing: 16,
+              // The glyphs are a sequence — the ayat of a surah, the letters of
+              // a family — so they have to run right to left. Laid out LTR,
+              // Al-Ikhlas opened with its second ayah on the right.
+              textDirection: TextDirection.rtl,
+              spacing: 12,
+              runSpacing: 12,
               children: teach.glyphs
                   .map(
-                    (g) => Container(
-                      width: 64,
-                      height: 64,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: AppColors.gold),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        g,
-                        textDirection: TextDirection.rtl,
-                        style: arabic(fontSize: 32, color: AppColors.tealStart),
-                      ),
+                    (g) => ArabicTile(
+                      text: g,
+                      textColor: AppColors.tealStart,
+                      borderColor: AppColors.gold,
                     ),
                   )
                   .toList(),
@@ -199,11 +199,39 @@ class _LessonScreenState extends State<LessonScreen> {
           const OrnamentalDivider(width: double.infinity, opacity: 0.3),
           const SizedBox(height: 16),
           Text(
-            teach.narrationEn,
+            bidi(teach.narrationEn),
             textAlign: TextAlign.center,
             style: pjs(fontSize: 15, height: 1.6, color: AppColors.textDark),
           ),
-          const Spacer(),
+          if (teach.focusEn != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.tealStart.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.center_focus_strong_rounded,
+                      size: 16, color: AppColors.tealStart),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      bidi(teach.focusEn!),
+                      style: pjs(
+                        fontSize: 13,
+                        height: 1.5,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
           SizedBox(
             height: 52,
             child: ElevatedButton(
@@ -250,10 +278,15 @@ class _LessonScreenState extends State<LessonScreen> {
           if (item.promptTextAr != null) ...[
             const SizedBox(height: 24),
             Center(
-              child: Text(
-                item.promptTextAr!,
-                textDirection: TextDirection.rtl,
-                style: arabic(fontSize: 56, color: AppColors.tealStart),
+              // A single letter wants 56pt; a word from unit 7 would run off
+              // the screen at that size, so shrink rather than clip.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  item.promptTextAr!,
+                  textDirection: TextDirection.rtl,
+                  style: arabic(fontSize: 56, color: AppColors.tealStart),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -271,7 +304,7 @@ class _LessonScreenState extends State<LessonScreen> {
                     shape: BoxShape.circle,
                     color: AppColors.tealStart.withValues(alpha: 0.12),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.volume_up,
                     size: 36,
                     color: AppColors.tealStart,
@@ -305,19 +338,10 @@ class _LessonScreenState extends State<LessonScreen> {
   Widget _buildEchoPrompt(LessonItem item) {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: AppColors.gold),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Text(
-            item.referenceText ?? '',
-            textDirection: TextDirection.rtl,
-            textAlign: TextAlign.center,
-            style: arabic(fontSize: 32, color: AppColors.tealStart),
-          ),
+        ArabicTile(
+          text: item.referenceText ?? '',
+          textColor: AppColors.tealStart,
+          borderColor: AppColors.gold,
         ),
         const SizedBox(height: 24),
         GestureDetector(
@@ -326,7 +350,7 @@ class _LessonScreenState extends State<LessonScreen> {
             width: 84,
             height: 84,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.tealStart,
             ),
@@ -348,61 +372,80 @@ class _LessonScreenState extends State<LessonScreen> {
 
   Widget _buildOptions(LessonItem item) {
     final bool isFeedback = _controller.phase == LessonPhase.itemFeedback;
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 12,
-      runSpacing: 12,
-      children: item.options.map((opt) {
-        final isAudio = opt.endsWith('.ogg');
-        final bool isCorrect = opt == item.answer;
-        final bool isPicked = opt == _selectedOption;
+    final bool reveal = _controller.answerRevealed;
+    final bool hintable =
+        item.options
+            .where((o) => o != item.answer && !_controller.eliminated.contains(o))
+            .length >
+        1;
 
-        Color? bg;
-        Color? border;
-        Color textColor = AppColors.tealStart;
+    return Column(
+      children: [
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
+          runSpacing: 12,
+          children: item.options.map((opt) {
+            final isAudio = opt.endsWith('.ogg');
+            final bool isCorrect = opt == item.answer;
+            final bool isPicked = opt == _selectedOption;
+            final bool struck = _controller.eliminated.contains(opt);
 
-        if (isFeedback) {
-          if (isCorrect) {
-            bg = AppColors.success.withValues(alpha: 0.12);
-            border = AppColors.success;
-            textColor = AppColors.success;
-          } else if (isPicked) {
-            bg = AppColors.tajweedError.withValues(alpha: 0.12);
-            border = AppColors.tajweedError;
-            textColor = AppColors.tajweedError;
-          }
-        }
+            Color? bg;
+            Color? border;
+            Color textColor = AppColors.tealStart;
 
-        return GestureDetector(
-          onTap: isFeedback
-              ? null
-              : () {
-                  setState(() => _selectedOption = opt);
-                  if (isAudio) _play(opt);
-                  _controller.answerChoice(opt);
-                },
-          child: Container(
-            width: 72,
-            height: 72,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: bg ?? Colors.white,
-              border: Border.all(
-                color: border ?? const Color(0xFFF5F1E6),
-                width: border != null ? 2 : 1,
+            // A wrong pick is marked wrong; the right answer stays hidden
+            // until the learner asks for it. Showing it on the first miss is
+            // what made "Try Again" pointless.
+            if (isPicked && isFeedback && !isCorrect) {
+              bg = AppColors.tajweedError.withValues(alpha: 0.12);
+              border = AppColors.tajweedError;
+              textColor = AppColors.tajweedError;
+            }
+            if (isCorrect && (reveal || (isFeedback && isPicked))) {
+              bg = AppColors.success.withValues(alpha: 0.12);
+              border = AppColors.success;
+              textColor = AppColors.success;
+            }
+            if (struck) textColor = AppColors.textMuted;
+
+            final tile = ArabicTile(
+              text: opt,
+              icon: isAudio ? Icons.volume_up : null,
+              textColor: textColor,
+              background: struck ? const Color(0xFFF5F1E6) : bg,
+              borderColor: border ?? kTileBorder,
+              borderWidth: border != null ? 2 : 1,
+              onTap: (isFeedback || struck)
+                  ? null
+                  : () {
+                      setState(() => _selectedOption = opt);
+                      if (isAudio) _play(opt);
+                      _controller.answerChoice(opt);
+                    },
+            );
+
+            return struck ? Opacity(opacity: 0.45, child: tile) : tile;
+          }).toList(),
+        ),
+        if (!isFeedback && hintable && _controller.attempts > 0) ...[
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: _controller.requestHint,
+            icon: const Icon(Icons.lightbulb_outline_rounded,
+                size: 18, color: AppColors.gold),
+            label: Text(
+              'Hint — rule one out',
+              style: pjs(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.gold,
               ),
-              borderRadius: BorderRadius.circular(16),
             ),
-            child: isAudio
-                ? Icon(Icons.volume_up, color: textColor, size: 28)
-                : Text(
-                    opt,
-                    textDirection: TextDirection.rtl,
-                    style: arabic(fontSize: 30, color: textColor),
-                  ),
           ),
-        );
-      }).toList(),
+        ],
+      ],
     );
   }
 
@@ -444,6 +487,16 @@ class _LessonScreenState extends State<LessonScreen> {
   Widget _buildDuolingoFeedbackBanner() {
     final correct = _controller.lastCorrect ?? false;
     final feedback = _controller.lastFeedback;
+    final item = _controller.currentItem;
+    final bool isChoice =
+        item.type != ExerciseType.echo &&
+        item.type != ExerciseType.readAloudSyllable;
+    // On a miss the learner has to try again; Continue only appears once
+    // they've got it, asked to see the answer, or missed twice.
+    final bool canAdvance = _controller.canAdvance;
+    final bool offerReveal =
+        !correct && isChoice && !_controller.answerRevealed &&
+        _controller.attempts >= 2;
 
     return Container(
       width: double.infinity,
@@ -473,7 +526,11 @@ class _LessonScreenState extends State<LessonScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  correct ? 'MashaAllah! Correct!' : 'Not quite right',
+                  correct
+                      ? 'MashaAllah! Correct!'
+                      : _controller.answerRevealed
+                      ? "Here's the answer — take it in, then continue"
+                      : 'Not quite — have another go',
                   style: pjs(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -505,8 +562,8 @@ class _LessonScreenState extends State<LessonScreen> {
                       _controller.retryItem();
                     },
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.tajweedError,
-                      side: const BorderSide(color: AppColors.tajweedError),
+                      foregroundColor: AppColors.tealStart,
+                      side: const BorderSide(color: AppColors.tealStart),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
                       ),
@@ -520,32 +577,46 @@ class _LessonScreenState extends State<LessonScreen> {
                 ),
                 const SizedBox(width: 12),
               ],
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() => _selectedOption = null);
-                    _controller.next();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        correct ? AppColors.success : AppColors.tealStart,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100),
+              if (offerReveal) ...[
+                Expanded(
+                  child: TextButton(
+                    onPressed: _controller.revealAnswer,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.textMuted,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: Text(
-                    'Continue',
-                    style: pjs(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                    child: Text(
+                      'Show answer',
+                      style: pjs(fontSize: 14, fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 12),
+              ],
+              if (canAdvance)
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() => _selectedOption = null);
+                      _controller.next();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          correct ? AppColors.success : AppColors.tealStart,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      'Continue',
+                      style: pjs(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
             ],
           ),
         ],

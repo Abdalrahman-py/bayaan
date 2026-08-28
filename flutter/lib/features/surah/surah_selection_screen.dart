@@ -143,7 +143,7 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.search, size: 18, color: AppColors.textMuted),
+                    const Icon(Icons.search, size: 18, color: AppColors.textMuted),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(

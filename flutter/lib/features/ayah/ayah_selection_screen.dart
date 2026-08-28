@@ -118,7 +118,7 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.mic_rounded, size: 18, color: AppColors.tealStart),
+              const Icon(Icons.mic_rounded, size: 18, color: AppColors.tealStart),
               const SizedBox(width: 10),
               Flexible(
                 child: Text(
@@ -162,7 +162,7 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
                   border: Border.all(color: const Color(0xFFF5F1E6)),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.chevron_left,
                   size: 20,
                   color: AppColors.textDark,

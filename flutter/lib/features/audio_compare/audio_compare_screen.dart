@@ -1,25 +1,34 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../models/models.dart';
+import '../../services/app_settings.dart';
+import '../../services/reciter_audio.dart';
+import '../../shared/animation/score_math.dart';
 import 'compare_data.dart';
 import 'widgets/audio_compare_card.dart';
 
 /// Compare screen (ported from the bayyan client): reference ayah plate,
 /// master-recitation card and your-recitation card with error bars derived
-/// from the real mistake list. Reference audio is not bundled yet, so the
-/// waveforms are synthetic and playback is an animated simulation.
+/// from the real mistake list. The master card streams the chosen reciter's
+/// recording; the user's own recitation is not kept after upload, so that
+/// card's waveform is still a stand-in.
 class AudioCompareScreen extends StatefulWidget {
   final Verse verse;
   final List<Mistake> mistakes;
-  final String masterName;
+  final List<SifatError> sifatErrors;
+
+  /// The user's own recording of this ayah, when they have just recited it.
+  final Uint8List? recording;
 
   const AudioCompareScreen({
     super.key,
     required this.verse,
     required this.mistakes,
-    this.masterName = 'Sheikh Al-Husary',
+    this.sifatErrors = const [],
+    this.recording,
   });
 
   @override
@@ -38,10 +47,12 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
 
   static const int _barCount = 24;
 
-  int get _score {
-    final issues = widget.mistakes.length;
-    return (100 - (issues * 12)).clamp(15, 95);
-  }
+  final Reciter _reciter = AppSettings.instance.reciter;
+
+  int get _score => recitationScore(
+    mistakes: widget.mistakes.length,
+    sifatErrors: widget.sifatErrors.length,
+  );
 
   @override
   void initState() {
@@ -103,6 +114,8 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
                   _buildMasterCard(),
                   const SizedBox(height: 20),
                   _buildUserCard(),
+                  const SizedBox(height: 20),
+                  _buildMatchCard(),
                 ],
               ),
             ),
@@ -130,7 +143,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
                   border: Border.all(color: const Color(0xFFF5F1E6)),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.chevron_left,
                   size: 16,
                   color: AppColors.textDark,
@@ -202,7 +215,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
           badgeLabel: 'Master Recitation',
           badgeBg: AppColors.cream,
           badgeTextColor: AppColors.gold,
-          trailingText: widget.masterName,
+          trailingText: _reciter.shortName,
           trailingTextColor: AppColors.textMuted,
           playButtonColor: AppColors.tealStart,
           iconColor: Colors.white,
@@ -212,7 +225,128 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
             seed: widget.verse.sura * 1000 + widget.verse.aya,
           ),
           waveformColor: AppColors.tealStart,
+          audioUrl: _reciter.urlFor(widget.verse.sura, widget.verse.aya),
+          autoPlay: AppSettings.instance.autoPlayReference,
         ),
+      ),
+    );
+  }
+
+  /// Ranks what went wrong most often, so "practise this next" is concrete.
+  List<MapEntry<String, int>> get _focusAreas {
+    final counts = <String, int>{};
+    for (final m in widget.mistakes) {
+      final label = m.ruleNameEn ?? (m.isTajweed ? 'Tajweed' : 'Pronunciation');
+      counts[label] = (counts[label] ?? 0) + 1;
+    }
+    for (final e in widget.sifatErrors) {
+      counts[e.attribute] = (counts[e.attribute] ?? 0) + 1;
+    }
+    final entries = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return entries.take(3).toList();
+  }
+
+  /// How close the attempt was, and what to work on. The number comes from the
+  /// grading engine's phoneme and sifat comparison against the canonical text
+  /// — not from matching the two waveforms against each other, which the app
+  /// does not do.
+  Widget _buildMatchCard() {
+    final focus = _focusAreas;
+    final total = widget.mistakes.length + widget.sifatErrors.length;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFF5F1E6)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'How close you were',
+                style: pjs(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
+              ),
+              Text(
+                '$_score%',
+                style: pjs(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.tealStart,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: _score / 100,
+              minHeight: 8,
+              backgroundColor: const Color(0xFFF5F1E6),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.tealStart,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            total == 0
+                ? 'Matched the reference with no issues detected.'
+                : '$total ${total == 1 ? 'difference' : 'differences'} from '
+                      '${_reciter.shortName}\'s recitation.',
+            style: pjs(fontSize: 13, color: AppColors.textMuted),
+          ),
+          if (focus.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Focus on',
+              style: pjs(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final entry in focus)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      entry.value > 1
+                          ? '${entry.key} ×${entry.value}'
+                          : entry.key,
+                      style: pjs(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -242,6 +376,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
           ),
           waveformColor: AppColors.textMuted,
           errorBarIndices: errorBars,
+          audioBytes: widget.recording,
         ),
       ),
     );

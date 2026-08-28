@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:record/record.dart';
 
 import '../models/models.dart';
+import 'app_settings.dart';
 import 'quran_text.dart';
 
 /// Backend = Supabase Edge Functions (Ktor retired). Same multipart contract
@@ -32,6 +33,17 @@ class RecitationController extends ChangeNotifier {
   static const _sampleRate = 16000;
 
   final Map<String, RecitationUiState> _states = {};
+
+  // The most recent recording, kept so the compare screen can play it back
+  // against the qari. One slot only: the bytes are ~320KB for a ten-second
+  // ayah and nothing needs an older take.
+  String? _recordingKey;
+  Uint8List? _recording;
+
+  /// The user's last recording of this ayah, or null if they haven't recited
+  /// it (or recited something else since).
+  Uint8List? recordingFor(int sura, int aya) =>
+      _recordingKey == '$sura:$aya' ? _recording : null;
   final Map<String, _ActiveRecording> _active = {};
   // Lazy: the platform recorder is only reachable once recording starts, so
   // constructing this controller stays safe on hosts without the plugin.
@@ -145,7 +157,10 @@ class RecitationController extends ChangeNotifier {
       return;
     }
     _set(key, Uploading(verse));
-    final result = await _analyze(buildWav(pcm), sura, aya, verse, token);
+    final wav = buildWav(pcm);
+    _recordingKey = key;
+    _recording = wav;
+    final result = await _analyze(wav, sura, aya, verse, token);
     _set(key, result);
   }
 
@@ -171,7 +186,11 @@ class RecitationController extends ChangeNotifier {
           ),
         )
         ..fields['sura'] = '$sura'
-        ..fields['aya'] = '$aya';
+        ..fields['aya'] = '$aya'
+        // The learner's madd lengths. The edge function validates these and
+        // forwards them to the engine; omitted or invalid, the engine falls
+        // back to its own Hafs defaults.
+        ..fields.addAll(AppSettings.instance.maddStyle.fields);
       final streamed = await req.send().timeout(const Duration(seconds: 60));
       // The read needs its own timeout — a stalled edge function response
       // must not hang the spinner forever.
