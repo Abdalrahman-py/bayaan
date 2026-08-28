@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
-import '../../services/app_settings.dart';
 import '../../services/auth_controller.dart';
 import '../../services/learn_repository.dart';
 import '../../services/progress_repository.dart';
@@ -159,11 +158,6 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget _buildMetricsGrid(_Stats stats) {
     final summary = stats.summary;
     final header = stats.header;
-    final weekStart = _startOfDay(DateTime.now()).subtract(const Duration(days: 6));
-    final thisWeek = stats.sessions
-        .where((s) => !s.createdAt.isBefore(weekStart))
-        .length;
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final double itemWidth = (constraints.maxWidth - 12) / 2;
@@ -178,7 +172,6 @@ class _StatsScreenState extends State<StatsScreen> {
               iconBgColor: const Color(0xFFFFF7ED),
               value: '${header.streakCount} ${header.streakCount == 1 ? "Day" : "Days"}',
               label: 'Streak',
-              sublabel: '${AppSettings.instance.dailyGoalMinutes}m daily goal',
             ),
             _buildMetricTile(
               width: itemWidth,
@@ -187,7 +180,6 @@ class _StatsScreenState extends State<StatsScreen> {
               iconBgColor: AppColors.tealStart.withValues(alpha: 0.1),
               value: '${summary.totalSessions}',
               label: 'Ayahs Recited',
-              sublabel: thisWeek == 0 ? 'None this week' : '+$thisWeek this week',
             ),
             _buildMetricTile(
               width: itemWidth,
@@ -196,8 +188,6 @@ class _StatsScreenState extends State<StatsScreen> {
               iconBgColor: AppColors.success.withValues(alpha: 0.1),
               value: '${(summary.overallAccuracy * 100).round()}%',
               label: 'Tajweed Accuracy',
-              sublabel:
-                  '${summary.perfectSessions}/${summary.totalSessions} flawless',
             ),
             _buildMetricTile(
               width: itemWidth,
@@ -206,7 +196,6 @@ class _StatsScreenState extends State<StatsScreen> {
               iconBgColor: AppColors.gold.withValues(alpha: 0.15),
               value: '${header.xp}',
               label: 'Total XP',
-              sublabel: 'Level ${header.arabicLevel}',
             ),
           ],
         );
@@ -221,7 +210,6 @@ class _StatsScreenState extends State<StatsScreen> {
     required Color iconBgColor,
     required String value,
     required String label,
-    required String sublabel,
   }) {
     return Container(
       width: width,
@@ -234,31 +222,15 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: iconBgColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: iconColor, size: 22),
-              ),
-              Flexible(
-                child: Text(
-                  sublabel,
-                  textAlign: TextAlign.end,
-                  style: pjs(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
-            ],
+          Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 22),
           ),
           const SizedBox(height: 12),
           Text(
