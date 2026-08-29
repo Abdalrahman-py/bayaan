@@ -5,12 +5,11 @@ import 'package:http/http.dart' as http;
 import '../features/learn/models/lesson.dart';
 import 'quran_text.dart';
 
-/// Client for the `learn` Edge Function — GET path, POST complete/placement,
+/// Client for the backend's /learn routes — GET path, POST complete/placement,
 /// GET/POST reviews. Same auth pattern as RecitationController's `_analyze`:
 /// Bearer user JWT + the anon apikey header.
 class LearnRepository {
-  static Uri _uri(String sub) =>
-      Uri.parse('$kSupabaseUrl/functions/v1/learn/$sub');
+  static Uri _uri(String sub) => Uri.parse('$kBackendUrl/learn/$sub');
 
   static Map<String, String> _headers(String token) => {
     'Authorization': 'Bearer $token',

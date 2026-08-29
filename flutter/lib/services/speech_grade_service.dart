@@ -68,7 +68,7 @@ class SpeechGradeService {
     final req =
         http.MultipartRequest(
             'POST',
-            Uri.parse('$kSupabaseUrl/functions/v1/speech-grade'),
+            Uri.parse('$kBackendUrl/speech/grade'),
           )
           ..headers['Authorization'] = 'Bearer $token'
           ..headers['apikey'] = kAnonKey

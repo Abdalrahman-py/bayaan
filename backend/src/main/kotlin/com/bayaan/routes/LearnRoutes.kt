@@ -93,6 +93,16 @@ data class PlacementRequest(val item_results: List<PlacementItemResult> = emptyL
 @Serializable
 data class PlacementResponse(val arabic_level: Int, val placement_message_key: String)
 
+// Placement gating — how a learner's arabic_level (0–8, written by /learn/placement)
+// turns into unlocked units. Level N means the learner demonstrated units 1..N, so those
+// units plus the next one open immediately — available, never completed. Marking them
+// completed would invent lesson_progress rows for work nobody did; the learner can still
+// walk back through anything below their level. Only the arabic track is placed: nothing
+// in the placement test measures tajweed. `position` is the unit's 1-based index in
+// curriculum file order, matching curriculum_units.position in backend/sql/0005.
+private fun placementUnlocks(track: String, position: Int, arabicLevel: Int): Boolean =
+    track == "arabic" && position <= arabicLevel + 1
+
 fun Route.learnRoutes() {
 
     get("/learn/path") {
@@ -104,8 +114,10 @@ fun Route.learnRoutes() {
         // Single global chain in curriculum file order: a lesson is available once the
         // immediately-preceding lesson (across the whole file) is completed. This also
         // gates the tajweed track behind the last Arabic lesson — graduation unlocks it.
+        // Placement opens an additional prefix of the arabic track on top of that chain.
         var prevCompleted = true
-        val units = Curriculum.file.units.map { unit ->
+        val units = Curriculum.file.units.withIndex().map { (index, unit) ->
+            val unitPosition = index + 1
             UnitResponse(
                 unit_id = unit.unit_id,
                 track = unit.track,
@@ -116,7 +128,9 @@ fun Route.learnRoutes() {
                     val status = when {
                         state?.status == "completed" -> "completed"
                         state?.status == "in_progress" -> "in_progress"
-                        prevCompleted -> "available"
+                        prevCompleted ||
+                            placementUnlocks(unit.track, unitPosition, profile.arabicLevel) ->
+                            "available"
                         else -> "locked"
                     }
                     prevCompleted = status == "completed"

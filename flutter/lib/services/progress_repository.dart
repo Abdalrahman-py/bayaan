@@ -4,11 +4,10 @@ import 'package:http/http.dart' as http;
 
 import 'quran_text.dart';
 
-/// Client for the `progress` Edge Function — GET summary and GET sessions.
+/// Client for the backend's /progress routes — GET summary and GET sessions.
 /// Same auth pattern as [LearnRepository]: Bearer user JWT + anon apikey.
 class ProgressRepository {
-  static Uri _uri(String sub) =>
-      Uri.parse('$kSupabaseUrl/functions/v1/progress$sub');
+  static Uri _uri(String sub) => Uri.parse('$kBackendUrl/progress$sub');
 
   static Map<String, String> _headers(String token) => {
     'Authorization': 'Bearer $token',

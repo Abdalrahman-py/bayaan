@@ -18,7 +18,8 @@ import java.util.UUID
 private val log = LoggerFactory.getLogger("com.bayaan.RecitationAnalysis")
 
 data class EngineResponse(val statusCode: Int, val body: String)
-typealias EngineAdapter = suspend (audio: ByteArray, sura: Int, aya: Int) -> EngineResponse
+typealias EngineAdapter =
+    suspend (audio: ByteArray, sura: Int, aya: Int, maddQuery: String) -> EngineResponse
 
 // The quran-muaalem engine deployed on Modal. Overridable via env for local/staging swaps.
 private val MUAALEM_URL = System.getenv("MUAALEM_URL")
@@ -29,8 +30,8 @@ private val engineClient = HttpClient(CIO) {
     engine { requestTimeout = 60_000 }
 }
 
-val defaultEngineAdapter: EngineAdapter = { audio, sura, aya ->
-    val resp = engineClient.post("$MUAALEM_URL?sura=$sura&aya=$aya") {
+val defaultEngineAdapter: EngineAdapter = { audio, sura, aya, maddQuery ->
+    val resp = engineClient.post("$MUAALEM_URL?sura=$sura&aya=$aya$maddQuery") {
         setBody(MultiPartFormDataContent(formData {
             append("audio", audio, Headers.build {
                 append(HttpHeaders.ContentDisposition, "filename=\"recording.wav\"")
@@ -49,9 +50,15 @@ sealed class AnalysisResult {
 
 class RecitationAnalysis(private val engine: EngineAdapter = defaultEngineAdapter) {
 
-    suspend fun analyze(audio: ByteArray, sura: Int, aya: Int, userId: UUID): AnalysisResult {
+    suspend fun analyze(
+        audio: ByteArray,
+        sura: Int,
+        aya: Int,
+        userId: UUID,
+        maddQuery: String = "",
+    ): AnalysisResult {
         val engineResp = try {
-            engine(audio, sura, aya)
+            engine(audio, sura, aya, maddQuery)
         } catch (_: Exception) {
             return AnalysisResult.EngineFailed
         }

@@ -31,7 +31,7 @@ class AnalyzeRouteTest {
             configureJwt(issuer)
             routing {
                 authenticate("auth-jwt") {
-                    analyzeRoute(RecitationAnalysis(engine = { _, _, _ ->
+                    analyzeRoute(RecitationAnalysis(engine = { _, _, _, _ ->
                         EngineResponse(422, """{"error":"unprocessable"}""")
                     }))
                 }
@@ -54,7 +54,7 @@ class AnalyzeRouteTest {
             configureJwt(issuer)
             routing {
                 authenticate("auth-jwt") {
-                    analyzeRoute(RecitationAnalysis(engine = { _, _, _ ->
+                    analyzeRoute(RecitationAnalysis(engine = { _, _, _, _ ->
                         EngineResponse(200, "not-json-at-all")
                     }))
                 }
@@ -77,7 +77,7 @@ class AnalyzeRouteTest {
             configureJwt(issuer)
             routing {
                 authenticate("auth-jwt") {
-                    analyzeRoute(RecitationAnalysis(engine = { _, _, _ ->
+                    analyzeRoute(RecitationAnalysis(engine = { _, _, _, _ ->
                         throw Exception("connection refused")
                     }))
                 }
@@ -100,7 +100,7 @@ class AnalyzeRouteTest {
             configureJwt(issuer)
             routing {
                 authenticate("auth-jwt") {
-                    analyzeRoute(RecitationAnalysis(engine = { _, _, _ ->
+                    analyzeRoute(RecitationAnalysis(engine = { _, _, _, _ ->
                         EngineResponse(200, """{"all_correct":true,"errors":[]}""")
                     }))
                 }
