@@ -9,6 +9,12 @@ import '../models/models.dart';
 const kSupabaseUrl = 'https://djcuxaziipgjlmdfkeqz.supabase.co';
 const kAnonKey = 'sb_publishable_2_fHjweJj84IuJkP9elIGw_31m1xWQY';
 
+/// Backend REST service — the Ktor service on Render. Auth stays with Supabase
+/// above (it issues the JWT); every application endpoint is served from here.
+/// The Edge Functions port of these same routes lives in supabase/functions/
+/// and is deferred — swap this one const to switch back.
+const kBackendUrl = 'https://bayaan-backend.onrender.com';
+
 /// Ported from android/.../ui/model/QuranText.kt — full Uthmani text +
 /// chapter metadata loaded from bundled assets.
 class QuranText {

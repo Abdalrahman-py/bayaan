@@ -10,11 +10,11 @@ import '../models/models.dart';
 import 'app_settings.dart';
 import 'quran_text.dart';
 
-/// Backend = Supabase Edge Functions (Ktor retired). Same multipart contract
-/// as the old Ktor /audio/analyze: audio file + sura/aya form fields,
-/// engine JSON passed through. Points at the promoted audio-analyze function
-/// (the spike-* function this replaced is scheduled for deletion).
-String get kAnalyzeUrl => '$kSupabaseUrl/functions/v1/audio-analyze';
+/// Backend = the Ktor service on Render. Multipart contract: audio file +
+/// sura/aya form fields + the learner's madd lengths, engine JSON passed
+/// through unchanged so character offsets stay aligned to the engine's own
+/// reference text.
+String get kAnalyzeUrl => '$kBackendUrl/audio/analyze';
 
 /// One active recording session — everything needed to tear it down cleanly.
 class _ActiveRecording {
