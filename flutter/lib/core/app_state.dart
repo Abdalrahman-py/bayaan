@@ -23,11 +23,10 @@ class AppState extends ChangeNotifier {
 
   bool _bootstrapped = false;
 
-  /// Matches the SplashScreen entrance animation. Boot work is usually far
-  /// faster than this, and without a floor the logo flashes and vanishes.
-  static const splashWindow = Duration(milliseconds: 1600);
-
-  Future<void> bootstrap({Duration minSplash = splashWindow}) async {
+  /// No artificial floor: the native launch screen is the branding, and the
+  /// splash route just holds its colour, so there is no animation left to wait
+  /// for. Kept as a parameter because a test still needs to gate on it.
+  Future<void> bootstrap({Duration minSplash = Duration.zero}) async {
     if (_bootstrapped) return;
     _bootstrapped = true;
     final floor = Future<void>.delayed(minSplash);
@@ -52,7 +51,7 @@ class AppState extends ChangeNotifier {
   }
 
   /// Re-runs a boot that failed on assets. Clears the failure first so the
-  /// splash drops back to its plain animation while the retry is in flight.
+  /// splash drops back to its plain colour while the retry is in flight.
   Future<void> retryBootstrap() {
     _bootstrapped = false;
     assetError = false;

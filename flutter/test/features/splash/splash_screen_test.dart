@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bayaan/core/app_state.dart';
+import 'package:bayaan/core/theme/app_colors.dart';
 import 'package:bayaan/features/splash/splash_screen.dart';
 
 void main() {
@@ -36,7 +37,6 @@ void main() {
 
     expect(find.text("Couldn't load the Quran text"), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
-    expect(find.text('Instant Precision · Reverential Practice'), findsNothing);
   });
 
   testWidgets('retrying clears the failure and boots again', (tester) async {
@@ -57,18 +57,20 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
   });
 
-  testWidgets('a healthy boot shows the tagline and no retry', (tester) async {
+  testWidgets('a healthy boot shows nothing over the native splash colour', (
+    tester,
+  ) async {
     final state = AppState();
     addTearDown(state.dispose);
 
     await tester.pumpWidget(MaterialApp(home: SplashScreen(state: state)));
     await tester.pump();
 
-    expect(
-      find.text('Instant Precision · Reverential Practice'),
-      findsOneWidget,
-    );
-    expect(find.text('Try again'), findsNothing);
+    // Branding belongs to the native launch screen; this route only continues
+    // its colour, so a healthy boot draws no text at all.
+    expect(find.byType(Text), findsNothing);
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.backgroundColor, AppColors.tealStart);
 
     await tester.pump(const Duration(seconds: 2));
   });
