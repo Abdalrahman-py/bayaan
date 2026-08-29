@@ -70,12 +70,14 @@ class LearnRoutesTest {
 
 
     @Test
-    fun `fresh account has only the first lesson available`() = learnApp { ctx ->
+    fun `a fresh account has the whole first unit open and the rest locked`() = learnApp { ctx ->
         val body = decode<LearnPathResponse>(path(client, ctx))
         assertEquals(HeaderResponse(0, 0, 0, 10, 0), body.header)
         val lessons = body.units.flatMap { it.lessons }
-        assertEquals("available", lessons.first().status)
-        assertTrue(lessons.drop(1).all { it.status == "locked" })
+        // arabic_level 0 places the learner at unit 1, so all six of its lessons open at
+        // once; unit 2 onward still waits on the completion chain.
+        assertTrue(lessons.take(6).all { it.status == "available" })
+        assertTrue(lessons.drop(6).all { it.status == "locked" })
     }
 
 
@@ -92,12 +94,24 @@ class LearnRoutesTest {
     }
 
     @Test
-    fun `passing a lesson unlocks the next one, later ones stay locked`() = learnApp { ctx ->
+    fun `passing a lesson completes it and leaves the next unit gated`() = learnApp { ctx ->
         complete(client, ctx, "ar.1.1", 0.9)
         val lessons = decode<LearnPathResponse>(path(client, ctx)).units.flatMap { it.lessons }
         assertEquals("completed", lessons[0].status)
         assertEquals("available", lessons[1].status)
-        assertEquals("locked", lessons[2].status)
+        // ar.2.1 — placement has not reached unit 2, and the chain has not either.
+        assertEquals("locked", lessons[6].status)
+    }
+
+    @Test
+    fun `placement opens every unit up to one past the assigned level`() = learnApp { ctx ->
+        // Two wrong answers place the learner at level 2 (see the placement tests below).
+        placement(client, ctx, List(2) { PlacementItemResult("x", correct = false) })
+        val units = decode<LearnPathResponse>(path(client, ctx)).units
+        // Level 2 opens units at position 1..3; position 4 onward stays gated, and the
+        // tajweed units are never placed.
+        assertTrue(units.take(3).flatMap { it.lessons }.all { it.status == "available" })
+        assertTrue(units.drop(3).flatMap { it.lessons }.all { it.status == "locked" })
     }
 
     @Test
