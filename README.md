@@ -1,109 +1,139 @@
 # Bayaan
 
-An AI-powered Quran recitation coach for Android. Pick an ayah, record your recitation, and Bayaan flags Tajweed and pronunciation mistakes directly on the Arabic script — no teacher required.
+An AI-powered Quran recitation coach and Arabic learning companion. Recite an ayah to receive instant, per-character Tajweed and pronunciation feedback directly on the Uthmani script, compare your recitation against master reciters (e.g. Al-Husary), practice interactive Tajweed quizzes, and progress through structured Arabic foundation lessons.
 
-**Status: Learning track MVP** — guided Arabic curriculum with real-time speech grading, XP/streaks, and spaced repetition. Full recitation analysis loop with page-faithful mushaf (604 pages). Ready for graduation submission.
+---
 
-## What's Built
+## Current Status & Overview
 
-### Android — Kotlin, Jetpack Compose, Material 3
-- 4-tab bottom nav (Learn · Qur'an · Progress · Profile)
-- **Learn tab:** curriculum roadmap with animated nodes, server-driven progress/locks
-- **Lesson player:** 6 exercise types (listen-pick, read-pick, discriminate, odd-one-out, connect, echo with real mic grading)
-- **Qur'an tab:** full page-faithful QCF mushaf browser — all 114 surahs, 604 pages, RTL pager
-- **Recitation screen:** record → upload → per-character mistake highlighting + sifat analysis
-- **Progress tab:** streak/XP header, weak-rules breakdown, session history
-- Premium feel: score ring, confetti canvas, haptics, sound effects, animated transitions
-- Supabase Auth (email/password) with local token verification
-
-### Backend — Kotlin, Ktor
-- JWT verification via Supabase JWKS/ES256 (no per-request network roundtrip)
-- `/audio/analyze` — forward audio to Muaalem engine, persist results
-- `/speech/grade` — grade arbitrary Uthmani text for echo exercises
-- `/learn/path`, `/learn/complete`, `/learn/reviews`, `/learn/placement` — full learning track API
-- `/progress`, `/progress/sessions` — paginated history with mistake breakdown
-- Exposed ORM + HikariCP → Supabase Postgres (11 tables)
-- Deployed on Render (Docker, free tier)
-
-### ML — Muaalem on Modal GPU
-- `/correct` — grade full ayat against Quran database
-- `/grade-text` — grade arbitrary Uthmani text (syllables, words) — enables Arabic track echo exercises
-- 10 sifat classification heads (ghunnah, qalqalah, tafkheem, etc.)
-- Scale-to-zero (~$0 idle), ~24s cold start, ~1.7s warm
-
-### Content Pipeline
-- 3 authored units (17 lessons) with recognition + echo exercises
-- JSON schema-validated at build time by `scripts/build_content.py`
-- Bundled as Android assets
-
-## Architecture
+Bayaan is a complete end-to-end platform featuring a **Flutter** client (with a native **Jetpack Compose** legacy reference), a **Ktor** backend API proxy, a **Modal GPU** ML recitation engine (powered by *quran-muaalem*), and a **Supabase** Postgres + Auth datastore.
 
 ```
-[Android App] ──JWT + audio──▶ [Ktor Backend (Render)]
-     ▲                              │
-     │                  forward audio │ verify locally (JWKS)
-     │                              ▼
-     │               [Muaalem Engine (Modal GPU)]
-     │                              │
-     +────── JSON: errors ──────────+
-                                    │
-                    persist session + mistakes
-                                    ▼
-                        [Supabase Postgres]
+┌──────────────────────────────────────────────────────────┐
+│                   Flutter Client App                     │
+│  (Home · Surahs / 604p Mushaf · Stats · Settings · Quiz) │
+└────────────────────────────┬─────────────────────────────┘
+                             │ JWT + Audio (WAV)
+                             ▼
+┌──────────────────────────────────────────────────────────┐
+│                Ktor Backend API (Render)                 │
+│       • JWKS/ES256 Token Verification                    │
+│       • REST API: /audio/analyze, /speech/grade, /learn  │
+│       • Supabase Postgres Persistence                    │
+└────────────────────────────┬─────────────────────────────┘
+                             │ Audio + Uthmani Reference
+                             ▼
+┌──────────────────────────────────────────────────────────┐
+│               Muaalem ML Engine (Modal GPU)              │
+│       • Multi-task Wav2Vec2 + CTC Decoding               │
+│       • Full Ayah & Phrase Speech Grading                │
+│       • 10 Sifāt Classification Heads (Ghunnah, etc.)    │
+└──────────────────────────────────────────────────────────┘
 ```
 
-## Documentation
+---
 
-| Doc | What's in it |
-|---|---|
-| [Graduation Report](docs/GRADUATION_REPORT.md) | Full project report (abstract, architecture, implementation, testing) |
-| [Codebase Map](docs/CODEBASE_MAP.md) | System design, data flow, every moving part |
-| [Production Plan](docs/PRODUCTION_PLAN.md) | Milestone-by-milestone build spec (M0–M8) |
-| [API Spec](docs/api-spec.md) | Every endpoint, request/response shapes, error codes |
-| [Tajweed Rules](docs/tajweed-rules.md) | The rules the engine detects, with examples |
-| [Grading Tiers Decision](docs/decisions/grading-tiers.md) | Spike S1 results + Path A vs B decision |
-| [Team Plan](docs/TEAM_PLAN.md) | Team split (Abdalrahman + Ramzi + Gemini) |
+## What's Built & Working
+
+### 1. Mobile Client (`flutter/`)
+- **Dynamic Theming (`AppPalette`)**: Automatic Dark/Light mode support with bespoke Islamic aesthetics (emerald green, deep slate `#0F172A`, warm gold `#D4AF37`, and cream).
+- **Recitation & Tajweed Coach**:
+  - Voice recording with real-time waveform visualization.
+  - Per-character mistake overlays (Madd lengths, Iqlab, Idgham, Ikhfaa, deletions, additions).
+  - Letter Quality (Sifāt) analysis covering 10 phonetic heads with acoustic `[pad]` artifact filtering.
+  - Celebration dialogs, streak tracking, and score animations.
+- **Audio Comparison with Master Reciters**:
+  - Compare recitations against Sheikh Mahmoud Khalil Al-Husary.
+  - Dual synchronized waveform players and similarity scoring.
+- **Full Mushaf Browser**:
+  - Page-faithful 604-page Madani Mushaf with Uthmani script (`AmiriQuran` font).
+  - Surah index with search, filters (All / Favorites / Recent), and quick jump.
+- **Learn Arabic Track**:
+  - Adaptive placement test to determine skill level.
+  - Visual curriculum roadmap with interactive nodes, unit progress, and spaced repetition.
+  - Multi-format exercises (listen-and-pick, echo practice, discrimination).
+- **Quizzes & Tests**:
+  - Tajweed tests, Quran trivia, and Islamic general knowledge.
+  - Gamified score tracking, streaks, and explanations.
+- **Settings & Profile**:
+  - Multi-account manager with instant switcher.
+  - Customization for Madd recitation styles (Hafs lengths), theme preferences, and offline caching.
+  - Supabase Auth (Email + Google OAuth) with guest mode fallback.
+
+### 2. Backend API (`backend/`)
+- **Framework**: Kotlin with Ktor, Netty, and Exposed ORM.
+- **Authentication**: Zero-roundtrip JWT verification using Supabase JWKS (ES256).
+- **Core Endpoints**:
+  - `POST /audio/analyze`: Ayah recitation analysis proxying Modal GPU with session & mistake persistence.
+  - `POST /speech/grade`: Short phrase and syllable speech grading for Arabic track lessons.
+  - `GET /learn/path`, `POST /learn/complete`, `GET /learn/reviews`, `POST /learn/placement`: Full learning track progression and spaced repetition.
+  - `GET /progress/summary`, `GET /progress/sessions`: Historical statistics and weak-rule analytics.
+- **Database**: Supabase Postgres with connection pooling (HikariCP) and migration scripts (`sql/`).
+- **Hosting**: Render Docker deployment.
+
+### 3. ML Recitation Engine (`ml/`)
+- **Engine**: Pretrained `quran-muaalem` model on serverless GPU (Modal L4).
+- **Endpoints**:
+  - `POST /correct`: Ayah analysis against Quran database.
+  - `POST /grade-text`: Arbitrary Uthmani text grading.
+  - `GET /healthz`: Liveness probe.
+- **Sifāt Heads**: 10 phonetic attribute heads (Qalqalah, Ghunnah, Tafkheem/Tarqeeq, Hams/Jahr, Shiddah/Rakhawah, Itbaq, Safeer, Tikraar, Tafashie, Istitala).
+- **Acoustic Sanitization**: Filters CTC blank/padding tokens (`[pad]`) to prevent unaligned frames from producing false letter-quality errors.
+
+---
+
+## Repository Structure
+
+```
+bayaan/
+├── flutter/          # Primary Flutter mobile app (iOS & Android)
+├── backend/          # Ktor API proxy & database backend
+├── ml/               # Modal serverless GPU deployment script for Muaalem
+├── supabase/         # Supabase Edge Functions & SQL migrations
+├── android/          # Native Jetpack Compose Android client (reference)
+├── docs/             # Architecture, API specifications, and Tajweed definitions
+└── scripts/          # Developer tooling & build scripts
+```
+
+---
 
 ## Quick Start
 
-### Backend
+### 1. Flutter Mobile App
+```bash
+cd flutter
+flutter pub get
+flutter run
+```
+*Run tests:* `flutter test`
+
+### 2. Backend (Ktor)
 ```bash
 cd backend
-./gradlew run   # needs SUPABASE_DB_URL and SUPABASE_PROJECT_REF env vars
+# Set SUPABASE_DB_URL and SUPABASE_PROJECT_REF in .env
+./gradlew run
 ```
+*Run tests:* `./gradlew test`
 
-### Android
-```bash
-cd android
-./gradlew assembleDebug
-adb install app/build/outputs/apk/debug/app-debug.apk
-```
-
-### ML Engine
+### 3. ML Service (Modal)
 ```bash
 cd ml
+source .venv/bin/activate
 modal deploy muaalem_modal.py
 ```
 
-## Database Setup
-Apply the migration in Supabase SQL editor:
-```sql
--- backend/sql/0001_mvp_learn_tables.sql
-```
+---
 
-## Roadmap
+## Documentation
 
-| Milestone | Status |
-|---|---|
-| M0 — App shell (4-tab nav, design system) | ✅ Done |
-| M1 — Content pipeline + curriculum v1 | ✅ Done (Units 1–3) |
-| M2 — Lesson player (recognition exercises) | ✅ Done |
-| M3 — Voice loop (echo grading) | ✅ Done |
-| M4 — Learn backend (progress, XP, SRS, placement) | ✅ Done |
-| M5 — LLM tutor integration | ⬜ Planned |
-| M6 — Content complete (Units 4–8) | ⬜ Planned |
-| M7 — Tajweed guided-lesson track | ⬜ Planned (backend ready) |
-| M8 — Production hardening & launch | ⬜ Planned |
+- [Codebase Map](docs/CODEBASE_MAP.md) — Architectural overview and data flow.
+- [API Specification](docs/api-spec.md) — Endpoint contracts, request/response schemas, and error codes.
+- [Tajweed Rule Definitions](docs/tajweed-rules.md) — Phonetic specifications and detected rules.
+- [Graduation Report](docs/GRADUATION_REPORT.md) — Full technical project report.
+- [Team Plan](docs/TEAM_PLAN.md) — Roles and working model.
+
+---
 
 ## License
-Private — graduation project. QCF font license is showcase-only pending KFGQPC permission.
+
+Private / Academic project. Quranic scripts and fonts are licensed under their respective open and KFGQPC showcase permissions.

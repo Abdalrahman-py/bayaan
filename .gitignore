@@ -93,3 +93,6 @@ docs.zip
 
 # Supabase CLI local state — machine-specific (project ref/link info), never commit.
 supabase/.temp/
+
+# Local MCP and tool configs
+config/
