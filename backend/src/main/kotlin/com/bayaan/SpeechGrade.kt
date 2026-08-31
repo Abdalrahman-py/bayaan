@@ -224,6 +224,9 @@ object SpeechGradeNormalizer {
         val attribute = obj.str("attribute") ?: return null
         val expected = obj.str("expected") ?: return null
         val predicted = obj.str("predicted") ?: return null
+        if (predicted.trim().lowercase() in listOf("[pad]", "<pad>", "pad", "none", "")) {
+            return null
+        }
         val group = obj.str("phonemes_group") ?: ""
 
         // Only surface the sifat heads that map cleanly to client feedback keys.

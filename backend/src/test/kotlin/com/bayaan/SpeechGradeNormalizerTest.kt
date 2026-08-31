@@ -68,15 +68,33 @@ class SpeechGradeNormalizerTest {
     }
 
     @Test
-    fun `two issues yield fail`() {
+    fun `multiple minor issues fail`() {
         val body = """
             {"errors":[
-              {"uthmani_pos":[0,1],"speech_error_type":"replace","expected_ph":"صَ","preditected_ph":"سَ"},
-              {"uthmani_pos":[1,2],"speech_error_type":"replace","expected_ph":"ا","preditected_ph":"ي"}
+              {"uthmani_pos":[0,1],"speech_error_type":"replace","expected_ph":"صَ","preditected_ph":"سَ","expected_len":null,"predicted_len":null},
+              {"uthmani_pos":[1,2],"speech_error_type":"replace","expected_ph":"طَ","preditected_ph":"تَ","expected_len":null,"predicted_len":null}
             ],"sifat_errors":[]}
         """.trimIndent()
-        val r = SpeechGradeNormalizer.normalize(body, "صَا", "x")
+        val r = SpeechGradeNormalizer.normalize(body, "صَطَا", "x")
         assertEquals("fail", r.verdict)
         assertEquals(2, r.phoneme_issues.size)
+    }
+
+    @Test
+    fun `pad tokens in sifat errors are ignored and do not cause retry or fail`() {
+        val body = """
+            {
+              "errors": [],
+              "sifat_errors": [
+                {"phonemes_group": "قل", "attribute": "qalqla", "predicted": "[pad]", "expected": "not_moqalqal"},
+                {"phonemes_group": "ش", "attribute": "tafashie", "predicted": "<pad>", "expected": "not_motafashie"}
+              ],
+              "all_correct": true
+            }
+        """.trimIndent()
+        val r = SpeechGradeNormalizer.normalize(body, "بَا", "x")
+        assertEquals("pass", r.verdict)
+        assertEquals(1.0, r.score)
+        assertTrue(r.phoneme_issues.isEmpty())
     }
 }

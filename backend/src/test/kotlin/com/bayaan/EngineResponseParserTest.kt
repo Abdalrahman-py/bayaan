@@ -31,9 +31,11 @@ class EngineResponseParserTest {
     }
 
     @Test
-    fun `missing all_correct defaults to true`() {
+    fun `missing all_correct defaults to false`() {
+        // A body without the flag is a broken contract; recording it as a
+        // perfect session would inflate the learner's stats off a non-answer.
         val (allCorrect, _) = EngineResponseParser.parse("""{"errors":[]}""")
-        assertTrue(allCorrect)
+        assertFalse(allCorrect)
     }
 
     // ── errors array ─────────────────────────────────────────────────────────
@@ -179,6 +181,29 @@ class EngineResponseParserTest {
 
         assertEquals(1, parsed.sifatErrors.size)
         assertEquals("قل", parsed.sifatErrors[0].phonemesGroup)
+    }
+
+    @Test
+    fun `pad and empty tokens in sifat predicted are discarded`() {
+        val json = """
+            {
+              "all_correct": false,
+              "errors": [],
+              "sifat_errors": [
+                {"phonemes_group": "قل", "attribute": "qalqla", "predicted": "[pad]", "expected": "not_moqalqal", "confidence": 0.5},
+                {"phonemes_group": "ش", "attribute": "tafashie", "predicted": "<pad>", "expected": "not_motafashie", "confidence": 0.5},
+                {"phonemes_group": "ض", "attribute": "istitala", "predicted": "None", "expected": "not_mostateel", "confidence": 0.5},
+                {"phonemes_group": "ق", "attribute": "qalqla", "predicted": "not_moqalqal", "expected": "moqalqal", "confidence": 0.8}
+              ]
+            }
+        """.trimIndent()
+
+        val parsed = EngineResponseParser.parse(json)
+
+        assertEquals(1, parsed.sifatErrors.size)
+        assertEquals("ق", parsed.sifatErrors[0].phonemesGroup)
+        assertEquals("not_moqalqal", parsed.sifatErrors[0].predicted)
+        assertEquals("moqalqal", parsed.sifatErrors[0].expected)
     }
 
     @Test

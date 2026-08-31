@@ -23,7 +23,10 @@ object EngineResponseParser {
 
     fun parse(body: String): ParsedEngineResponse {
         val json = Json.parseToJsonElement(body).jsonObject
-        val allCorrect = json["all_correct"]?.jsonPrimitive?.booleanOrNull ?: true
+        // Default false, not true: a body missing `all_correct` is a broken
+        // contract, and defaulting to "perfect" writes a clean session row for a
+        // recitation nobody graded. Wrong-but-cautious beats wrong-and-flattering.
+        val allCorrect = json["all_correct"]?.jsonPrimitive?.booleanOrNull ?: false
         val mistakes = json["errors"]?.jsonArray?.mapNotNull { el ->
             try {
                 val obj = el.jsonObject
@@ -45,10 +48,14 @@ object EngineResponseParser {
         val sifatErrors = json["sifat_errors"]?.jsonArray?.mapNotNull { el ->
             try {
                 val obj = el.jsonObject
+                val predicted = obj["predicted"]!!.jsonPrimitive.content
+                if (predicted.trim().lowercase() in listOf("[pad]", "<pad>", "pad", "none", "")) {
+                    return@mapNotNull null
+                }
                 SifatMistakeInput(
                     phonemesGroup = obj["phonemes_group"]!!.jsonPrimitive.content,
                     attribute = obj["attribute"]!!.jsonPrimitive.content,
-                    predicted = obj["predicted"]!!.jsonPrimitive.content,
+                    predicted = predicted,
                     expected = obj["expected"]!!.jsonPrimitive.content,
                     confidence = obj["confidence"]?.jsonPrimitive?.doubleOrNull,
                 )
