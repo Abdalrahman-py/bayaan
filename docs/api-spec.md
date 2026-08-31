@@ -69,6 +69,7 @@ Uploads a recitation recording for one ayah and returns the engine's mistake ana
 ```json
 {
   "all_correct": false,
+  "uthmani": "مَٰلِكِ يَوْمِ ٱلدِّينِ",
   "errors": [
     {
       "uthmani_pos": [10, 14],
@@ -93,7 +94,8 @@ Uploads a recitation recording for one ayah and returns the engine's mistake ana
 }
 ```
 
-- `errors` — phoneme-level mistakes. `uthmani_pos` is `[start, end)` into the ayah's Uthmani text. `error_type` is `"tajweed"` for a rule violation; anything else is a plain mispronunciation. `ref_tajweed_rules[0].name` omitted for plain mispronunciations.
+- `uthmani` — the engine's own reference text for the ayah, the string every `uthmani_pos` indexes into. **Required whenever `errors` is non-empty**: the client renders this exact string and refuses the payload otherwise, because painting the offsets onto its own bundled copy would shift every mark by whatever the two spellings differ by.
+- `errors` — phoneme-level mistakes. `uthmani_pos` is `[start, end)` into `uthmani` (above). A zero-width range (`[n, n]`) is an insertion — the gap the extra sound went into, not a letter. `error_type` is `"tajweed"`, `"tashkeel"` (vowel-mark slip) or `"normal"`; only `"tajweed"` renders as a rule violation. `error_type` is `"tajweed"` for a rule violation; anything else is a plain mispronunciation. `ref_tajweed_rules[0].name` omitted for plain mispronunciations.
 - `sifat_errors` — letter-characteristic mistakes from Muaalem's attribute heads. See [`tajweed-rules.md`](./tajweed-rules.md) for attribute keys.
 
 **Error responses:**

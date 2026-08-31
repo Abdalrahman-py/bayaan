@@ -179,6 +179,10 @@ function mapSifatError(obj: Record<string, unknown>): PhonemeIssue | null {
   if (typeof attribute !== "string" || typeof expected !== "string" || typeof predicted !== "string") {
     return null;
   }
+  const cleanPred = predicted.trim().toLowerCase();
+  if (["[pad]", "<pad>", "pad", "none", ""].includes(cleanPred)) {
+    return null;
+  }
   const group = typeof obj["phonemes_group"] === "string" ? (obj["phonemes_group"] as string) : "";
 
   let issueType: string;
@@ -307,10 +311,14 @@ export function parseEngineBody(body: string): ParsedEngineBody {
   const sifatErrors: SifatRow[] = [];
   for (const el of rawSifat) {
     try {
+      const pred = String(el["predicted"] ?? "").trim();
+      if (["[pad]", "<pad>", "pad", "none", ""].includes(pred.toLowerCase())) {
+        continue;
+      }
       sifatErrors.push({
         phonemes_group: String(el["phonemes_group"] ?? ""),
         attribute: String(el["attribute"] ?? ""),
-        predicted: String(el["predicted"] ?? ""),
+        predicted: pred,
         expected: String(el["expected"] ?? ""),
         confidence: el["confidence"] != null ? Number(el["confidence"]) : null,
       });
@@ -320,7 +328,7 @@ export function parseEngineBody(body: string): ParsedEngineBody {
   }
 
   return {
-    allCorrect: allCorrectFrom(rawErrors.length, rawSifat.length),
+    allCorrect: allCorrectFrom(rawErrors.length, sifatErrors.length),
     mistakes,
     sifatErrors,
   };

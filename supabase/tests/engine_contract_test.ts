@@ -171,6 +171,39 @@ Deno.test("parseEngineBody: sifat-only recitation is NOT all correct (drift fix)
   assertEquals(parsed.allCorrect, false);
 });
 
+Deno.test("normalize: pad and non-speech sifat tokens are filtered out", () => {
+  const body = `{"errors":[],"sifat_errors":[
+      {"phonemes_group":"قل","attribute":"qalqla","predicted":"[pad]","expected":"not_moqalqal"},
+      {"phonemes_group":"ش","attribute":"tafashie","predicted":"<pad>","expected":"not_motafashie"}
+    ],"all_correct":true}`;
+  const r = normalize(body, "بَا", "x");
+  assertEquals(r.verdict, "pass");
+  assertEquals(r.score, 1.0);
+  assertEquals(r.phoneme_issues.length, 0);
+});
+
+Deno.test("parseEngineBody: pad and empty tokens in sifat predicted are discarded", () => {
+  const body = `{"errors":[],"sifat_errors":[
+      {"phonemes_group":"قل","attribute":"qalqla","predicted":"[pad]","expected":"not_moqalqal"},
+      {"phonemes_group":"ش","attribute":"tafashie","predicted":"<pad>","expected":"not_motafashie"},
+      {"phonemes_group":"ض","attribute":"istitala","predicted":"None","expected":"not_mostateel"},
+      {"phonemes_group":"ص","attribute":"tafkheem_or_taqeeq","predicted":"mufakham","expected":"moraqaq"}
+    ],"all_correct":true}`;
+  const parsed = parseEngineBody(body);
+  assertEquals(parsed.sifatErrors.length, 1);
+  assertEquals(parsed.sifatErrors[0].attribute, "tafkheem_or_taqeeq");
+  assertEquals(parsed.allCorrect, false);
+});
+
+Deno.test("parseEngineBody: only pad tokens in sifat yields allCorrect true", () => {
+  const body = `{"errors":[],"sifat_errors":[
+      {"phonemes_group":"قل","attribute":"qalqla","predicted":"[pad]","expected":"not_moqalqal"}
+    ],"all_correct":true}`;
+  const parsed = parseEngineBody(body);
+  assertEquals(parsed.sifatErrors.length, 0);
+  assertEquals(parsed.allCorrect, true);
+});
+
 Deno.test("parseEngineBody: unparseable body throws", () => {
   let threw = false;
   try {
