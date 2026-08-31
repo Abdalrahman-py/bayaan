@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>بيان — منصّة تعليم اللغة العربية وتلاوتها بالذكاء الاصطناعي</title>
+<meta name="description" content="مشروع تخرّج: منصّة ذكاء اصطناعي تُعلِّم القراءة والنطق العربي الصحيح لغير الناطقين بالعربية في كل مكان، من الحرف الأوّل وحتى إتقان تلاوة القرآن الكريم — بدقّة صوتية على مستوى الحرف الواحد.">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="img/app-icon.png">
+</head>
+<body>
+
+<!-- =========================================== Hand-drawn icon sprite =========================================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+
+<g id="i-teacher" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="7.5" r="3.2"/><path d="M5 20.5c0-3.9 3.13-6.5 7-6.5s7 2.6 7 6.5"/><path d="M9 5.2c1-1.4 3-1.9 4.4-.9"/>
+</g>
+<g id="i-play" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z" fill="currentColor" stroke="none"/>
+</g>
+<g id="i-waveform" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+  <path d="M3 12h1.6M7 8v8M10.5 5v14M14 9v6M17.5 6.5v11M21 12h-.4"/>
+</g>
+<g id="i-book" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 6.2c-1.6-1.3-4-1.9-8-1.9v13.4c4 0 6.4.6 8 1.9 1.6-1.3 4-1.9 8-1.9V4.3c-4 0-6.4.6-8 1.9z"/><path d="M12 6.2v13.4"/>
+</g>
+<g id="i-seedling" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 21v-8"/><path d="M12 13C7 13 5 10 5 6c5 0 7 2.4 7 7z"/><path d="M12 11c0-3.5 1.8-5.4 5-5.4.3 3.6-1.6 5.7-5 5.4z"/>
+</g>
+<g id="i-reader" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="4.5" y="4" width="15" height="16" rx="2"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4.5"/>
+</g>
+<g id="i-users" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="9" cy="8.3" r="2.9"/><path d="M3.5 19.5c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><circle cx="17" cy="8.8" r="2.2"/><path d="M15.3 14.4c2.6.2 4.7 2.2 4.7 5.1"/>
+</g>
+<g id="i-mushaf" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="5" y="3.5" width="14" height="17" rx="1.6"/><path d="M8 8h8M8 11h8M8 14h5"/><path d="M12 3.5v17" opacity=".5"/>
+</g>
+<g id="i-letters" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M5 18c0-2 1-3.5 3-3.5s3 1.2 3 3v.5"/><path d="M14 6v9c0 2-1.3 3-3 3"/><path d="M17 9.5c1.6 0 2.8 1.1 2.8 3s-1.2 3-2.8 3"/>
+</g>
+<g id="i-sparkles" fill="currentColor" stroke="none">
+  <path d="M11 3l1.2 4.6L17 9l-4.8 1.4L11 15l-1.2-4.6L5 9l4.8-1.4z"/><path d="M18 14l.6 2.2 2.2.6-2.2.6L18 19.6l-.6-2.2-2.2-.6 2.2-.6z"/>
+</g>
+<g id="i-tajweed" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M6 12c0-4 2.7-7 6-7s6 3 6 7-2.7 7-6 7"/><path d="M12 9v6M9.5 12h5"/>
+</g>
+<g id="i-flame" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 3c1 3-3 4.5-3 8a3 3 0 006 0c0-1.3-.7-2-1.2-2.8.9.2 3.2 1.6 3.2 5a5 5 0 01-10 0c0-4.2 2.7-6 5-10.2z"/>
+</g>
+<g id="i-lock" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="5.5" y="10.5" width="13" height="9.5" rx="1.8"/><path d="M8.5 10.5V7.8a3.5 3.5 0 017 0v2.7"/>
+</g>
+<g id="i-key" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="8" cy="15.5" r="3.5"/><path d="M10.3 13.2L18 5.5M15.2 8.3l2 2M18 5.5l2 2"/>
+</g>
+<g id="i-server" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="4.5" y="4.5" width="15" height="6" rx="1.6"/><rect x="4.5" y="13.5" width="15" height="6" rx="1.6"/><path d="M8 7.5h.01M8 16.5h.01"/>
+</g>
+<g id="i-eye-off" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 4l16 16"/><path d="M10.6 6.2A9.6 9.6 0 0112 6c5 0 8.5 3.6 9.9 6-.6 1.1-1.7 2.5-3.2 3.7M6.6 7.5C4.7 8.8 3.2 10.6 2.1 12c1.4 2.4 4.9 6 9.9 6 1 0 1.9-.15 2.8-.4"/><path d="M9.8 10a2.8 2.8 0 003.9 3.9"/>
+</g>
+<g id="i-mic-off" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 4l16 16"/><path d="M15 9.4V6a3 3 0 00-5.7-1.3M9 9.2V12a3 3 0 004.4 2.65"/><path d="M18.5 12a6.5 6.5 0 01-1.7 4.4M6.5 12A6.5 6.5 0 0012 18.5M12 18.5V21"/>
+</g>
+<g id="i-shield" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 3.5l7 2.5v6c0 5-3 7.7-7 8.5-4-.8-7-3.5-7-8.5V6z"/>
+</g>
+<g id="i-database" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <ellipse cx="12" cy="5.5" rx="7" ry="2.6"/><path d="M5 5.5V18c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V5.5"/><path d="M5 11.8c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6"/>
+</g>
+<g id="i-cpu" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="7" y="7" width="10" height="10" rx="1.6"/><rect x="10" y="10" width="4" height="4"/><path d="M12 3v2.3M12 18.7V21M3 12h2.3M18.7 12H21M7 3v2.3M7 18.7V21M17 3v2.3M17 18.7V21M3 7h2.3M3 17h2.3M18.7 7H21M18.7 17H21"/>
+</g>
+<g id="i-phone" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M11 19h2"/>
+</g>
+<g id="i-kotlin" fill="currentColor" stroke="none">
+  <path d="M4 4h16L12 12l8 8H4V4z"/>
+</g>
+<g id="i-check" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 12.5l5.2 5.2L20 6.5"/>
+</g>
+<g id="i-x" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+  <path d="M6 6l12 12M18 6L6 18"/>
+</g>
+<g id="i-close" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+  <path d="M6 6l12 12M18 6L6 18"/>
+</g>
+<g id="i-chevron-prev" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14.5 6l-6 6 6 6"/>
+</g>
+<g id="i-chevron-next" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M9.5 6l6 6-6 6"/>
+</g>
+<g id="i-expand" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
+</g>
+<g id="i-compress" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>
+</g>
+<g id="i-help" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2-2.4 3.7"/><path d="M12 17.2h.01"/>
+</g>
+<g id="i-replay" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 12a8 8 0 1 1 2.6 5.9"/><path d="M4 12V7M4 12h5"/>
+</g>
+<!-- App icon: the Bayaan brand mark, same artwork as flutter/assets/logo/bayaan_logo.png -->
+<symbol id="app-icon" viewBox="0 0 149 140">
+<image href="img/app-icon.png" x="4.5" y="0" width="140" height="140"/>
+</symbol>
+
+<g id="i-mic" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="9.3" y="3.5" width="5.4" height="10.5" rx="2.7"/><path d="M6 11.2a6 6 0 0012 0"/><path d="M12 17.2V21M9 21h6"/>
+</g>
+
+<!-- ================= Islamic geometric ornaments (authentic construction) ================= -->
+<!-- Shamsa medallion: 16-point sunburst ring + bold 8-point star + octagon + core star, concentric -->
+<g id="orn-shamsa" fill="none" stroke="currentColor" stroke-linejoin="round">
+  <g stroke-width="0.7" opacity="0.5"><circle cx="100" cy="100" r="86"/><circle cx="100" cy="100" r="60"/></g>
+  <path stroke-width="0.9" opacity="0.65" d="M100.00,10.00 L102.94,15.65 M115.22,23.50 L118.94,18.53 M136.74,11.31 L142.90,9.55 M143.33,35.15 L149.44,32.90 M167.88,32.12 L173.58,35.72 M164.85,56.67 L170.94,58.94 M189.51,64.51 L194.65,68.61 M180.94,84.78 L185.51,89.51 M199.99,100.00 L199.99,100.00" />
+  <path stroke-width="1.15" d="M100.00,4.00 L115.22,23.50 L136.74,11.31 L143.33,35.15 L167.88,32.12 L164.85,56.67 L189.51,64.51 L180.94,84.78 L200.00,100.00 L180.94,115.22 L189.51,135.49 L164.85,143.33 L167.88,167.88 L143.33,164.85 L136.74,188.69 L115.22,176.50 L100.00,196.00 L84.78,176.50 L63.26,188.69 L56.67,164.85 L32.12,167.88 L35.15,143.33 L10.49,135.49 L19.06,115.22 L0.00,100.00 L19.06,84.78 L10.49,64.51 L35.15,56.67 L32.12,32.12 L56.67,35.15 L63.26,11.31 L84.78,23.50 Z" opacity="0.9"/>
+  <path stroke-width="1.7" d="M100,28 L117.4,74.6 L164,60 L131.4,96.6 L172,100 L131.4,103.4 L164,140 L117.4,125.4 L100,172 L82.6,125.4 L36,140 L68.6,103.4 L28,100 L68.6,96.6 L36,60 L82.6,74.6 Z"/>
+  <path stroke-width="1.3" d="M100,66 L114.14,72.5 L127.28,66 L133.5,79.14 L146.64,85.36 L140.14,98.5 L146.64,111.64 L133.5,117.86 L127.28,131 L114.14,124.5 L100,131 L85.86,124.5 L72.72,131 L66.5,117.86 L53.36,111.64 L59.86,98.5 L53.36,85.36 L66.5,79.14 L72.72,66 L85.86,72.5 Z" transform="rotate(0 100 100)"/>
+  <path fill="currentColor" stroke="none" opacity="0.95" d="M100,74 L106.5,92.5 L125,99 L106.5,105.5 L100,124 L93.5,105.5 L75,99 L93.5,92.5 Z"/>
+</g>
+<!-- Manuscript corner flourish: sweeping double arc from a small 8-point star, with trailing illumination dots -->
+<g id="orn-corner" fill="none" stroke="currentColor" stroke-linecap="round">
+  <path stroke-width="1.5" d="M4,60 Q4,4 60,4"/>
+  <path stroke-width="1" opacity="0.6" d="M14,60 Q14,14 60,14"/>
+  <path fill="currentColor" stroke="none" opacity="0.95" d="M9.00,0.60 L10.30,5.86 L14.94,3.06 L12.14,7.70 L17.40,9.00 L12.14,10.30 L14.94,14.94 L10.30,12.14 L9.00,17.40 L7.70,12.14 L3.06,14.94 L5.86,10.30 L0.60,9.00 L5.86,7.70 L3.06,3.06 L7.70,5.86 Z"/>
+  <circle cx="11.2" cy="34.8" r="2.3" fill="currentColor" stroke="none"/>
+  <circle cx="24.6" cy="17.8" r="2" fill="currentColor" stroke="none"/>
+  <circle cx="41.8" cy="7.9" r="1.7" fill="currentColor" stroke="none"/>
+</g>
+<!-- Tileable border-strip unit: small 8-point star flanked by connecting hairlines -->
+<symbol id="orn-strip" viewBox="0 0 40 16">
+  <g fill="none" stroke="currentColor">
+    <path stroke-width="1" opacity="0.7" d="M-2,8 L8,8 M32,8 L42,8"/>
+    <path stroke-width="1.1" d="M20.00,1.00 L21.15,5.23 L24.95,3.05 L22.77,6.85 L27.00,8.00 L22.77,9.15 L24.95,12.95 L21.15,10.77 L20.00,15.00 L18.85,10.77 L15.05,12.95 L17.23,9.15 L13.00,8.00 L17.23,6.85 L15.05,3.05 L18.85,5.23 Z"/>
+    <circle cx="20" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+  </g>
+</symbol>
+
+</defs>
+</svg>
+<!-- ==================================================== /icon sprite ==================================================== -->
+
+<div class="progress-bar"><div class="progress-bar__fill" id="progFill"></div></div>
+
+<nav class="rail" id="rail" aria-label="التنقّل بين الأقسام"></nav>
+
+<div class="hud" id="hud">
+  <button class="hud__btn" id="btnPrev" aria-label="القسم السابق"><svg viewBox="0 0 24 24"><use href="#i-chevron-prev"/></svg></button>
+  <span class="hud__count" id="hudCount">01 / 21</span>
+  <button class="hud__btn" id="btnNext" aria-label="القسم التالي"><svg viewBox="0 0 24 24"><use href="#i-chevron-next"/></svg></button>
+  <button class="hud__btn" id="btnFs" aria-label="ملء الشاشة"><svg viewBox="0 0 24 24"><use href="#i-expand"/></svg></button>
+  <button class="hud__btn" id="btnHelp" aria-label="اختصارات لوحة المفاتيح"><svg viewBox="0 0 24 24"><use href="#i-help"/></svg></button>
+</div>
+
+<div class="help" id="help">
+  <div class="help__panel">
+    <h3 class="h3" style="margin-bottom:16px">اختصارات لوحة المفاتيح</h3>
+    <div class="help__row"><span>القسم التالي</span><kbd>↓</kbd></div>
+    <div class="help__row"><span>القسم السابق</span><kbd>↑</kbd></div>
+    <div class="help__row"><span>ملء الشاشة</span><kbd>F</kbd></div>
+    <div class="help__row"><span>إغلاق هذه النافذة</span><kbd>Esc</kbd></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox__close" id="lbClose" aria-label="إغلاق"><svg viewBox="0 0 24 24"><use href="#i-close"/></svg></button>
+  <div class="lightbox__panel" id="lbPanel"></div>
+</div>
+
+<main id="deck">
+
+<!-- ================================================================ 01 · HERO ================================================================ -->
+<section class="section section--plain" id="hero">
+  <div class="hero-mesh"></div>
+  <canvas id="particles"></canvas>
+  <div class="wrap hero-grid">
+    <div>
+      <svg class="hero-logo app-icon" viewBox="0 0 149 140" aria-hidden="true">
+        <use href="#app-icon"/>
+      </svg>
+      <p class="eyebrow reveal" data-d="60" id="heroEyebrow"></p>
+      <h1 class="hero-title reveal" data-d="120" id="heroTitle"></h1>
+      <p class="hero-sub reveal" data-d="180" id="heroSub"></p>
+      <p class="hero-tag reveal" data-d="240" id="heroTag"></p>
+      <div class="hero-meta reveal" id="heroChips" data-d="300"></div>
+    </div>
+    <div class="hero-stage">
+      <svg class="orn-medallion orn-medallion--hero" viewBox="0 0 200 200" aria-hidden="true"><use href="#orn-shamsa"/></svg>
+      <div class="hero-ring hero-ring--1"></div>
+      <div class="hero-ring hero-ring--2"></div>
+      <div class="phone"><div class="phone__notch"></div><div class="phone__screen" id="heroPhone"></div><div class="phone__glare"></div></div>
+      <div class="float-card float-card--a"><svg viewBox="0 0 24 24"><use href="#i-waveform"/></svg><span>تحليل صوتي حرفي</span></div>
+      <div class="float-card float-card--b"><svg viewBox="0 0 24 24"><use href="#i-letters"/></svg><span>٤١ درسًا للمبتدئين</span></div>
+      <div class="float-card float-card--c"><svg viewBox="0 0 24 24"><use href="#i-mushaf"/></svg><span>٦٠٤ صفحة مصحف مطابقة</span></div>
+    </div>
+  </div>
+  <div class="hero-scroll"><span>مرّر للأسفل</span><i></i></div>
+</section>
+
+<!-- ================================================================ 02 · TEAM ================================================================ -->
+<section class="section section--white" id="team">
+  <div class="wrap">
+    <div class="masthead reveal">
+      <p class="masthead__inst" id="masthead"></p>
+    </div>
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">02</span> فريق العمل</p>
+      <h2 class="h2">الأشخاص خلف بيان</h2>
+    </div>
+    <div class="grid grid-4" id="teamGrid"></div>
+    <div class="credits-banner reveal" id="creditsBanner"></div>
+  </div>
+</section>
+
+<!-- ================================================================ 03 · PROBLEM ============================================================== -->
+<section class="section section--wash" id="problem">
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">03</span> المشكلة</p>
+      <h2 class="h2">لماذا تبقى الأذن الوحيدة القادرة على التصحيح <span class="underline-accent">بشرية</span>؟</h2>
+      <p class="lead">أربع فجوات حقيقية تمنع ملايين المبتدئين والمتحسِّنين من تطوير نطقهم العربي دون معلّم إلى جانبهم في كل لحظة.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-col" id="probColL"></div>
+      <div class="mic-figure reveal" data-d="120">
+        <div class="mic-figure__halo"></div>
+        <svg viewBox="0 0 160 200" fill="none">
+          <rect x="62" y="14" width="36" height="70" rx="18" fill="var(--primary)"/>
+          <path d="M42 78a38 38 0 0076 0" stroke="var(--primary)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M80 116v26" stroke="var(--primary)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M56 154h48" stroke="var(--primary)" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="80" cy="49" r="7" fill="#fff" opacity=".8"/>
+          <path d="M20 95q10-8 10 8t14 10" stroke="var(--tajweed-fg)" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+          <path d="M126 90q-10 10 0 16t-6 14" stroke="var(--sifat-fg)" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+        </svg>
+        <p class="mic-figure__cap">صوت واحد<span>ألف طريقة ليخطئ فيها المبتدئ</span></p>
+      </div>
+      <div class="problem-col" id="probColR"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= 04 · WHY ================================================================= -->
+<section class="section section--dark" id="why">
+  <div class="orb" style="width:360px;height:360px;inset-inline-start:-6%;inset-block-start:10%"></div>
+  <div class="wrap--narrow">
+    <p class="why-question reveal reveal--blur" id="whyQuestion"></p>
+    <div class="why-divider"></div>
+    <svg class="why-logo app-icon reveal" data-d="120" viewBox="0 0 149 140" aria-hidden="true"><use href="#app-icon"/></svg>
+    <p class="why-brand reveal reveal--blur" data-d="180">بيان</p>
+    <p class="why-body reveal" id="whyBody" data-d="260"></p>
+  </div>
+</section>
+
+<!-- ============================================================= 05 · AUDIENCE ============================================================== -->
+<section class="section section--white" id="audience">
+  <div class="wrap">
+    <div class="section-header reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">05</span> من نخدم</p>
+      <h2 class="h2">ثلاث فئات، أذن واحدة تُصغي للجميع</h2>
+      <p class="lead">بيان لا يفترض متعلّمًا واحدًا — المنهج يبدأ من الحرف لمن لا يعرفه، ويتيح القفز إلى التصحيح المتقدّم لمن يقرأ بالفعل.</p>
+    </div>
+    <div class="aud-grid" id="audGrid"></div>
+    <div class="aud-callout reveal">
+      <div class="aud-callout__ico"><svg viewBox="0 0 24 24"><use href="#i-users"/></svg></div>
+      <div id="audNote"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 06 · MARKET =============================================================== -->
+<section class="section section--wash" id="market">
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">06</span> مقابل البدائل</p>
+      <h2 class="h2">بين فئتين، لا يوجد بيان إلا في المنتصف</h2>
+      <p class="lead">تطبيقات التلاوة تُشغِّل الصوت الصحيح ولا تُصغي. تطبيقات تعلّم اللغة العامة تُعلِّم العربية المحكية ولا تلمس الرسم العثماني ولا التجويد.</p>
+    </div>
+    <div class="cmp-scroll reveal">
+      <table class="cmp" id="cmpTable"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= 07 · GAP ================================================================= -->
+<section class="section section--dark" id="gap">
+  <div class="orb" style="width:420px;height:420px;inset-inline-end:-10%;inset-block-start:-6%;background:radial-gradient(circle, rgba(217,164,65,0.16), transparent 68%)"></div>
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">07</span> الفجوة</p>
+      <h2 class="h2">كل بديل يحلّ جزءًا من المشكلة — <span class="underline-accent">لا كلّها</span></h2>
+      <p class="lead">ستّ فجوات حقيقية تتفرّق بين البدائل الحالية — تلتقي كلّها في نقطة واحدة.</p>
+    </div>
+    <div class="gap-map" id="gapMap">
+      <svg class="orn-medallion orn-medallion--gap orn-medallion--core" viewBox="0 0 200 200" aria-hidden="true"><use href="#orn-shamsa"/></svg>
+      <div class="gap-orbit gap-orbit--1"></div>
+      <div class="gap-orbit gap-orbit--2"></div>
+      <div class="gap-hub">
+        <div class="gap-hub__pulse p1"></div>
+        <div class="gap-hub__pulse p2"></div>
+        <svg class="gap-hub__mark app-icon" viewBox="0 0 149 140" aria-hidden="true"><use href="#app-icon"/></svg>
+        <span class="gap-hub__label">بيان</span>
+      </div>
+      <div class="gap-spokes" id="gapSpokes"></div>
+    </div>
+    <p class="gap-caption reveal">محرّك واحد، ومنهج واحد، وتجربة تعلّم هادئة وداعمة — تغلق الفجوات الستّ معًا.</p>
+  </div>
+</section>
+
+<!-- ============================================================== 08 · SOLUTION =============================================================== -->
+<section class="section section--white" id="solution">
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">08</span> الحل</p>
+      <h2 class="h2">ستّ وحدات، منظومة واحدة</h2>
+      <p class="lead">من أول حرف يتعرّف عليه المتعلّم إلى تحليل تلاوته الكاملة — كل وحدة تغذّي التي تليها.</p>
+    </div>
+    <div class="grid grid-3" id="modulesGrid"></div>
+  </div>
+</section>
+
+<!-- ============================================================= 09 · CURRICULUM ============================================================== -->
+<section class="section section--wash" id="curriculum">
+  <div class="wrap">
+    <div class="section-header reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">09</span> المنهج</p>
+      <h2 class="h2">ثماني وحدات، من الحرف إلى الفاتحة</h2>
+      <p class="lead">منهج عربي تأسيسي متدرّج — الوحدات الست الأولى عربية عامّة بالكامل، تعبر تدريجيًا إلى القراءة القرآنية في الوحدتين الأخيرتين.</p>
+    </div>
+    <div class="grid" style="grid-template-columns:1.25fr 0.9fr">
+      <div class="unit-track" id="unitTrack"></div>
+      <div class="card unit-detail reveal" id="unitDetail"></div>
+    </div>
+    <div class="curr-totals reveal" id="currTotals"></div>
+    <div class="reveal" style="margin-top:clamp(28px,3.4vh,44px)">
+      <h3 class="h3" style="margin-bottom:4px">ثم مسار التجويد</h3>
+      <p class="lead" style="margin-bottom:0">بعد إتمام المسار العربي، تُفتح ثلاث وحدات لأحكام تلاوة أساسية — تُقيَّم على آيات قرآنية مختارة.</p>
+      <div class="tj-grid" id="tjGrid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== 10 · JOURNEY ================================================================ -->
+<section class="section section--white" id="journey">
+  <div class="wrap">
+    <div class="section-header reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">10</span> رحلة المتعلّم</p>
+      <h2 class="h2">من الشاشة الأولى إلى القراءة الواثقة</h2>
+    </div>
+    <div class="journey-layout">
+      <div class="journey-steps" id="journeySteps"></div>
+      <div class="jtrack"><div class="jtrack__fill" id="jtrackFill"></div></div>
+      <div class="journey-phone-wrap">
+        <div class="phone"><div class="phone__notch"></div><div class="phone__screen" id="journeyPhone"></div><div class="phone__glare"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= 11 · APP ================================================================= -->
+<section class="section section--wash" id="app">
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">11</span> تجربة التطبيق</p>
+      <h2 class="h2">تصميم صريح، لغة تصميم واحدة</h2>
+      <p class="lead">اسحب لتصفّح عشر شاشات رئيسية من واجهة بيان — لقطات حقيقية من التطبيق الفعلي.</p>
+    </div>
+    <div class="gallery-wrap" id="galleryWrap">
+      <div class="gallery-track" id="galleryTrack"></div>
+    </div>
+    <p class="app-note"><svg viewBox="0 0 24 24"><use href="#i-sparkles"/></svg> لقطات شاشة حقيقية من تطبيق بيان الفعلي</p>
+  </div>
+</section>
+
+<!-- ================================================================== 12 · AI ================================================================= -->
+<section class="section section--dark" id="ai">
+  <div class="wrap">
+    <div class="section-header reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">12</span> جوهر الذكاء الاصطناعي</p>
+      <h2 class="h2">كيف "يسمع" بيان صوتك</h2>
+    </div>
+    <div class="ai-layout">
+      <svg class="ai-diagram reveal" viewBox="0 0 480 360" id="aiDiagram"></svg>
+      <div class="reveal" data-d="120">
+        <div class="ai-tabs" id="aiTabs"></div>
+        <div class="ai-panel" id="aiPanel"></div>
+        <div class="tol-table-wrap">
+          <p class="small" style="color:rgba(230, 224, 210,.6);font-weight:700;margin:16px 0 0">سياسة التسامح — كيف يُشتقّ القرار</p>
+          <table class="tol-table" id="tolTable"></table>
+        </div>
+        <div class="spike-box" id="spikeBox"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== 13 · GAMIFY ================================================================ -->
+<section class="section section--white" id="gamify">
+  <div class="wrap">
+    <div class="section-header reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">13</span> التحفيز والمراجعة الذكية</p>
+      <h2 class="h2">كل حالة عاطفية للتعلّم، محسوبة من الخادم</h2>
+    </div>
+    <div class="gamify-layout">
+      <div id="gamifyCards"></div>
+      <div class="card ladder reveal" data-d="120">
+        <p class="small" style="font-weight:800;color:var(--primary-700);margin-bottom:14px">سلّم المراجعة المتباعدة</p>
+        <div id="ladderList"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================= 14 · ARCHITECTURE ============================================================= -->
+<section class="section section--wash" id="architecture">
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">14</span> المعمارية</p>
+      <h2 class="h2">معمارية الصناديق الثلاثة</h2>
+      <p class="lead">كل صندوق يملك مسؤولية واحدة صريحة، ولا يعرف تفاصيل جاره — استدلال الذكاء الاصطناعي معزول تمامًا عن منطق الأعمال.</p>
+    </div>
+    <div class="arch-boxes" id="archBoxes"><div class="arch-flow-dot"></div></div>
+    <div class="grid grid-4" id="deployGrid"></div>
+  </div>
+</section>
+
+<!-- ================================================================ 15 · STACK ================================================================= -->
+<section class="section section--white" id="stack">
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">15</span> التقنيات</p>
+      <h2 class="h2">أدوات مُختارة، لا أدوات مألوفة</h2>
+    </div>
+    <div class="stack-filters reveal" id="stackFilters"></div>
+    <div class="tech-grid" id="techGrid"></div>
+  </div>
+</section>
+
+<!-- =============================================================== 16 · SECURITY ============================================================== -->
+<section class="section section--wash" id="security">
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">16</span> الأمان والأخلاقيات</p>
+      <h2 class="h2">خصوصية المتعلّم أولًا — وحساسية إضافية لما هو مقدَّس</h2>
+    </div>
+    <div class="sec-layout">
+      <div class="shield-figure reveal">
+        <svg viewBox="0 0 200 220">
+          <circle class="shield-ring r1" cx="100" cy="105" r="58"/><circle class="shield-ring r2" cx="100" cy="105" r="58"/><circle class="shield-ring r3" cx="100" cy="105" r="58"/>
+          <path d="M100 20l55 20v48c0 40-24 62-55 68-31-6-55-28-55-68V40z" fill="var(--primary)"/>
+          <path class="shield-check" d="M78 106l16 16 30-34"/>
+        </svg>
+      </div>
+      <div class="sec-grid" id="secGrid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 17 · TESTING =============================================================== -->
+<section class="section section--white" id="testing">
+  <div class="wrap">
+    <div class="section-header reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">17</span> التحقّق</p>
+      <h2 class="h2">لا تسليم بلا دليل</h2>
+    </div>
+    <div class="test-cols">
+      <div>
+        <div class="test-block reveal">
+          <h3>ما الذي تُغطّيه الاختبارات الآلية</h3>
+          <div id="testCoverage"></div>
+        </div>
+        <div class="harness-note reveal" id="harnessNote"></div>
+      </div>
+      <div>
+        <div class="card perf-card reveal">
+          <h4>خادم الاختبارات الآلي</h4>
+          <div class="perf-stats" id="perfStats"></div>
+        </div>
+        <div class="card reveal" style="margin-top:14px;padding:18px 20px">
+          <h4 style="font-size:.88rem;margin-bottom:8px">خط أنابيب المحتوى</h4>
+          <p style="margin:0;font-size:.82rem;color:var(--gray);line-height:1.7" id="pipelineNote"></p>
+        </div>
+        <div class="card reveal" style="margin-top:14px;padding:18px 20px">
+          <h4 style="font-size:.88rem;margin-bottom:8px">القبول على جهاز فعلي</h4>
+          <p style="margin:0;font-size:.82rem;color:var(--gray);line-height:1.7" id="deviceNote"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 18 · ACHIEVED ============================================================== -->
+<section class="section section--wash" id="achieved">
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">18</span> ماذا حقّقنا</p>
+      <h2 class="h2">تسعة أهداف، ثمانية مُنجَزة كاملة</h2>
+    </div>
+    <div class="ach-grid" id="achGrid"></div>
+    <div class="ach-finale reveal">
+      <svg class="app-icon" viewBox="0 0 149 140" aria-hidden="true"><use href="#app-icon"/></svg>
+      <p>من فكرة إلى حلقة تلاوة تعمل فعليًا على جهاز حقيقي — من الميكروفون إلى تحليل GPU إلى تظليل حرفي — بيان يثبت أن التصحيح الصوتي الدقيق ليس حكرًا على معلّم بشري وحده.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= 19 · LIMITS =============================================================== -->
+<section class="section section--white" id="limits">
+  <div class="wrap">
+    <div class="section-header reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">19</span> المحدّدات</p>
+      <h2 class="h2">ما لم يكتمل بعد — بصراحة</h2>
+      <p class="lead">أي ادّعاء غير موثَّق هنا يبقى ادّعاءً غير موثَّق — بيان لا يخفي حدوده.</p>
+    </div>
+    <div class="limits-layout">
+      <div class="card version-card reveal">
+        <p class="version-card__label">الإصدار الحالي</p>
+        <p class="version-card__title">نموذج أكاديمي مُتحقَّق منه</p>
+        <div class="version-card__meter" style="--pct:72%"><i></i></div>
+        <p class="version-card__pct">٧٢٪</p>
+        <p class="version-card__note">تقدير نوعي لاكتمال النطاق المخطَّط — لا مقياس رسمي، بل خلاصة صادقة لما تبقّى</p>
+      </div>
+      <div id="limitsList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 20 · ROADMAP =============================================================== -->
+<section class="section section--wash" id="roadmap">
+  <div class="wrap">
+    <div class="section-header section-header--center reveal"><svg class="orn-corner reveal" viewBox="0 0 120 120" aria-hidden="true"><use href="#orn-corner"/></svg>
+      <p class="eyebrow"><span class="eyebrow__num">20</span> خارطة الطريق</p>
+      <h2 class="h2">الخطوات العشر القادمة، مرتَّبة بالأولوية</h2>
+    </div>
+    <div class="rm-scroll" id="rmScroll">
+      <div class="rm-track" id="rmTrack"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= 21 · FINAL =============================================================== -->
+<section class="section section--plain" id="final">
+  <div class="orb orb--a"></div>
+  <div class="orb orb--b"></div>
+  <svg class="orn-medallion orn-medallion--final" viewBox="0 0 200 200" aria-hidden="true"><use href="#orn-shamsa"/></svg>
+  <div class="wrap--narrow">
+    <svg class="final-logo app-icon reveal" viewBox="0 0 149 140" aria-hidden="true"><use href="#app-icon"/></svg>
+    <p class="final-brand reveal reveal--blur" data-d="100">بيان</p>
+    <p class="final-msg reveal" data-d="180" id="finalMsg"></p>
+    <div class="final-rule reveal" data-d="240"></div>
+    <p class="final-thanks reveal" data-d="280" id="finalThanks"></p>
+    <p class="final-q reveal" data-d="320" id="finalQ"></p>
+    <p class="final-foot reveal" data-d="380" id="finalFoot"></p>
+  </div>
+</section>
+
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>
