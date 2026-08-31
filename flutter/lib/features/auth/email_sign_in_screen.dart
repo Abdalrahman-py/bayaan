@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../services/auth_controller.dart';
 import '../../services/password_strength.dart';
 import '../../shared/widgets/ornamental_divider.dart';
@@ -113,8 +114,9 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: ListenableBuilder(
           listenable: widget.auth,
@@ -125,38 +127,40 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
               child: _entrance(
                 Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildBackButton(),
-                  const SizedBox(height: 16),
-                  _buildCrest(),
-                  const SizedBox(height: 18),
-                  _buildTitle(),
-                  const SizedBox(height: 20),
-                  _buildModeSwitch(),
-                  const SizedBox(height: 20),
-                  _buildForm(),
-                  if (loggedOut.error != null) ...[
-                    const SizedBox(height: 14),
-                    _buildNotice(
-                      loggedOut.error!,
-                      AppColors.tajweedError,
-                      Icons.error_outline_rounded,
-                    ),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildBackButton(palette),
+                    const SizedBox(height: 16),
+                    _buildCrest(),
+                    const SizedBox(height: 18),
+                    _buildTitle(palette),
+                    const SizedBox(height: 20),
+                    _buildModeSwitch(palette),
+                    const SizedBox(height: 20),
+                    _buildForm(palette),
+                    if (loggedOut.error != null) ...[
+                      const SizedBox(height: 14),
+                      _buildNotice(
+                        loggedOut.error!,
+                        AppColors.tajweedError,
+                        Icons.error_outline_rounded,
+                        palette,
+                      ),
+                    ],
+                    if (loggedOut.pendingConfirmation) ...[
+                      const SizedBox(height: 14),
+                      _buildNotice(
+                        'Check your email to confirm your account.',
+                        AppColors.tealStart,
+                        Icons.mark_email_read_outlined,
+                        palette,
+                      ),
+                    ],
+                    const SizedBox(height: 22),
+                    _buildSubmit(loggedOut.submitting),
+                    const SizedBox(height: 16),
+                    _buildFooter(palette),
                   ],
-                  if (loggedOut.pendingConfirmation) ...[
-                    const SizedBox(height: 14),
-                    _buildNotice(
-                      'Check your email to confirm your account.',
-                      AppColors.tealStart,
-                      Icons.mark_email_read_outlined,
-                    ),
-                  ],
-                  const SizedBox(height: 22),
-                  _buildSubmit(loggedOut.submitting),
-                  const SizedBox(height: 16),
-                  _buildFooter(),
-                ],
                 ),
               ),
             );
@@ -166,7 +170,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
     );
   }
 
-  Widget _buildBackButton() => Align(
+  Widget _buildBackButton(AppPalette palette) => Align(
     alignment: Alignment.centerLeft,
     child: GestureDetector(
       onTap: () =>
@@ -176,47 +180,22 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
         height: 36,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFF5F1E6)),
+          color: palette.cardBg,
+          border: Border.all(color: palette.borderColor),
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.chevron_left, size: 20, color: AppColors.textDark),
+        child: Icon(Icons.chevron_left, size: 20, color: palette.textPrimary),
       ),
     ),
   );
 
-  /// The rotated-diamond mark from the sign-in screen, so the two screens read
-  /// as one flow rather than a form bolted onto a branded page.
+  /// The brand mark from the sign-in screen, so the two screens read as one
+  /// flow rather than a form bolted onto a branded page.
   Widget _buildCrest() => Center(
-    child: SizedBox(
-      width: 56,
-      height: 56,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Transform.rotate(
-            angle: 45 * 3.14159 / 180,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                gradient: AppColors.splashGradient,
-                border: Border.all(color: AppColors.gold, width: 2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          Text(
-            'ب',
-            textDirection: TextDirection.rtl,
-            style: arabic(fontSize: 22, color: Colors.white),
-          ),
-        ],
-      ),
-    ),
+    child: Image.asset('assets/logo/bayaan_logo.png', width: 64, height: 64),
   );
 
-  Widget _buildTitle() => Column(
+  Widget _buildTitle(AppPalette palette) => Column(
     children: [
       Text(
         _signUp ? 'Create your account' : 'Welcome back',
@@ -224,7 +203,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
         style: pjs(
           fontSize: 24,
           fontWeight: FontWeight.w800,
-          color: AppColors.textDark,
+          color: palette.textPrimary,
         ),
       ),
       const SizedBox(height: 6),
@@ -233,7 +212,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
             ? 'A few details and your recitation practice is saved from here on.'
             : 'Your streak, your levels, and every ayah you have recited.',
         textAlign: TextAlign.center,
-        style: pjs(fontSize: 13, height: 1.5, color: AppColors.textMuted),
+        style: pjs(fontSize: 13, height: 1.5, color: palette.textMuted),
       ),
       const SizedBox(height: 14),
       const OrnamentalDivider(width: 180, opacity: 0.35),
@@ -242,21 +221,21 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
 
   /// A sliding two-up switch instead of the old text link — the choice between
   /// signing in and signing up is the first thing to make obvious.
-  Widget _buildModeSwitch() => Container(
+  Widget _buildModeSwitch(AppPalette palette) => Container(
     padding: const EdgeInsets.all(4),
     decoration: BoxDecoration(
-      color: const Color(0xFFF1ECE0),
+      color: palette.isDark ? AppColorsDark.cardBg : const Color(0xFFF1ECE0),
       borderRadius: BorderRadius.circular(100),
     ),
     child: Row(
       children: [
-        _modeTab('Log in', !_signUp),
-        _modeTab('Sign up', _signUp),
+        _modeTab('Log in', !_signUp, palette),
+        _modeTab('Sign up', _signUp, palette),
       ],
     ),
   );
 
-  Widget _modeTab(String label, bool selected) => Expanded(
+  Widget _modeTab(String label, bool selected, AppPalette palette) => Expanded(
     child: GestureDetector(
       onTap: () => setState(() {
         _signUp = label == 'Sign up';
@@ -272,7 +251,9 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
         padding: const EdgeInsets.symmetric(vertical: 11),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
+          color: selected
+              ? (palette.isDark ? AppColorsDark.tealStart : Colors.white)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
           boxShadow: selected
               ? [
@@ -289,14 +270,16 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
           style: pjs(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: selected ? AppColors.tealStart : AppColors.textMuted,
+            color: selected
+                ? (palette.isDark ? Colors.white : AppColors.tealStart)
+                : palette.textMuted,
           ),
         ),
       ),
     ),
   );
 
-  Widget _buildForm() => Column(
+  Widget _buildForm(AppPalette palette) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       // AnimatedSize keeps the name field from popping the layout when the
@@ -314,6 +297,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
                     icon: Icons.person_outline_rounded,
                     error: _showErrors ? _nameError : null,
                     textCapitalization: TextCapitalization.words,
+                    palette: palette,
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -326,6 +310,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
         icon: Icons.alternate_email_rounded,
         keyboardType: TextInputType.emailAddress,
         error: _showErrors ? _emailError : null,
+        palette: palette,
       ),
       const SizedBox(height: 12),
       _field(
@@ -338,6 +323,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
         // A wrong password on log-in is the server's verdict, not ours, so the
         // inline error only fires for an empty field.
         error: _showErrors ? _passwordError : null,
+        palette: palette,
         trailing: GestureDetector(
           onTap: () => setState(() => _obscure = !_obscure),
           child: Icon(
@@ -345,7 +331,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
                 ? Icons.visibility_outlined
                 : Icons.visibility_off_outlined,
             size: 20,
-            color: AppColors.textMuted,
+            color: palette.textMuted,
           ),
         ),
       ),
@@ -361,6 +347,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
     required TextEditingController controller,
     required String hint,
     required IconData icon,
+    required AppPalette palette,
     String? error,
     bool obscure = false,
     TextInputType? keyboardType,
@@ -380,14 +367,14 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
           keyboardType: keyboardType,
           textCapitalization: textCapitalization,
           onSubmitted: onSubmitted,
-          style: pjs(fontSize: 15, color: AppColors.textDark),
+          style: pjs(fontSize: 15, color: palette.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: pjs(fontSize: 15, color: AppColors.textMuted),
+            hintStyle: pjs(fontSize: 15, color: palette.textMuted),
             prefixIcon: Icon(
               icon,
               size: 20,
-              color: bad ? AppColors.tajweedError : AppColors.textMuted,
+              color: bad ? AppColors.tajweedError : palette.textMuted,
             ),
             suffixIcon: trailing == null
                 ? null
@@ -397,11 +384,11 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
                   ),
             suffixIconConstraints: const BoxConstraints(minWidth: 0),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: palette.cardBg,
             contentPadding: const EdgeInsets.symmetric(vertical: 16),
-            border: _border(const Color(0xFFF5F1E6)),
+            border: _border(palette.borderColor),
             enabledBorder: _border(
-              bad ? AppColors.tajweedError : const Color(0xFFF5F1E6),
+              bad ? AppColors.tajweedError : palette.borderColor,
             ),
             focusedBorder: _border(
               bad ? AppColors.tajweedError : AppColors.tealStart,
@@ -427,7 +414,12 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
         borderSide: BorderSide(color: color, width: width),
       );
 
-  Widget _buildNotice(String message, Color color, IconData icon) => Container(
+  Widget _buildNotice(
+    String message,
+    Color color,
+    IconData icon,
+    AppPalette palette,
+  ) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
       color: color.withValues(alpha: 0.08),
@@ -442,7 +434,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
         Expanded(
           child: Text(
             message,
-            style: pjs(fontSize: 13, height: 1.4, color: AppColors.textDark),
+            style: pjs(fontSize: 13, height: 1.4, color: palette.textPrimary),
           ),
         ),
       ],
@@ -481,16 +473,12 @@ class _EmailSignInScreenState extends State<EmailSignInScreen>
     ),
   );
 
-  Widget _buildFooter() => Text(
-    // Same wording as SignInScreen's footer, which carries this notice for the
-    // social buttons. ponytail: plain text, because there is nothing to link
-    // to yet — a privacy policy is still unwritten (GRADUATION_REPORT.md:490).
-    // Make these real links before release; an agreement notice pointing at
-    // nothing is worse than none.
+  Widget _buildFooter(AppPalette palette) => Text(
     _signUp
         ? 'By creating an account, you agree to our Terms of Service and Privacy Policy.'
         : 'Signing in keeps your progress on every device you use.',
     textAlign: TextAlign.center,
-    style: pjs(fontSize: 12, height: 1.5, color: AppColors.textMuted),
+    style: pjs(fontSize: 12, height: 1.5, color: palette.textMuted),
   );
 }
+

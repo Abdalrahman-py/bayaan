@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../services/auth_controller.dart';
 import 'lesson_controller.dart';
 import 'models/lesson.dart';
@@ -52,10 +53,11 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final total = widget.controller.lesson?.items.length ?? 0;
     final correct = widget.controller.correctCount;
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -69,31 +71,31 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
                 style: pjs(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 total == 0 ? 'Nicely done.' : '$correct of $total correct',
-                style: pjs(fontSize: 15, color: AppColors.textMuted),
+                style: pjs(fontSize: 15, color: palette.textMuted),
               ),
               const SizedBox(height: 24),
               if (_header != null)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _stat('Level', '${_header!.arabicLevel}'),
+                    _stat('Level', '${_header!.arabicLevel}', palette),
                     const SizedBox(width: 24),
-                    _stat('XP', '${_header!.xp}'),
+                    _stat('XP', '${_header!.xp}', palette),
                     const SizedBox(width: 24),
-                    _stat('Streak', '${_header!.streakCount}'),
+                    _stat('Streak', '${_header!.streakCount}', palette),
                   ],
                 )
               else if (_error != null)
                 Text(
                   _error!,
                   textAlign: TextAlign.center,
-                  style: pjs(fontSize: 13, color: AppColors.textMuted),
+                  style: pjs(fontSize: 13, color: palette.textMuted),
                 )
               else
                 const CircularProgressIndicator(),
@@ -127,7 +129,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
     );
   }
 
-  Widget _stat(String label, String value) => Column(
+  Widget _stat(String label, String value, AppPalette palette) => Column(
     children: [
       Text(
         value,
@@ -137,7 +139,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
           color: AppColors.tealStart,
         ),
       ),
-      Text(label, style: pjs(fontSize: 11, color: AppColors.textMuted)),
+      Text(label, style: pjs(fontSize: 11, color: palette.textMuted)),
     ],
   );
 }

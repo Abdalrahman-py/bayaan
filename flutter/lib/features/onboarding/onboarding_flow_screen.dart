@@ -4,6 +4,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/app_state.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import 'widgets/onboarding_page_1.dart';
 import 'widgets/onboarding_page_2.dart';
 import 'widgets/onboarding_page_3.dart';
@@ -45,14 +46,16 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final bool isLastPage = _currentPage == _pageCount - 1;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 8),
+
             Expanded(
               child: PageView(
                 controller: _pageController,

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../services/auth_controller.dart';
 import '../../services/learn_content.dart';
 import '../../services/learn_repository.dart';
@@ -145,32 +146,33 @@ class _PlacementScreenState extends State<PlacementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: _resultLevel != null
-            ? _buildResult(_resultLevel!)
+            ? _buildResult(_resultLevel!, palette)
             : _submitting
             ? const Center(child: CircularProgressIndicator())
             : _bank == null
             ? const Center(child: CircularProgressIndicator())
             : _bank!.isEmpty
-            ? _buildSkip()
+            ? _buildSkip(palette)
             : Column(
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
-                      child: _buildItem(_bank![_index]),
+                      child: _buildItem(_bank![_index], palette),
                     ),
                   ),
-                  if (_lastCorrect != null) _buildDuolingoFeedbackBanner(),
+                  if (_lastCorrect != null) _buildDuolingoFeedbackBanner(palette),
                 ],
               ),
       ),
     );
   }
 
-  Widget _buildResult(int level) {
+  Widget _buildResult(int level, AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -193,7 +195,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
                       'is unlocked if you want to go back over it.'
                 : "You've unlocked the whole Arabic track.",
             textAlign: TextAlign.center,
-            style: pjs(fontSize: 15, color: AppColors.textMuted),
+            style: pjs(fontSize: 15, color: palette.textMuted),
           ),
           const SizedBox(height: 32),
           SizedBox(
@@ -220,7 +222,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
     );
   }
 
-  Widget _buildSkip() {
+  Widget _buildSkip(AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -229,7 +231,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
           Text(
             "No placement items yet — we'll start you from the beginning.",
             textAlign: TextAlign.center,
-            style: pjs(fontSize: 15, color: AppColors.textMuted),
+            style: pjs(fontSize: 15, color: palette.textMuted),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
@@ -244,7 +246,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
     );
   }
 
-  Widget _buildItem(LessonItem item) {
+  Widget _buildItem(LessonItem item, AppPalette palette) {
     final bool answered = _lastCorrect != null;
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -256,7 +258,9 @@ class _PlacementScreenState extends State<PlacementScreen> {
             child: LinearProgressIndicator(
               value: (_index + 1) / _bank!.length,
               minHeight: 8,
-              backgroundColor: const Color(0xFFF5F1E6),
+              backgroundColor: palette.isDark
+                  ? palette.cardBg
+                  : const Color(0xFFF5F1E6),
               valueColor: const AlwaysStoppedAnimation(AppColors.tealStart),
             ),
           ),
@@ -267,7 +271,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
             style: pjs(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
+              color: palette.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -279,7 +283,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
             style: pjs(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
+              color: palette.textMuted,
             ),
           ),
           const SizedBox(height: 16),
@@ -324,7 +328,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
               final bool isCorrect = opt == item.answer;
               final bool isPicked = opt == _selectedOption;
 
-              Color? bg;
+              Color? bg = palette.cardBg;
               Color? border;
               Color textColor = AppColors.tealStart;
 
@@ -345,7 +349,7 @@ class _PlacementScreenState extends State<PlacementScreen> {
                 icon: isAudio ? Icons.volume_up : null,
                 textColor: textColor,
                 background: bg,
-                borderColor: border ?? kTileBorder,
+                borderColor: border ?? palette.borderColor,
                 borderWidth: border != null ? 2 : 1,
                 onTap: answered
                     ? null
@@ -362,16 +366,16 @@ class _PlacementScreenState extends State<PlacementScreen> {
   }
 
   /// Duolingo-style bottom banner matching QuizSessionScreen.
-  Widget _buildDuolingoFeedbackBanner() {
+  Widget _buildDuolingoFeedbackBanner(AppPalette palette) {
     final bool correct = _lastCorrect ?? false;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: BoxDecoration(
-        color: correct
-            ? const Color(0xFFE8F5E9)
-            : const Color(0xFFFFEBEE),
+        color: palette.isDark
+            ? (correct ? const Color(0xFF142E25) : const Color(0xFF331B21))
+            : (correct ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE)),
         border: Border(
           top: BorderSide(
             color: correct ? AppColors.success : AppColors.tajweedError,

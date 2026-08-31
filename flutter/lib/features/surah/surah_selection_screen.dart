@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../shared/widgets/staggered_fade_slide.dart';
 import 'models/surah.dart';
 import 'package:go_router/go_router.dart';
@@ -81,9 +82,10 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final surahs = _filtered;
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -92,8 +94,8 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  _buildHeader(),
-                  _buildFilters(),
+                  _buildHeader(palette),
+                  _buildFilters(palette),
                   ...List.generate(surahs.length, (index) {
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
@@ -114,7 +116,7 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppPalette palette) {
     return FadeTransition(
       opacity: _headerFade,
       child: SlideTransition(
@@ -129,7 +131,7 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
                 style: pjs(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -137,23 +139,23 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
                 height: 48,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFFF5F1E6)),
+                  color: palette.cardBg,
+                  border: Border.all(color: palette.borderColor),
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.search, size: 18, color: AppColors.textMuted),
+                    Icon(Icons.search, size: 18, color: palette.textMuted),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
                         controller: _searchController,
-                        style: pjs(fontSize: 14, color: AppColors.textDark),
+                        style: pjs(fontSize: 14, color: palette.textPrimary),
                         decoration: InputDecoration(
                           hintText: 'Search surah or ayah…',
                           hintStyle: pjs(
                             fontSize: 14,
-                            color: AppColors.textMuted,
+                            color: palette.textMuted,
                           ),
                           border: InputBorder.none,
                           isDense: true,
@@ -170,7 +172,7 @@ class _SurahSelectionScreenState extends State<SurahSelectionScreen>
     );
   }
 
-  Widget _buildFilters() {
+  Widget _buildFilters(AppPalette palette) {
     return FadeTransition(
       opacity: _filtersFade,
       child: Padding(
@@ -218,15 +220,16 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.tealStart : Colors.white,
+          color: isSelected ? AppColors.tealStart : palette.cardBg,
           border: Border.all(
-            color: isSelected ? AppColors.tealStart : const Color(0xFFF5F1E6),
+            color: isSelected ? AppColors.tealStart : palette.borderColor,
           ),
           borderRadius: BorderRadius.circular(100),
         ),
@@ -236,7 +239,7 @@ class _FilterChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 12,
-                color: isSelected ? Colors.white : AppColors.textMuted,
+                color: isSelected ? Colors.white : palette.textMuted,
               ),
               const SizedBox(width: 4),
             ],
@@ -245,7 +248,7 @@ class _FilterChip extends StatelessWidget {
               style: pjs(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : AppColors.textMuted,
+                color: isSelected ? Colors.white : palette.textMuted,
               ),
             ),
           ],
@@ -262,6 +265,7 @@ class _SurahRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -281,8 +285,8 @@ class _SurahRow extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: const Color(0xFFF5F1E6)),
+            color: palette.cardBg,
+            border: Border.all(color: palette.borderColor),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -292,7 +296,7 @@ class _SurahRow extends StatelessWidget {
                 height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.lightBg,
+                  color: palette.background,
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.gold),
                 ),
@@ -318,7 +322,7 @@ class _SurahRow extends StatelessWidget {
                           style: pjs(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
+                            color: palette.textPrimary,
                           ),
                         ),
                         Text(
@@ -336,7 +340,7 @@ class _SurahRow extends StatelessWidget {
                     Text(
                       '${surah.meaning} · ${surah.revelationType} · ${surah.ayahCount} ayahs · ~${surah.estimatedMinutes} min',
                       overflow: TextOverflow.ellipsis,
-                      style: pjs(fontSize: 12, color: AppColors.textMuted),
+                      style: pjs(fontSize: 12, color: palette.textMuted),
                     ),
                   ],
                 ),

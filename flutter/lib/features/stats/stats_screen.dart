@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
+import '../../models/models.dart';
 import '../../services/auth_controller.dart';
 import '../../services/learn_repository.dart';
 import '../../services/progress_repository.dart';
 import '../../services/quran_text.dart';
+import '../audio_compare/audio_compare_screen.dart';
 import '../learn/models/lesson.dart';
 
 /// Progress, Tajweed accuracy, and recitation stats — all read from the
@@ -39,38 +44,67 @@ class _StatsScreenState extends State<StatsScreen> {
   Future<void> _load() async {
     final token = widget.auth.accessToken;
     if (token == null) {
-      setState(() => _error = 'Sign in to see your progress.');
+      if (mounted) {
+        setState(() => _error = 'Sign in to see your progress.');
+      }
       return;
     }
-    if (_error != null) setState(() => _error = null);
+
+    LearnHeader? header;
+    ProgressSummary? summary;
+    List<RecitationSession>? sessions;
+
     try {
-      // ponytail: three round-trips because the header lives on `learn` and the
-      // stats on `progress`. Collapse into one endpoint if this ever feels slow.
       final results = await Future.wait([
-        LearnRepository.path(token),
-        ProgressRepository.summary(token),
-        ProgressRepository.sessions(token),
+        LearnRepository.path(token)
+            .then<LearnHeader?>((p) => p.header)
+            .catchError((_) => null),
+        ProgressRepository.summary(token)
+            .then<ProgressSummary?>((s) => s)
+            .catchError((_) => null),
+        ProgressRepository.sessions(token)
+            .then<List<RecitationSession>?>((s) => s)
+            .catchError((_) => null),
       ]);
-      if (!mounted) return;
+      header = results[0] as LearnHeader?;
+      summary = results[1] as ProgressSummary?;
+      sessions = results[2] as List<RecitationSession>?;
+    } catch (_) {}
+
+    header ??= const LearnHeader(
+      arabicLevel: 0,
+      xp: 0,
+      streakCount: 0,
+      dailyGoalMinutes: 10,
+      reviewsDue: 0,
+    );
+
+    summary ??= const ProgressSummary(
+      totalSessions: 0,
+      perfectSessions: 0,
+      overallAccuracy: 0.0,
+      totalMistakes: 0,
+      mistakeBreakdown: {},
+      sifatBreakdown: {},
+    );
+
+    sessions ??= const [];
+
+    if (mounted) {
       setState(() {
-        _stats = _Stats(
-          (results[0] as LearnPath).header,
-          results[1] as ProgressSummary,
-          results[2] as List<RecitationSession>,
-        );
+        _stats = _Stats(header!, summary!, sessions!);
+        _error = null;
       });
-    } catch (_) {
-      if (mounted) {
-        setState(() => _error = "Couldn't load your progress. Pull to retry.");
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final stats = _stats;
+
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
@@ -82,23 +116,23 @@ class _StatsScreenState extends State<StatsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
+                _buildHeader(palette),
                 const SizedBox(height: 20),
                 if (_error != null)
-                  _message(_error!)
+                  _message(_error!, palette)
                 else if (stats == null)
                   const Padding(
                     padding: EdgeInsets.only(top: 60),
                     child: Center(child: CircularProgressIndicator()),
                   )
                 else ...[
-                  _buildMetricsGrid(stats),
+                  _buildMetricsGrid(stats, palette),
                   const SizedBox(height: 24),
-                  _buildWeeklyActivityCard(stats.sessions),
+                  _buildWeeklyActivityCard(stats.sessions, palette),
                   const SizedBox(height: 24),
-                  _buildFocusAreasCard(stats.summary),
+                  _buildFocusAreasCard(stats.summary, palette),
                   const SizedBox(height: 24),
-                  _buildRecentSessionsCard(stats.sessions),
+                  _buildRecentSessionsCard(stats.sessions, palette),
                 ],
               ],
             ),
@@ -108,18 +142,18 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Widget _message(String text) => Padding(
+  Widget _message(String text, AppPalette palette) => Padding(
     padding: const EdgeInsets.only(top: 60),
     child: Center(
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: pjs(fontSize: 14, color: AppColors.textMuted),
+        style: pjs(fontSize: 14, color: palette.textMuted),
       ),
     ),
   );
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppPalette palette) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -132,13 +166,13 @@ class _StatsScreenState extends State<StatsScreen> {
               style: pjs(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               'Consistency is the key to mastery',
-              style: pjs(fontSize: 13, color: AppColors.textMuted),
+              style: pjs(fontSize: 13, color: palette.textMuted),
             ),
           ],
         ),
@@ -155,7 +189,7 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Widget _buildMetricsGrid(_Stats stats) {
+  Widget _buildMetricsGrid(_Stats stats, AppPalette palette) {
     final summary = stats.summary;
     final header = stats.header;
     return LayoutBuilder(
@@ -169,9 +203,10 @@ class _StatsScreenState extends State<StatsScreen> {
               width: itemWidth,
               icon: Icons.local_fire_department_rounded,
               iconColor: const Color(0xFFF97316),
-              iconBgColor: const Color(0xFFFFF7ED),
+              iconBgColor: const Color(0xFFF97316).withValues(alpha: 0.15),
               value: '${header.streakCount} ${header.streakCount == 1 ? "Day" : "Days"}',
               label: 'Streak',
+              palette: palette,
             ),
             _buildMetricTile(
               width: itemWidth,
@@ -180,6 +215,7 @@ class _StatsScreenState extends State<StatsScreen> {
               iconBgColor: AppColors.tealStart.withValues(alpha: 0.1),
               value: '${summary.totalSessions}',
               label: 'Ayahs Recited',
+              palette: palette,
             ),
             _buildMetricTile(
               width: itemWidth,
@@ -188,6 +224,7 @@ class _StatsScreenState extends State<StatsScreen> {
               iconBgColor: AppColors.success.withValues(alpha: 0.1),
               value: '${(summary.overallAccuracy * 100).round()}%',
               label: 'Tajweed Accuracy',
+              palette: palette,
             ),
             _buildMetricTile(
               width: itemWidth,
@@ -196,6 +233,7 @@ class _StatsScreenState extends State<StatsScreen> {
               iconBgColor: AppColors.gold.withValues(alpha: 0.15),
               value: '${header.xp}',
               label: 'Total XP',
+              palette: palette,
             ),
           ],
         );
@@ -210,13 +248,14 @@ class _StatsScreenState extends State<StatsScreen> {
     required Color iconBgColor,
     required String value,
     required String label,
+    required AppPalette palette,
   }) {
     return Container(
       width: width,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF5F1E6)),
+        color: palette.cardBg,
+        border: Border.all(color: palette.borderColor),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -238,7 +277,7 @@ class _StatsScreenState extends State<StatsScreen> {
             style: pjs(
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
+              color: palette.textPrimary,
             ),
           ),
           const SizedBox(height: 2),
@@ -247,7 +286,7 @@ class _StatsScreenState extends State<StatsScreen> {
             style: pjs(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
+              color: palette.textMuted,
             ),
           ),
         ],
@@ -259,9 +298,8 @@ class _StatsScreenState extends State<StatsScreen> {
 
   static const _dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  Widget _buildWeeklyActivityCard(List<RecitationSession> sessions) {
+  Widget _buildWeeklyActivityCard(List<RecitationSession> sessions, AppPalette palette) {
     final today = _startOfDay(DateTime.now());
-    // Last 7 days, oldest first — a bucket per day of recitation counts.
     final days = List.generate(7, (i) => today.subtract(Duration(days: 6 - i)));
     final counts = days
         .map((d) => sessions.where((s) => _startOfDay(s.createdAt) == d).length)
@@ -270,6 +308,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final maxCount = counts.fold<int>(0, (a, b) => a > b ? a : b);
 
     return _card(
+      palette: palette,
       title: 'Weekly Recitation',
       trailing: _pill(
         '$total ${total == 1 ? "ayah" : "ayahs"}',
@@ -297,7 +336,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         fontWeight: FontWeight.w600,
                         color: isToday
                             ? AppColors.tealStart
-                            : AppColors.textMuted,
+                            : palette.textMuted,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -306,7 +345,7 @@ class _StatsScreenState extends State<StatsScreen> {
                       height: height,
                       decoration: BoxDecoration(
                         color: count == 0
-                            ? const Color(0xFFF5F1E6)
+                            ? palette.borderColor
                             : isToday
                             ? AppColors.tealStart
                             : AppColors.tealStart.withValues(alpha: 0.35),
@@ -322,8 +361,8 @@ class _StatsScreenState extends State<StatsScreen> {
                             ? FontWeight.w800
                             : FontWeight.w600,
                         color: isToday
-                            ? AppColors.textDark
-                            : AppColors.textMuted,
+                            ? palette.textPrimary
+                            : palette.textMuted,
                       ),
                     ),
                   ],
@@ -335,10 +374,7 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  /// Tajweed rules and sifat the reciter misses most — the only per-rule signal
-  /// the backend records is a mistake count, so this is "where to focus", not
-  /// a mastery percentage.
-  Widget _buildFocusAreasCard(ProgressSummary summary) {
+  Widget _buildFocusAreasCard(ProgressSummary summary, AppPalette palette) {
     final entries = [
       ...summary.mistakeBreakdown.entries.map((e) => (e.key, e.value, AppColors.tajweedError)),
       ...summary.sifatBreakdown.entries.map((e) => (e.key, e.value, AppColors.sifatError)),
@@ -347,6 +383,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final maxCount = top.isEmpty ? 0 : top.first.$2;
 
     return _card(
+      palette: palette,
       title: 'Focus Areas',
       trailing: Text(
         '${summary.totalMistakes} total',
@@ -361,6 +398,7 @@ class _StatsScreenState extends State<StatsScreen> {
               summary.totalSessions == 0
                   ? 'Recite an ayah to see where to focus.'
                   : 'No mistakes recorded — keep it up.',
+              palette,
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,7 +418,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                 style: pjs(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.textDark,
+                                  color: palette.textPrimary,
                                 ),
                               ),
                             ),
@@ -400,7 +438,7 @@ class _StatsScreenState extends State<StatsScreen> {
                           child: LinearProgressIndicator(
                             value: maxCount == 0 ? 0 : count / maxCount,
                             minHeight: 7,
-                            backgroundColor: const Color(0xFFF5F1E6),
+                            backgroundColor: palette.borderColor,
                             valueColor: AlwaysStoppedAnimation<Color>(color),
                           ),
                         ),
@@ -412,72 +450,106 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Widget _buildRecentSessionsCard(List<RecitationSession> sessions) {
+  Widget _buildRecentSessionsCard(List<RecitationSession> sessions, AppPalette palette) {
     final recent = sessions.take(5).toList();
     return _card(
+      palette: palette,
       title: 'Recent Practice Sessions',
+      trailing: GestureDetector(
+        onTap: () => context.push(AppRoutes.sessionHistory),
+        child: Text(
+          'History ›',
+          style: pjs(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppColors.tealStart,
+          ),
+        ),
+      ),
       child: recent.isEmpty
-          ? _emptyLine('No recitations yet.')
+          ? _emptyLine('No recitations yet.', palette)
           : Column(
               children: [
                 for (final s in recent)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: (s.allCorrect
-                                    ? AppColors.success
-                                    : AppColors.tajweedError)
-                                .withValues(alpha: 0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            s.allCorrect
-                                ? Icons.check_rounded
-                                : Icons.priority_high_rounded,
-                            size: 20,
-                            color: s.allCorrect
-                                ? AppColors.success
-                                : AppColors.tajweedError,
+                  InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () {
+                      final verse = QuranText.verse(s.sura, s.aya) ??
+                          Verse(
+                            sura: s.sura,
+                            aya: s.aya,
+                            uthmani: '',
+                            surahNameEn: 'Surah ${s.sura}',
+                            surahNameAr: '',
+                          );
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => AudioCompareScreen(
+                            verse: verse,
+                            mistakes: const [],
+                            sifatErrors: const [],
                           ),
                         ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                QuranText.verse(s.sura, s.aya)?.surahNameEn ??
-                                    'Surah ${s.sura}',
-                                style: pjs(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textDark,
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: (s.allCorrect
+                                      ? AppColors.success
+                                      : AppColors.tajweedError)
+                                  .withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              s.allCorrect
+                                  ? Icons.check_rounded
+                                  : Icons.priority_high_rounded,
+                              size: 20,
+                              color: s.allCorrect
+                                  ? AppColors.success
+                                  : AppColors.tajweedError,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  QuranText.verse(s.sura, s.aya)?.surahNameEn ??
+                                      'Surah ${s.sura}',
+                                  style: pjs(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: palette.textPrimary,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                s.allCorrect
-                                    ? 'Ayah ${s.aya} · no mistakes'
-                                    : 'Ayah ${s.aya} · ${s.mistakesCount} '
-                                          '${s.mistakesCount == 1 ? "mistake" : "mistakes"}',
-                                style: pjs(
-                                  fontSize: 12,
-                                  color: AppColors.textMuted,
+                                Text(
+                                  s.allCorrect
+                                      ? 'Ayah ${s.aya} · no mistakes'
+                                      : 'Ayah ${s.aya} · ${s.mistakesCount} '
+                                            '${s.mistakesCount == 1 ? "mistake" : "mistakes"}',
+                                  style: pjs(
+                                    fontSize: 12,
+                                    color: palette.textMuted,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        Text(
-                          _relativeDate(s.createdAt),
-                          style: pjs(fontSize: 11, color: AppColors.textMuted),
-                        ),
-                      ],
+                          Text(
+                            _relativeDate(s.createdAt),
+                            style: pjs(fontSize: 11, color: palette.textMuted),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
               ],
@@ -497,9 +569,9 @@ class _StatsScreenState extends State<StatsScreen> {
     };
   }
 
-  Widget _emptyLine(String text) => Text(
+  Widget _emptyLine(String text, AppPalette palette) => Text(
     text,
-    style: pjs(fontSize: 13, color: AppColors.textMuted),
+    style: pjs(fontSize: 13, color: palette.textMuted),
   );
 
   Widget _pill(String text, Color color) => Container(
@@ -514,12 +586,17 @@ class _StatsScreenState extends State<StatsScreen> {
     ),
   );
 
-  Widget _card({required String title, Widget? trailing, required Widget child}) {
+  Widget _card({
+    required AppPalette palette,
+    required String title,
+    Widget? trailing,
+    required Widget child,
+  }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF5F1E6)),
+        color: palette.cardBg,
+        border: Border.all(color: palette.borderColor),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -533,7 +610,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 style: pjs(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               ?trailing,

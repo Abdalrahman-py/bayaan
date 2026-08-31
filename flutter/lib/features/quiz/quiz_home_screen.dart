@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import 'models/quiz_question.dart';
 
 /// Quiz launcher: three category cards with question counts. [loader] is the
@@ -37,12 +38,13 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(palette),
             Expanded(
               child: FutureBuilder<QuizQuestionBank>(
                 future: _bankFuture,
@@ -51,7 +53,7 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                     return Center(
                       child: Text(
                         'Could not load questions.',
-                        style: pjs(fontSize: 14, color: AppColors.textMuted),
+                        style: pjs(fontSize: 14, color: palette.textMuted),
                       ),
                     );
                   }
@@ -65,7 +67,7 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                       for (final category in QuizCategory.values)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
-                          child: _buildCategoryCard(category, bank),
+                          child: _buildCategoryCard(category, bank, palette),
                         ),
                     ],
                   );
@@ -78,7 +80,7 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       child: Row(
@@ -96,14 +98,14 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
               height: 36,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFFF5F1E6)),
+                color: palette.cardBg,
+                border: Border.all(color: palette.borderColor),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.chevron_left,
                 size: 20,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
           ),
@@ -117,13 +119,13 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                   style: pjs(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
+                    color: palette.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Test your tajweed and Quran knowledge',
-                  style: pjs(fontSize: 12, color: AppColors.textMuted),
+                  style: pjs(fontSize: 12, color: palette.textMuted),
                 ),
               ],
             ),
@@ -133,7 +135,8 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
     );
   }
 
-  Widget _buildCategoryCard(QuizCategory category, QuizQuestionBank bank) {
+  Widget _buildCategoryCard(
+      QuizCategory category, QuizQuestionBank bank, AppPalette palette) {
     final questions = bank.byCategory(category);
     return Material(
       color: Colors.transparent,
@@ -146,8 +149,8 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: AppColors.gold),
+            color: palette.cardBg,
+            border: Border.all(color: palette.borderColor),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -157,7 +160,7 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                 height: 48,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.lightBg,
+                  color: palette.background,
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.gold),
                 ),
@@ -177,22 +180,22 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                       style: pjs(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
+                        color: palette.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${questions.length} '
                       '${questions.length == 1 ? 'question' : 'questions'}',
-                      style: pjs(fontSize: 13, color: AppColors.textMuted),
+                      style: pjs(fontSize: 13, color: palette.textMuted),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
                 size: 20,
-                color: AppColors.textMuted,
+                color: palette.textMuted,
               ),
             ],
           ),

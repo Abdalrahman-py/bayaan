@@ -46,11 +46,13 @@ void main() {
     isTajweed: false,
     kind: 'delete',
   );
+  // The engine's real vocabulary (spike/s1_results_mine.txt), not a tidied-up
+  // stand-in: these are the exact strings that have to survive to the screen.
   const sifat = SifatError(
     phonemesGroup: 'د',
-    attribute: 'shidda',
-    predicted: 'rikhwa',
-    expected: 'shadida',
+    attribute: 'shidda_or_rakhawa',
+    predicted: 'rikhw',
+    expected: 'shadeed',
   );
 
   testWidgets('lists every mistake instead of hiding them behind a tap', (
@@ -80,7 +82,18 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Sound left out'), findsOneWidget);
-    expect(find.text('Heard rikhwa — should be shadida'), findsOneWidget);
+    // No raw engine identifier reaches the screen.
+    expect(find.text('Strength'), findsOneWidget);
+    expect(
+      find.text('Should be a firm stop (shadeed) — you said flowing (rikhw)'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('shidda_or_rakhawa'), findsNothing);
+    // Sifat carry no character range, so the ayah above shows no mark for them.
+    expect(
+      find.textContaining('not marked on the ayah above'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a section is absent when that error kind did not occur', (

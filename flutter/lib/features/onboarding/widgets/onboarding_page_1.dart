@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/app_palette.dart';
 
 class OnboardingPage1 extends StatefulWidget {
   const OnboardingPage1({super.key});
@@ -60,20 +61,21 @@ class _OnboardingPage1State extends State<OnboardingPage1>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Column(
       children: [
         Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [_buildHeroCircle()],
+            children: [_buildHeroCircle(palette)],
           ),
         ),
-        _buildTexts(),
+        _buildTexts(palette),
       ],
     );
   }
 
-  Widget _buildHeroCircle() {
+  Widget _buildHeroCircle(AppPalette palette) {
     return FadeTransition(
       opacity: _ringAnim,
       child: ScaleTransition(
@@ -82,7 +84,7 @@ class _OnboardingPage1State extends State<OnboardingPage1>
           width: 220,
           height: 220,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: palette.cardBg,
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.gold, width: 1),
             boxShadow: [
@@ -138,7 +140,7 @@ class _OnboardingPage1State extends State<OnboardingPage1>
     );
   }
 
-  Widget _buildTexts() {
+  Widget _buildTexts(AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: FadeTransition(
@@ -154,7 +156,7 @@ class _OnboardingPage1State extends State<OnboardingPage1>
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   height: 1.2,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -165,7 +167,7 @@ class _OnboardingPage1State extends State<OnboardingPage1>
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                   height: 1.5,
-                  color: AppColors.textMuted,
+                  color: palette.textMuted,
                 ),
               ),
             ],
@@ -175,3 +177,4 @@ class _OnboardingPage1State extends State<OnboardingPage1>
     );
   }
 }
+

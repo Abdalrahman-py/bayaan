@@ -110,6 +110,35 @@ void main() {
       expect((s as ResultState).allCorrect, isFalse);
     });
 
+    test('pad and non-speech sifat tokens are filtered out and do not cause false errors', () {
+      final s = RecitationController.parseResponse(
+        jsonEncode({
+          'errors': [],
+          'sifat_errors': [
+            {
+              'phonemes_group': 'قل',
+              'attribute': 'qalqla',
+              'predicted': '[pad]',
+              'expected': 'not_moqalqal',
+            },
+            {
+              'phonemes_group': 'ش',
+              'attribute': 'tafashie',
+              'predicted': '<pad>',
+              'expected': 'not_motafashie',
+            }
+          ],
+          'all_correct': true,
+        }),
+        200,
+        _verse,
+      );
+      expect(s, isA<ResultState>());
+      final r = s as ResultState;
+      expect(r.allCorrect, isTrue);
+      expect(r.sifatErrors, isEmpty);
+    });
+
     test('missing all_correct throws FormatException', () {
       expect(
         () => RecitationController.parseResponse(
@@ -127,6 +156,30 @@ void main() {
           jsonEncode({
             'errors': [
               {'error_type': 'tajweed', 'speech_error_type': 'replace'}
+            ],
+            'sifat_errors': [],
+            'all_correct': false,
+          }),
+          200,
+          _verse,
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test('mistakes without the engine text throw rather than mismark', () {
+      // Char offsets index the engine's own reference text. Painting them onto
+      // the bundled asset text would put marks on letters the reciter got
+      // right — a wrong answer is worse here than an honest retry prompt.
+      expect(
+        () => RecitationController.parseResponse(
+          jsonEncode({
+            'errors': [
+              {
+                'uthmani_pos': [1, 3],
+                'error_type': 'tajweed',
+                'speech_error_type': 'replace',
+              }
             ],
             'sifat_errors': [],
             'all_correct': false,

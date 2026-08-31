@@ -147,10 +147,10 @@
     {
       "id": "quran-9",
       "category": "quranTrivia",
-      "question": "Which surah is named after an insect?",
+      "question": "Which surah is named after the ant?",
       "choices": ["An-Nahl", "An-Naml", "Al-Ankabut", "Adh-Dhariyat"],
       "correctIndex": 1,
-      "explanation": "An-Naml (The Ant) is named after the ant."
+      "explanation": "Surah An-Naml is named after the ant (Ayah 18)."
     },
     {
       "id": "quran-10",

@@ -227,8 +227,7 @@ void main() {
     expect(find.text('Page not found'), findsOneWidget);
 
     await tester.tap(find.text('Go home'));
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.byType(HomeScreen), findsOneWidget);
   });

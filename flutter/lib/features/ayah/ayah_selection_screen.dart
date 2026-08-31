@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../models/models.dart';
 import '../../services/quran_text.dart';
 import 'models/ayah.dart';
 import 'widgets/mushaf_page_view.dart';
-import 'package:go_router/go_router.dart';
-import '../../core/router/app_routes.dart';
 
 class AyahSelectionScreen extends StatefulWidget {
   final int surahNumber;
@@ -69,16 +70,17 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final startPage = widget.initialPage > 0
         ? widget.initialPage
         : (QuranText.pageFor(widget.surahNumber, 1) ?? 1);
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildBackHeader(context),
+            _buildBackHeader(context, palette),
             Expanded(
               child: MushafPageView(
                 ayahs: widget.ayahs.isNotEmpty ? widget.ayahs : null,
@@ -101,11 +103,13 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
   /// Anchored to the pressed ayah rather than docked under the page — a bar
   /// below the mushaf would shrink it and re-fit the text at a smaller size.
   Future<void> _showAyahMenu(Ayah ayah, Offset at) async {
+    final palette = AppPalette.of(context);
     setState(() => _selectedAyah = ayah);
 
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final choice = await showMenu<String>(
       context: context,
+      color: palette.cardBg,
       position: RelativeRect.fromLTRB(
         at.dx,
         at.dy,
@@ -123,7 +127,11 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
               Flexible(
                 child: Text(
                   'Practice this ayah',
-                  style: pjs(fontSize: 14, fontWeight: FontWeight.w600),
+                  style: pjs(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: palette.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -138,7 +146,7 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
     context.push(AppRoutes.recordingPath(sura, ayah.number));
   }
 
-  Widget _buildBackHeader(BuildContext context) {
+  Widget _buildBackHeader(BuildContext context, AppPalette palette) {
     final pageInfo = _currentPageInfo;
     final surahEn = pageInfo?.surahNameEn ?? widget.surahNameEnglish;
     final surahAr = pageInfo?.surahNameAr ?? widget.surahNameArabic;
@@ -158,14 +166,14 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
                 height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFFF5F1E6)),
+                  color: palette.cardBg,
+                  border: Border.all(color: palette.borderColor),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.chevron_left,
                   size: 20,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
             ),
@@ -179,12 +187,12 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
                     style: pjs(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
+                      color: palette.textPrimary,
                     ),
                   ),
                   Text(
                     'Page $_currentPageNumber · Choose an ayah to practice',
-                    style: pjs(fontSize: 12, color: AppColors.textMuted),
+                    style: pjs(fontSize: 12, color: palette.textMuted),
                   ),
                 ],
               ),
@@ -204,4 +212,5 @@ class _AyahSelectionScreenState extends State<AyahSelectionScreen>
     );
   }
 }
+
 

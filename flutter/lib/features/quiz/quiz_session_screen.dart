@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import 'models/quiz_question.dart';
 import 'quiz_session_controller.dart';
 
@@ -62,7 +63,11 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_controller.isComplete) return _buildFinishedView();
+    if (_controller.isComplete) {
+      return _buildFinishedView();
+    }
+
+    final palette = AppPalette.of(context);
     final question = _controller.currentQuestion;
     if (question == null) return _buildFinishedView();
 
@@ -70,32 +75,32 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
     final picked = _controller.currentSelection;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(palette),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildProgressBar(),
+                    _buildProgressBar(palette),
                     const SizedBox(height: 20),
-                    _buildQuestionCard(question),
+                    _buildQuestionCard(question, palette),
                     const SizedBox(height: 20),
                     ...List.generate(question.choices.length, (i) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildChoice(question, i, answered, picked),
+                        child: _buildChoice(question, i, answered, picked, palette),
                       );
                     }),
                   ],
                 ),
               ),
             ),
-            if (answered) _buildDuolingoFeedbackBanner(question),
+            if (answered) _buildDuolingoFeedbackBanner(question, palette),
           ],
         ),
       ),
@@ -103,8 +108,9 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
   }
 
   Widget _buildFinishedView() {
+    final palette = AppPalette.of(context);
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -118,22 +124,21 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
                 style: pjs(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 '${_controller.score}/${widget.questions.length} correct · '
                 'best streak ${_controller.bestStreak}',
-                style: pjs(fontSize: 15, color: AppColors.textMuted),
+                style: pjs(fontSize: 15, color: palette.textMuted),
               ),
               const SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 48,
                 child: ElevatedButton(
-                  onPressed: () =>
-                      widget.onComplete(_controller.score, _controller.bestStreak),
+                  onPressed: _next,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.tealStart,
                     foregroundColor: Colors.white,
@@ -155,7 +160,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
@@ -167,14 +172,14 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
               height: 36,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFFF5F1E6)),
+                color: palette.cardBg,
+                border: Border.all(color: palette.borderColor),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.chevron_left,
                 size: 20,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
           ),
@@ -185,15 +190,15 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
               style: pjs(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFF5F1E6)),
+              color: palette.cardBg,
+              border: Border.all(color: palette.borderColor),
               borderRadius: BorderRadius.circular(100),
             ),
             child: Text(
@@ -210,7 +215,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
     );
   }
 
-  Widget _buildProgressBar() {
+  Widget _buildProgressBar(AppPalette palette) {
     final total = widget.questions.length;
     final done = _controller.currentIndex;
     return Column(
@@ -221,48 +226,52 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
           child: LinearProgressIndicator(
             value: total > 0 ? (done / total).clamp(0.0, 1.0) : 0,
             minHeight: 8,
-            backgroundColor: const Color(0xFFF5F1E6),
+            backgroundColor: palette.isDark
+                ? palette.cardBg
+                : const Color(0xFFF5F1E6),
             valueColor: const AlwaysStoppedAnimation(AppColors.tealStart),
           ),
         ),
         const SizedBox(height: 6),
         Text(
           'Question ${done + 1} of $total',
-          style: pjs(fontSize: 12, color: AppColors.textMuted),
+          style: pjs(fontSize: 12, color: palette.textMuted),
         ),
       ],
     );
   }
 
-  Widget _buildQuestionCard(QuizQuestion question) {
+  Widget _buildQuestionCard(QuizQuestion question, AppPalette palette) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: palette.cardBg,
         border: Border.all(color: AppColors.gold),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
-        question.question,
+        bidi(question.question),
         textAlign: TextAlign.center,
         style: pjs(
           fontSize: 17,
           fontWeight: FontWeight.w700,
           height: 1.5,
-          color: AppColors.textDark,
+          color: palette.textPrimary,
         ),
       ),
     );
   }
 
-  Widget _buildChoice(QuizQuestion question, int index, bool answered, int? picked) {
+  Widget _buildChoice(QuizQuestion question, int index, bool answered, int? picked, AppPalette palette) {
     final bool isPicked = picked == index;
     final bool isCorrect = question.correctIndex == index;
+    final String choiceText = question.choices[index];
+    final bool isArabicText = RegExp(r'[\u0600-\u06FF]').hasMatch(choiceText);
 
     Color? bg;
     Color? border;
-    Color? textColor = AppColors.textDark;
+    Color? textColor = palette.textPrimary;
     IconData? icon;
 
     if (answered) {
@@ -287,9 +296,9 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: bg ?? Colors.white,
+            color: bg ?? palette.cardBg,
             border: Border.all(
-              color: border ?? const Color(0xFFF5F1E6),
+              color: border ?? palette.borderColor,
               width: border != null ? 1.5 : 1,
             ),
             borderRadius: BorderRadius.circular(12),
@@ -301,7 +310,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
                 height: 28,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: bg ?? AppColors.lightBg,
+                  color: bg ?? palette.background,
                   shape: BoxShape.circle,
                   border: Border.all(color: border ?? AppColors.gold),
                 ),
@@ -317,12 +326,19 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  question.choices[index],
-                  style: pjs(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
-                  ),
+                  choiceText,
+                  textDirection: isArabicText ? TextDirection.rtl : TextDirection.ltr,
+                  style: isArabicText
+                      ? arabic(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        )
+                      : pjs(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
                 ),
               ),
               if (icon != null) Icon(icon, size: 20, color: textColor),
@@ -334,7 +350,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
   }
 
   /// Duolingo-style bottom banner with celebration / try-again and continue button.
-  Widget _buildDuolingoFeedbackBanner(QuizQuestion question) {
+  Widget _buildDuolingoFeedbackBanner(QuizQuestion question, AppPalette palette) {
     final bool correct = _controller.isCurrentCorrect;
     final String? explanation = question.explanation;
 
@@ -342,9 +358,9 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: BoxDecoration(
-        color: correct
-            ? const Color(0xFFE8F5E9) // soft green
-            : const Color(0xFFFFEBEE), // soft red
+        color: palette.isDark
+            ? (correct ? const Color(0xFF142E25) : const Color(0xFF331B21))
+            : (correct ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE)),
         border: Border(
           top: BorderSide(
             color: correct ? AppColors.success : AppColors.tajweedError,
@@ -383,7 +399,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
               style: pjs(
                 fontSize: 13,
                 height: 1.4,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
           ],
@@ -440,4 +456,3 @@ class _QuizSessionScreenState extends State<QuizSessionScreen> {
     );
   }
 }
-

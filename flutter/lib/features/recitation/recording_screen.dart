@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../models/models.dart';
 import '../../services/app_settings.dart';
 import '../../services/auth_controller.dart';
@@ -92,8 +93,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: ListenableBuilder(
           listenable: widget.controller,
@@ -101,20 +103,20 @@ class _RecordingScreenState extends State<RecordingScreen> {
             final state = widget.controller.stateFor(widget.sura, widget.aya);
             return Column(
               children: [
-                _buildHeader(state.verse),
+                _buildHeader(state.verse, palette),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
                       children: [
                         const SizedBox(height: 4),
-                        _buildVerseCard(state.verse),
+                        _buildVerseCard(state.verse, palette),
                         const SizedBox(height: 16),
-                        _buildListenButton(state),
+                        _buildListenButton(state, palette),
                         const SizedBox(height: 16),
                         _buildCaption(state),
                         const SizedBox(height: 16),
-                        _buildTranslationCard(),
+                        _buildTranslationCard(palette),
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -130,7 +132,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     );
   }
 
-  Widget _buildHeader(Verse verse) {
+  Widget _buildHeader(Verse verse, AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
@@ -145,14 +147,15 @@ class _RecordingScreenState extends State<RecordingScreen> {
               width: 36,
               height: 36,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: palette.cardBg,
+                border: Border.all(color: palette.borderColor),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.chevron_left,
                 size: 20,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
           ),
@@ -163,7 +166,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
               style: pjs(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
           ),
@@ -173,12 +176,12 @@ class _RecordingScreenState extends State<RecordingScreen> {
     );
   }
 
-  Widget _buildVerseCard(Verse verse) {
+  Widget _buildVerseCard(Verse verse, AppPalette palette) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: palette.paperBg,
         border: Border.all(color: AppColors.gold),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -192,7 +195,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
             textAlign: TextAlign.center,
             style: arabic(
               fontSize: 26,
-              color: AppColors.tealStart,
+              color: palette.isDark ? AppColorsDark.textDark : AppColors.tealStart,
               height: 1.9,
             ),
           ),
@@ -227,7 +230,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   /// Hear the ayah in the chosen shaikh's voice, then copy it. Hidden while
   /// the mic is live so the reference can't bleed into the recording.
-  Widget _buildListenButton(RecitationUiState state) {
+  Widget _buildListenButton(RecitationUiState state, AppPalette palette) {
     if (state is Recording || state is Uploading) {
       return const SizedBox.shrink();
     }
@@ -238,7 +241,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: palette.cardBg,
               border: Border.all(color: AppColors.gold),
               borderRadius: BorderRadius.circular(100),
             ),
@@ -293,7 +296,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     );
   }
 
-  Widget _buildTranslationCard() {
+  Widget _buildTranslationCard(AppPalette palette) {
     if (!AppSettings.instance.showTranslation) return const SizedBox.shrink();
     if (_translation == null && _transliteration == null) {
       return const SizedBox.shrink();
@@ -302,8 +305,10 @@ class _RecordingScreenState extends State<RecordingScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cream.withValues(alpha: 0.5),
-        border: Border.all(color: const Color(0xFFF5F1E6)),
+        color: palette.isDark
+            ? AppColorsDark.cardBg
+            : AppColors.cream.withValues(alpha: 0.5),
+        border: Border.all(color: palette.borderColor),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -331,7 +336,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 height: 1.5,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ).copyWith(fontStyle: FontStyle.italic),
             ),
           ],
@@ -354,7 +359,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
             const SizedBox(height: 8),
             Text(
               _translation!,
-              style: pjs(fontSize: 14, height: 1.5, color: AppColors.textDark),
+              style: pjs(fontSize: 14, height: 1.5, color: palette.textPrimary),
             ),
           ],
         ],

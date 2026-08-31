@@ -51,6 +51,19 @@ class Highlight {
   return (snappedStart, snappedEnd);
 }
 
+/// The one cluster an insertion points at.
+///
+/// `uthmani_pos` for an inserted sound is zero-width — it names the gap the
+/// extra sound went into, not a letter. Marking the cluster after the gap shows
+/// the reader where it landed; at the very end of the ayah there is no cluster
+/// after it, so mark the one before instead. Without that the last-position
+/// insert vanished from the verse while still being counted and listed.
+(int, int) _growEmpty(String text, int at) {
+  final (fs, fe) = snapToGraphemes(text, at, at + 1);
+  if (fs < fe) return (fs, fe);
+  return snapToGraphemes(text, at - 1, at);
+}
+
 /// The exact sounds the engine flagged, safe to render as separate spans.
 ///
 /// Ranges that genuinely overlap are merged — a letter carrying both a tajweed
@@ -67,10 +80,8 @@ List<Highlight> mistakeHighlights(String text, List<Mistake> mistakes) {
       m.charRange.start,
       m.charRange.end,
     );
-    // A zero-width range (an insertion) points between clusters; grow it by one
-    // so the reader can still see where the extra sound went.
     if (start == end) {
-      final (s2, e2) = snapToGraphemes(text, start, start + 1);
+      final (s2, e2) = _growEmpty(text, start);
       start = s2;
       end = e2;
     }
@@ -98,11 +109,16 @@ List<Highlight> mistakeHighlights(String text, List<Mistake> mistakes) {
 
 /// The exact sound a single mistake covers, for the breakdown list.
 String mistakeSnippet(String text, Mistake m) {
-  final (start, end) = snapToGraphemes(
-    text,
-    m.charRange.start,
-    m.charRange.end,
-  );
+  if (text.isEmpty) return '';
+  var (start, end) = snapToGraphemes(text, m.charRange.start, m.charRange.end);
+  // Same growth the verse painting uses. Skipping it here left every insertion
+  // row with a blank chip while the ayah above it showed a mark — the two
+  // views of one mistake have to agree.
+  if (start == end) {
+    final (s2, e2) = _growEmpty(text, start);
+    start = s2;
+    end = e2;
+  }
   if (start >= end) return '';
   return text.substring(start, end);
 }

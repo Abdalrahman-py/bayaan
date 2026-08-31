@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../shared/widgets/animated_score_ring.dart';
 
 /// End-of-quiz summary: animated score ring, best streak, play again / done.
@@ -23,9 +24,10 @@ class QuizResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final percent = (score / total * 100).round();
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -39,13 +41,13 @@ class QuizResultScreen extends StatelessWidget {
                 style: pjs(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Best streak $bestStreak',
-                style: pjs(fontSize: 14, color: AppColors.textMuted),
+                style: pjs(fontSize: 14, color: palette.textMuted),
               ),
               const SizedBox(height: 32),
               SizedBox(

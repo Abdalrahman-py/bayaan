@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../services/reciter_audio.dart';
 
 /// One side of the compare screen: a badge (master vs your recitation), a
@@ -149,11 +150,12 @@ class _AudioCompareCardState extends State<AudioCompareCard>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: palette.cardBg,
         border: Border.all(color: widget.borderColor),
         borderRadius: BorderRadius.circular(12),
       ),

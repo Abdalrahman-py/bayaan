@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'reciter_audio.dart';
@@ -89,7 +90,7 @@ class MaddStyle {
 /// apply in memory immediately and persist in the background; nothing here
 /// throws, because a settings store that is unavailable should cost the user
 /// their preference, not the screen.
-class AppSettings {
+class AppSettings extends ChangeNotifier {
   AppSettings._();
   static final AppSettings instance = AppSettings._();
 
@@ -100,12 +101,22 @@ class AppSettings {
   static const _kAutoPlay = 'auto_play_reference';
   static const _kTranslation = 'show_translation';
   static const _kGoal = 'daily_goal_minutes';
+  static const _kThemeMode = 'theme_mode';
+  static const _kDailyReminder = 'daily_reminder';
+  static const _kReminderTime = 'reminder_time';
+  static const _kStreakAlerts = 'streak_alerts';
+  static const _kPracticeReminders = 'practice_reminders';
 
   Reciter reciter = Reciter.fallback;
   MaddStyle maddStyle = MaddStyle.fallback;
   bool autoPlayReference = true;
   bool showTranslation = true;
   int dailyGoalMinutes = 10;
+  ThemeMode themeMode = ThemeMode.system;
+  bool dailyReminder = true;
+  String reminderTime = '8:00 PM';
+  bool streakAlerts = true;
+  bool practiceReminders = true;
 
   static Future<SharedPreferences?> _prefs() async {
     try {
@@ -125,30 +136,86 @@ class AppSettings {
     autoPlayReference = p.getBool(_kAutoPlay) ?? true;
     showTranslation = p.getBool(_kTranslation) ?? true;
     dailyGoalMinutes = p.getInt(_kGoal) ?? 10;
+    dailyReminder = p.getBool(_kDailyReminder) ?? true;
+    reminderTime = p.getString(_kReminderTime) ?? '8:00 PM';
+    streakAlerts = p.getBool(_kStreakAlerts) ?? true;
+    practiceReminders = p.getBool(_kPracticeReminders) ?? true;
+
+    final themeStr = p.getString(_kThemeMode);
+    if (themeStr == 'light') {
+      themeMode = ThemeMode.light;
+    } else if (themeStr == 'dark') {
+      themeMode = ThemeMode.dark;
+    } else {
+      themeMode = ThemeMode.system;
+    }
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    themeMode = mode;
+    notifyListeners();
+    final p = await _prefs();
+    final modeStr = switch (mode) {
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
+      ThemeMode.system => 'system',
+    };
+    await p?.setString(_kThemeMode, modeStr);
   }
 
   Future<void> setReciter(Reciter v) async {
     reciter = v;
+    notifyListeners();
     await (await _prefs())?.setString(_kReciter, v.id);
   }
 
   Future<void> setMaddStyle(MaddStyle v) async {
     maddStyle = v;
+    notifyListeners();
     await (await _prefs())?.setString(_kMadd, v.id);
   }
 
   Future<void> setAutoPlayReference(bool v) async {
     autoPlayReference = v;
+    notifyListeners();
     await (await _prefs())?.setBool(_kAutoPlay, v);
   }
 
   Future<void> setShowTranslation(bool v) async {
     showTranslation = v;
+    notifyListeners();
     await (await _prefs())?.setBool(_kTranslation, v);
   }
 
   Future<void> setDailyGoalMinutes(int v) async {
     dailyGoalMinutes = v;
+    notifyListeners();
     await (await _prefs())?.setInt(_kGoal, v);
   }
+
+  Future<void> setDailyReminder(bool v) async {
+    dailyReminder = v;
+    notifyListeners();
+    await (await _prefs())?.setBool(_kDailyReminder, v);
+  }
+
+  Future<void> setReminderTime(String v) async {
+    reminderTime = v;
+    notifyListeners();
+    await (await _prefs())?.setString(_kReminderTime, v);
+  }
+
+  Future<void> setStreakAlerts(bool v) async {
+    streakAlerts = v;
+    notifyListeners();
+    await (await _prefs())?.setBool(_kStreakAlerts, v);
+  }
+
+  Future<void> setPracticeReminders(bool v) async {
+    practiceReminders = v;
+    notifyListeners();
+    await (await _prefs())?.setBool(_kPracticeReminders, v);
+  }
 }
+

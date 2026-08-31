@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../shared/widgets/progress_ring_painter.dart';
 
 class OnboardingPage3 extends StatefulWidget {
@@ -69,15 +70,16 @@ class _OnboardingPage3State extends State<OnboardingPage3>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Column(
       children: [
-        Expanded(child: Center(child: _buildProgressRing())),
-        _buildTexts(),
+        Expanded(child: Center(child: _buildProgressRing(palette))),
+        _buildTexts(palette),
       ],
     );
   }
 
-  Widget _buildProgressRing() {
+  Widget _buildProgressRing(AppPalette palette) {
     return FadeTransition(
       opacity: _ringContainerAnim,
       child: ScaleTransition(
@@ -86,7 +88,7 @@ class _OnboardingPage3State extends State<OnboardingPage3>
           width: 220,
           height: 220,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: palette.cardBg,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -121,7 +123,7 @@ class _OnboardingPage3State extends State<OnboardingPage3>
                         style: pjs(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textMuted,
+                          color: palette.textMuted,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -136,7 +138,7 @@ class _OnboardingPage3State extends State<OnboardingPage3>
     );
   }
 
-  Widget _buildTexts() {
+  Widget _buildTexts(AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: FadeTransition(
@@ -152,7 +154,7 @@ class _OnboardingPage3State extends State<OnboardingPage3>
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   height: 1.2,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -163,7 +165,7 @@ class _OnboardingPage3State extends State<OnboardingPage3>
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                   height: 1.5,
-                  color: AppColors.textMuted,
+                  color: palette.textMuted,
                 ),
               ),
             ],
@@ -173,3 +175,4 @@ class _OnboardingPage3State extends State<OnboardingPage3>
     );
   }
 }
+

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../models/models.dart';
 import '../../services/app_settings.dart';
 import '../../services/reciter_audio.dart';
@@ -98,24 +99,25 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            _buildHeader(context),
+            _buildHeader(context, palette),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
-                  _buildReferencePlate(),
+                  _buildReferencePlate(palette),
                   const SizedBox(height: 20),
-                  _buildMasterCard(),
+                  _buildMasterCard(palette),
                   const SizedBox(height: 20),
-                  _buildUserCard(),
+                  _buildUserCard(palette),
                   const SizedBox(height: 20),
-                  _buildMatchCard(),
+                  _buildMatchCard(palette),
                 ],
               ),
             ),
@@ -125,7 +127,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AppPalette palette) {
     return FadeTransition(
       opacity: _headerFade,
       child: Padding(
@@ -139,14 +141,14 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
                 height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFFF5F1E6)),
+                  color: palette.cardBg,
+                  border: Border.all(color: palette.borderColor),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.chevron_left,
                   size: 16,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
             ),
@@ -159,7 +161,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
                   style: pjs(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
+                    color: palette.textPrimary,
                   ),
                 ),
                 Text(
@@ -167,7 +169,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
                   style: pjs(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textMuted,
+                    color: palette.textMuted,
                   ),
                 ),
               ],
@@ -178,7 +180,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
     );
   }
 
-  Widget _buildReferencePlate() {
+  Widget _buildReferencePlate(AppPalette palette) {
     return FadeTransition(
       opacity: _referenceAnim,
       child: ScaleTransition(
@@ -187,8 +189,8 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: const Color(0xFFF5F1E6)),
+            color: palette.cardBg,
+            border: Border.all(color: palette.borderColor),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -206,7 +208,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
     );
   }
 
-  Widget _buildMasterCard() {
+  Widget _buildMasterCard(AppPalette palette) {
     return FadeTransition(
       opacity: _masterCardAnim,
       child: SlideTransition(
@@ -216,7 +218,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
           badgeBg: AppColors.cream,
           badgeTextColor: AppColors.gold,
           trailingText: _reciter.shortName,
-          trailingTextColor: AppColors.textMuted,
+          trailingTextColor: palette.textMuted,
           playButtonColor: AppColors.tealStart,
           iconColor: Colors.white,
           borderColor: AppColors.gold,
@@ -247,19 +249,15 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
     return entries.take(3).toList();
   }
 
-  /// How close the attempt was, and what to work on. The number comes from the
-  /// grading engine's phoneme and sifat comparison against the canonical text
-  /// — not from matching the two waveforms against each other, which the app
-  /// does not do.
-  Widget _buildMatchCard() {
+  Widget _buildMatchCard(AppPalette palette) {
     final focus = _focusAreas;
     final total = widget.mistakes.length + widget.sifatErrors.length;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF5F1E6)),
+        color: palette.cardBg,
+        border: Border.all(color: palette.borderColor),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -274,7 +272,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
                 style: pjs(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               Text(
@@ -293,7 +291,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
             child: LinearProgressIndicator(
               value: _score / 100,
               minHeight: 8,
-              backgroundColor: const Color(0xFFF5F1E6),
+              backgroundColor: palette.borderColor,
               valueColor: const AlwaysStoppedAnimation<Color>(
                 AppColors.tealStart,
               ),
@@ -305,7 +303,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
                 ? 'Matched the reference with no issues detected.'
                 : '$total ${total == 1 ? 'difference' : 'differences'} from '
                       '${_reciter.shortName}\'s recitation.',
-            style: pjs(fontSize: 13, color: AppColors.textMuted),
+            style: pjs(fontSize: 13, color: palette.textMuted),
           ),
           if (focus.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -314,7 +312,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
               style: pjs(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -351,7 +349,7 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
     );
   }
 
-  Widget _buildUserCard() {
+  Widget _buildUserCard(AppPalette palette) {
     final errorBars = mistakeBins(
       widget.mistakes,
       widget.verse.uthmani.length,
@@ -363,18 +361,24 @@ class _AudioCompareScreenState extends State<AudioCompareScreen>
         position: _userCardSlide,
         child: AudioCompareCard(
           badgeLabel: 'Your Recitation',
-          badgeBg: const Color(0xFFE0F2FE),
-          badgeTextColor: const Color(0xFF0369A1),
+          badgeBg: palette.isDark
+              ? AppColorsDark.tealStart.withValues(alpha: 0.2)
+              : const Color(0xFFE0F2FE),
+          badgeTextColor: palette.isDark
+              ? AppColorsDark.tealStart
+              : const Color(0xFF0369A1),
           trailingText: '$_score% Accuracy',
           trailingTextColor: AppColors.tealStart,
-          playButtonColor: const Color(0xFFE0DCD3),
-          iconColor: AppColors.textDark,
-          borderColor: const Color(0xFFF5F1E6),
+          playButtonColor: palette.isDark
+              ? AppColorsDark.borderColor
+              : const Color(0xFFE0DCD3),
+          iconColor: palette.textPrimary,
+          borderColor: palette.borderColor,
           waveformHeights: waveformHeights(
             _barCount,
             seed: widget.verse.aya * 7 + widget.verse.sura,
           ),
-          waveformColor: AppColors.textMuted,
+          waveformColor: palette.textMuted,
           errorBarIndices: errorBars,
           audioBytes: widget.recording,
         ),

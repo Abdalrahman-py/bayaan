@@ -14,6 +14,9 @@ class AppRoutes {
   static const stats = '/stats';
   static const settings = '/settings';
   static const emailSignIn = '/sign-in/email';
+  static const editProfile = '/settings/edit-profile';
+  static const addAccount = '/settings/add-account';
+  static const sessionHistory = '/session-history';
   static const learn = '/learn';
   static const placement = '/learn/placement';
   static const lesson = '/learn/lesson/:lessonId';

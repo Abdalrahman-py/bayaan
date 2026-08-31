@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_fonts.dart';
-import '../../shared/widgets/ornamental_divider.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../services/auth_controller.dart';
+import '../../shared/widgets/ornamental_divider.dart';
 
 class SignInScreen extends StatefulWidget {
   final AuthController auth;
@@ -100,18 +101,19 @@ class _SignInScreenState extends State<SignInScreen>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 24),
             _buildLogo(),
             const SizedBox(height: 16),
-            _buildHeader(),
+            _buildHeader(palette),
             const Spacer(),
-            _buildAuthButtons(),
-            _buildFooter(),
+            _buildAuthButtons(palette),
+            _buildFooter(palette),
             const SizedBox(height: 8),
           ],
         ),
@@ -124,51 +126,16 @@ class _SignInScreenState extends State<SignInScreen>
       opacity: _logoAnim,
       child: ScaleTransition(
         scale: _logoAnim,
-        child: SizedBox(
-          width: 64,
-          height: 64,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Transform.rotate(
-                angle: 45 * 3.14159 / 180,
-                child: Container(
-                  width: 51,
-                  height: 51,
-                  decoration: BoxDecoration(
-                    color: AppColors.tealStart,
-                    border: Border.all(color: AppColors.gold, width: 2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              Container(
-                width: 51,
-                height: 51,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.tealStart,
-                  border: Border.all(color: AppColors.gold, width: 2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  'ب',
-                  textDirection: TextDirection.rtl,
-                  style: arabic(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.gold,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        child: Image.asset(
+          'assets/logo/bayaan_logo.png',
+          width: 72,
+          height: 72,
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppPalette palette) {
     return FadeTransition(
       opacity: _headerAnim,
       child: SlideTransition(
@@ -181,7 +148,7 @@ class _SignInScreenState extends State<SignInScreen>
               style: pjs(
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -191,7 +158,7 @@ class _SignInScreenState extends State<SignInScreen>
               style: pjs(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textMuted,
+                color: palette.textMuted,
               ),
             ),
           ],
@@ -200,7 +167,7 @@ class _SignInScreenState extends State<SignInScreen>
     );
   }
 
-  Widget _buildAuthButtons() {
+  Widget _buildAuthButtons(AppPalette palette) {
     return ListenableBuilder(
       listenable: widget.auth,
       builder: (context, _) {
@@ -226,9 +193,9 @@ class _SignInScreenState extends State<SignInScreen>
                     label: loggedOut.submitting
                         ? 'Connecting...'
                         : 'Continue with Google',
-                    backgroundColor: Colors.white,
-                    textColor: AppColors.textDark,
-                    borderColor: const Color(0xFFF5F1E6),
+                    backgroundColor: palette.cardBg,
+                    textColor: palette.textPrimary,
+                    borderColor: palette.borderColor,
                     icon: loggedOut.submitting
                         ? const SizedBox(
                             width: 20,
@@ -247,45 +214,49 @@ class _SignInScreenState extends State<SignInScreen>
                 ),
               ),
               const SizedBox(height: 14),
-          FadeTransition(
-            opacity: _appleAnim,
-            child: SlideTransition(
-              position: _appleSlide,
-              child: _AuthButton(
-                label: 'Continue with Apple',
-                backgroundColor: AppColors.textDark,
-                textColor: Colors.white,
-                icon: const Icon(Icons.apple, size: 22, color: Colors.white),
-                onTap: () => _comingSoon(context, 'Apple sign-in'),
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          FadeTransition(
-            opacity: _emailAnim,
-            child: SlideTransition(
-              position: _emailSlide,
-              child: _AuthButton(
-                label: 'Continue with Email',
-                backgroundColor: AppColors.tealStart,
-                textColor: Colors.white,
-                icon: const Icon(
-                  Icons.mail_outline,
-                  size: 20,
-                  color: Colors.white,
+              FadeTransition(
+                opacity: _appleAnim,
+                child: SlideTransition(
+                  position: _appleSlide,
+                  child: _AuthButton(
+                    label: 'Continue with Apple',
+                    backgroundColor: palette.isDark ? Colors.white : AppColors.textDark,
+                    textColor: palette.isDark ? AppColors.textDark : Colors.white,
+                    icon: Icon(
+                      Icons.apple,
+                      size: 22,
+                      color: palette.isDark ? AppColors.textDark : Colors.white,
+                    ),
+                    onTap: () => _comingSoon(context, 'Apple sign-in'),
+                  ),
                 ),
-                onTap: () => context.push(AppRoutes.emailSignIn),
               ),
-            ),
+              const SizedBox(height: 14),
+              FadeTransition(
+                opacity: _emailAnim,
+                child: SlideTransition(
+                  position: _emailSlide,
+                  child: _AuthButton(
+                    label: 'Continue with Email',
+                    backgroundColor: AppColors.tealStart,
+                    textColor: Colors.white,
+                    icon: const Icon(
+                      Icons.mail_outline,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                    onTap: () => context.push(AppRoutes.emailSignIn),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
-  },
-);
-}
+  }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(AppPalette palette) {
     return FadeTransition(
       opacity: _footerAnim,
       child: Padding(
@@ -301,7 +272,7 @@ class _SignInScreenState extends State<SignInScreen>
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
                 height: 1.4,
-                color: AppColors.textMuted,
+                color: palette.textMuted,
               ),
             ),
           ],

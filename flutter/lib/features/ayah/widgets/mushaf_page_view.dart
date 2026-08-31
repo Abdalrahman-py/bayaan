@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../models/models.dart';
 import '../../../services/quran_text.dart';
 import '../models/ayah.dart';
@@ -329,24 +330,24 @@ class _MushafPageState extends State<_MushafPage> {
     }
   }
 
-  TextStyle _textStyle(double size) => arabic(
+  TextStyle _textStyle(double size, AppPalette palette) => arabic(
     fontSize: size,
     fontWeight: FontWeight.w600,
     height: 1.0,
-    color: AppColors.tealStart,
+    color: palette.isDark ? AppColorsDark.textDark : AppColors.tealStart,
   );
 
-  double _baseWidthOf(String word) => _baseWidths.putIfAbsent(word, () {
+  double _baseWidthOf(String word, AppPalette palette) => _baseWidths.putIfAbsent(word, () {
     final painter = TextPainter(
-      text: TextSpan(text: word, style: _textStyle(_baseSize)),
+      text: TextSpan(text: word, style: _textStyle(_baseSize, palette)),
       textDirection: TextDirection.rtl,
     )..layout();
     return painter.width;
   });
 
-  double _tokenWidth(_Tok tok, double size) => switch (tok) {
+  double _tokenWidth(_Tok tok, double size, AppPalette palette) => switch (tok) {
     _WordTok(:final text, :final endsAyah) =>
-      _baseWidthOf(text) * size / _baseSize +
+      _baseWidthOf(text, palette) * size / _baseSize +
           (endsAyah ? size * 1.25 + size * 0.2 : 0),
   };
 
@@ -369,7 +370,7 @@ class _MushafPageState extends State<_MushafPage> {
       size * 2.4 + (opening.showBasmalah ? size * 2.0 : 0);
 
   /// Largest size at which every block fits the page without scrolling.
-  double _fitFontSize(double maxWidth, double maxHeight) {
+  double _fitFontSize(double maxWidth, double maxHeight, AppPalette palette) {
     for (var size = 26.0; size >= 11.0; size -= 0.5) {
       var total = 0.0;
       for (final block in _blocks) {
@@ -381,7 +382,7 @@ class _MushafPageState extends State<_MushafPage> {
               _tokensFor(block),
               maxWidth: maxWidth,
               spaceWidth: size * 0.28,
-              widthOf: (t) => _tokenWidth(t, size),
+              widthOf: (t) => _tokenWidth(t, size, palette),
             );
             total += lines.length * size * _lineHeightFactor;
         }
@@ -394,12 +395,13 @@ class _MushafPageState extends State<_MushafPage> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFDF7), // warm mushaf-paper white
+          color: palette.paperBg, // warm mushaf-paper background
           border: Border.all(color: AppColors.gold, width: 1.5),
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
@@ -434,11 +436,11 @@ class _MushafPageState extends State<_MushafPage> {
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) =>
-                          _buildPageBody(constraints),
+                          _buildPageBody(constraints, palette),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildPageFooter(),
+                  _buildPageFooter(palette),
                 ],
               ),
             ),
@@ -448,18 +450,18 @@ class _MushafPageState extends State<_MushafPage> {
     );
   }
 
-  Widget _buildPageBody(BoxConstraints constraints) {
+  Widget _buildPageBody(BoxConstraints constraints, AppPalette palette) {
     if (_blocks.isEmpty) return const SizedBox.shrink();
     final width = constraints.maxWidth;
-    final size = _fitFontSize(width, constraints.maxHeight);
+    final size = _fitFontSize(width, constraints.maxHeight, palette);
 
     final children = <Widget>[];
     for (final block in _blocks) {
       switch (block) {
         case SurahOpening():
-          children.add(_buildSurahOpening(block, size));
+          children.add(_buildSurahOpening(block, size, palette));
         case AyahRun():
-          children.addAll(_buildRunLines(block, size, width));
+          children.addAll(_buildRunLines(block, size, width, palette));
       }
     }
 
@@ -471,12 +473,12 @@ class _MushafPageState extends State<_MushafPage> {
     );
   }
 
-  List<Widget> _buildRunLines(AyahRun run, double size, double width) {
+  List<Widget> _buildRunLines(AyahRun run, double size, double width, AppPalette palette) {
     final lines = wrapTokens<_Tok>(
       _tokensFor(run),
       maxWidth: width,
       spaceWidth: size * 0.28,
-      widthOf: (t) => _tokenWidth(t, size),
+      widthOf: (t) => _tokenWidth(t, size, palette),
     );
 
     return List.generate(lines.length, (i) {
@@ -491,14 +493,14 @@ class _MushafPageState extends State<_MushafPage> {
               ? MainAxisAlignment.center
               : MainAxisAlignment.spaceBetween,
           children: [
-            for (final tok in lines[i]) _buildToken(tok, size, isLast),
+            for (final tok in lines[i]) _buildToken(tok, size, isLast, palette),
           ],
         ),
       );
     });
   }
 
-  Widget _buildToken(_Tok tok, double size, bool spaced) {
+  Widget _buildToken(_Tok tok, double size, bool spaced, AppPalette palette) {
     // A centred last line has no stretching to separate its words, so it
     // carries its own inter-word gap.
     final pad = spaced
@@ -519,7 +521,7 @@ class _MushafPageState extends State<_MushafPage> {
             Text(
               text,
               textDirection: TextDirection.rtl,
-              style: _textStyle(size).copyWith(
+              style: _textStyle(size, palette).copyWith(
                 backgroundColor: selected
                     ? AppColors.gold.withValues(alpha: 0.22)
                     : null,
@@ -528,7 +530,7 @@ class _MushafPageState extends State<_MushafPage> {
           ),
           if (endsAyah) ...[
             SizedBox(width: size * 0.2),
-            _buildMedallion(ayah, size),
+            _buildMedallion(ayah, size, palette),
           ],
         ],
       ),
@@ -550,7 +552,7 @@ class _MushafPageState extends State<_MushafPage> {
     return sel != null && sel.sura == ayah.sura && sel.number == ayah.number;
   }
 
-  Widget _buildMedallion(Ayah ayah, double size) {
+  Widget _buildMedallion(Ayah ayah, double size, AppPalette palette) {
     final selected = _isSelected(ayah);
     final diameter = size * 1.25;
     return _ayahGesture(
@@ -560,7 +562,7 @@ class _MushafPageState extends State<_MushafPage> {
         height: diameter,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppColors.gold : AppColors.lightBg,
+          color: selected ? AppColors.gold : palette.background,
           shape: BoxShape.circle,
           border: Border.all(
             color: AppColors.gold,
@@ -573,14 +575,16 @@ class _MushafPageState extends State<_MushafPage> {
           style: arabic(
             fontSize: size * 0.55,
             fontWeight: FontWeight.bold,
-            color: selected ? Colors.white : AppColors.tealStart,
+            color: selected
+                ? Colors.white
+                : (palette.isDark ? AppColorsDark.textDark : AppColors.tealStart),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSurahOpening(SurahOpening opening, double size) {
+  Widget _buildSurahOpening(SurahOpening opening, double size, AppPalette palette) {
     final ch = QuranText.chapters.isNotEmpty &&
             opening.sura <= QuranText.chapters.length
         ? QuranText.chapters[opening.sura - 1]
@@ -630,7 +634,7 @@ class _MushafPageState extends State<_MushafPage> {
                 style: arabic(
                   fontSize: size * 0.85,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.tealStart,
+                  color: palette.isDark ? AppColorsDark.textDark : AppColors.tealStart,
                 ),
               ),
             ),
@@ -674,13 +678,13 @@ class _MushafPageState extends State<_MushafPage> {
     ];
   }
 
-  Widget _buildPageFooter() {
+  Widget _buildPageFooter(AppPalette palette) {
     return Container(
       width: 36,
       height: 36,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.lightBg,
+        color: palette.background,
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.gold, width: 1.5),
       ),
@@ -689,10 +693,9 @@ class _MushafPageState extends State<_MushafPage> {
         style: pjs(
           fontSize: 13,
           fontWeight: FontWeight.bold,
-          color: AppColors.tealStart,
+          color: palette.isDark ? AppColorsDark.textDark : AppColors.tealStart,
         ),
       ),
     );
   }
 }
-

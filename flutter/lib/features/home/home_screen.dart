@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/router/app_router.dart';
+import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
-import 'package:go_router/go_router.dart';
-import '../../core/router/app_routes.dart';
-import '../../core/router/app_router.dart';
+import '../../core/theme/app_palette.dart';
+import '../../services/accounts_manager.dart';
 import '../../services/auth_controller.dart';
 import '../../services/quran_text.dart';
 
@@ -15,7 +18,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  static const double _completionTarget = 0.71;
+
   late final AnimationController _entryController;
 
   late final Animation<double> _headerAnim;
@@ -24,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late final Animation<Offset> _cardSlide;
   late final Animation<double> _suggestedAnim;
   late final Animation<Offset> _suggestedSlide;
+  late final Animation<double> _progressFillAnim;
 
   @override
   void initState() {
@@ -61,6 +68,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       end: Offset.zero,
     ).animate(_suggestedAnim);
 
+    _progressFillAnim = CurvedAnimation(
+      parent: _entryController,
+      curve: const Interval(0.35, 0.95, curve: Curves.easeOutCubic),
+    );
+
     _entryController.forward();
   }
 
@@ -70,10 +82,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  String get _displayName {
+    final active = AccountsManager.instance.activeAccount;
+    if (active.name.isNotEmpty && active.name != 'Learner') return active.name;
+    final email = widget.auth.email;
+    if (email != null && email.isNotEmpty) return email.split('@').first;
+    return 'Learner';
+  }
+
+  String get _avatarInitial =>
+      _displayName.isNotEmpty ? _displayName[0].toUpperCase() : 'B';
+
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -83,10 +108,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(),
-                    _buildResumeSection(),
-                    _buildQuizSection(),
-                    _buildSuggestedSection(),
+                    _buildHeader(palette),
+                    _buildResumeSection(palette),
+                    _buildQuizSection(palette),
+                    _buildSuggestedSection(palette),
                   ],
                 ),
               ),
@@ -97,16 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  String? get _firstName {
-    final email = widget.auth.email;
-    if (email == null || email.isEmpty) return null;
-    return email.split('@').first;
-  }
-
-  String get _avatarInitial =>
-      (_firstName?.isNotEmpty ?? false) ? _firstName![0].toUpperCase() : '?';
-
-  Widget _buildHeader() {
+  Widget _buildHeader(AppPalette palette) {
     return FadeTransition(
       opacity: _headerAnim,
       child: SlideTransition(
@@ -131,12 +147,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _firstName ?? 'Welcome',
+                      'Assalamu Alaikum, $_displayName',
                       overflow: TextOverflow.ellipsis,
                       style: pjs(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textDark,
+                        color: palette.textPrimary,
                       ),
                     ),
                   ],
@@ -168,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildResumeSection() {
+  Widget _buildResumeSection(AppPalette palette) {
     return FadeTransition(
       opacity: _cardAnim,
       child: SlideTransition(
@@ -183,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 style: pjs(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -260,6 +276,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        _buildProgressBar(palette),
+                        const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,
                           height: 48,
@@ -299,7 +317,51 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildQuizSection() {
+  Widget _buildProgressBar(AppPalette palette) {
+    return AnimatedBuilder(
+      animation: _progressFillAnim,
+      builder: (context, child) {
+        final double current = _progressFillAnim.value * _completionTarget;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: current,
+                minHeight: 6,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                valueColor: const AlwaysStoppedAnimation(AppColors.gold),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Module Progress',
+                  style: pjs(
+                    fontSize: 12,
+                    color: AppColors.cream.withValues(alpha: 0.8),
+                  ),
+                ),
+                Text(
+                  '${(current * 100).round()}%',
+                  style: pjs(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildQuizSection(AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       child: Material(
@@ -311,8 +373,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFF5F1E6)),
+              color: palette.cardBg,
+              border: Border.all(color: palette.borderColor),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -322,7 +384,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   height: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppColors.lightBg,
+                    color: palette.background,
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.gold),
                   ),
@@ -342,21 +404,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         style: pjs(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
+                          color: palette.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         'Tajweed tests · Quran trivia · Islamic trivia',
-                        style: pjs(fontSize: 12.5, color: AppColors.textMuted),
+                        style: pjs(fontSize: 12.5, color: palette.textMuted),
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right,
                   size: 20,
-                  color: AppColors.textMuted,
+                  color: palette.textMuted,
                 ),
               ],
             ),
@@ -366,7 +428,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildSuggestedSection() {
+  Widget _buildSuggestedSection(AppPalette palette) {
     return FadeTransition(
       opacity: _suggestedAnim,
       child: SlideTransition(
@@ -381,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 style: pjs(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -402,8 +464,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: const Color(0xFFF5F1E6)),
+                      color: palette.cardBg,
+                      border: Border.all(color: palette.borderColor),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -413,7 +475,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           height: 40,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: AppColors.lightBg,
+                            color: palette.background,
                             shape: BoxShape.circle,
                             border: Border.all(color: AppColors.gold),
                           ),
@@ -436,7 +498,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 style: pjs(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.textDark,
+                                  color: palette.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -444,7 +506,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 'Meccan · 4 ayahs · Deepen your tawheed',
                                 style: pjs(
                                   fontSize: 13,
-                                  color: AppColors.textMuted,
+                                  color: palette.textMuted,
                                 ),
                               ),
                             ],

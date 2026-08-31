@@ -22,6 +22,9 @@ import '../../features/audio_compare/audio_compare_screen.dart';
 import '../../models/models.dart';
 import '../../services/quran_text.dart';
 import '../../features/recitation/recording_screen.dart';
+import '../../features/session_history/session_history_screen.dart';
+import '../../features/settings/add_account_screen.dart';
+import '../../features/settings/edit_profile_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/stats/stats_screen.dart';
@@ -438,6 +441,18 @@ GoRouter createRouter(AppState appState, {String? initialLocation}) => GoRouter(
         if (controller == null) return RoadmapScreen(auth: appState.auth);
         return LessonResultScreen(controller: controller, auth: appState.auth);
       },
+    ),
+    GoRoute(
+      path: AppRoutes.sessionHistory,
+      builder: (context, state) => const SessionHistoryScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.editProfile,
+      builder: (context, state) => const EditProfileScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.addAccount,
+      builder: (context, state) => const AddAccountScreen(),
     ),
   ],
 );

@@ -234,10 +234,22 @@ class RecitationController extends ChangeNotifier {
     final mistakes = (decoded['errors'] as List<dynamic>? ?? [])
         .map((e) => _toMistake(e as Map<String, dynamic>))
         .toList();
-    final sifat = ((decoded['sifat_errors'] as List<dynamic>?) ?? [])
+    final rawSifat = ((decoded['sifat_errors'] as List<dynamic>?) ?? [])
         .map((e) => _toSifat(e as Map<String, dynamic>))
         .toList();
+    // Filter out padding / CTC blank artifacts so they never surface as phantom mistakes
+    final sifat = rawSifat
+        .where((s) => !const ['[pad]', '<pad>', 'pad', 'none', ''].contains(s.predicted.trim().toLowerCase()))
+        .toList();
+    // Every char offset in `errors` indexes the engine's OWN reference text, so
+    // the screen must paint that exact string. Falling back to the bundled asset
+    // text would silently shift every mark by whatever the two spellings differ
+    // by, and mark letters the reciter got right. Without it, refuse the payload
+    // rather than draw a plausible lie.
     final engineUthmani = decoded['uthmani'] as String?;
+    if ((engineUthmani == null || engineUthmani.isEmpty) && mistakes.isNotEmpty) {
+      throw const FormatException('missing uthmani');
+    }
     final resolved = (engineUthmani != null && engineUthmani.isNotEmpty)
         ? verse.copyWith(uthmani: engineUthmani)
         : verse;

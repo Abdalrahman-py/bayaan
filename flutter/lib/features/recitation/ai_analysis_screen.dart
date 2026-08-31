@@ -1,17 +1,18 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../models/models.dart';
 import '../../services/recitation_controller.dart';
-import 'highlighted_verse.dart';
-import 'mistake_highlights.dart';
 import '../../shared/animation/score_math.dart';
 import '../../shared/widgets/animated_score_ring.dart';
 import '../../shared/widgets/ornamental_divider.dart';
+import 'highlighted_verse.dart';
+import 'mistake_highlights.dart';
+import 'sifat_labels.dart';
 
 /// bayaan-ai-analysis from Figma — the mistakes-found result screen. Shown
 /// when ResultState.allCorrect is false; CelebrationScreen handles the
@@ -40,16 +41,17 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final state = widget.controller.stateFor(widget.sura, widget.aya);
     final result = state is ResultState ? state : null;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(palette),
             Expanded(
               child: result == null
                   ? const SizedBox.shrink()
@@ -57,13 +59,13 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       children: [
                         const SizedBox(height: 8),
-                        _buildScoreCard(result),
+                        _buildScoreCard(result, palette),
                         const SizedBox(height: 16),
-                        _buildVerseCard(result),
+                        _buildVerseCard(result, palette),
                         const SizedBox(height: 12),
-                        _buildLegend(result),
+                        _buildLegend(result, palette),
                         const SizedBox(height: 16),
-                        _buildMistakeList(result),
+                        _buildMistakeList(result, palette),
                         const SizedBox(height: 16),
                         _buildCompareButton(),
                         const SizedBox(height: 24),
@@ -76,7 +78,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
@@ -89,14 +91,15 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
               width: 36,
               height: 36,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: palette.cardBg,
+                border: Border.all(color: palette.borderColor),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.chevron_left,
                 size: 20,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
           ),
@@ -109,12 +112,12 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                 style: pjs(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               Text(
                 'Detail of your tajweed feedback',
-                style: pjs(fontSize: 13, color: AppColors.textMuted),
+                style: pjs(fontSize: 13, color: palette.textMuted),
               ),
             ],
           ),
@@ -123,14 +126,15 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
     );
   }
 
-  Widget _buildScoreCard(ResultState result) {
+  Widget _buildScoreCard(ResultState result, AppPalette palette) {
     final score = _score(result);
     final issues = result.mistakes.length + result.sifatErrors.length;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: palette.cardBg,
+        border: Border.all(color: palette.borderColor),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -160,7 +164,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
             style: pjs(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: AppColors.textDark,
+              color: palette.textPrimary,
             ),
           ),
         ],
@@ -182,12 +186,12 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
     );
   }
 
-  Widget _buildVerseCard(ResultState result) {
+  Widget _buildVerseCard(ResultState result, AppPalette palette) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: palette.paperBg,
         border: Border.all(color: AppColors.gold),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -203,7 +207,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
             ),
             style: arabic(
               fontSize: 24,
-              color: AppColors.tealStart,
+              color: palette.isDark ? AppColorsDark.textDark : AppColors.tealStart,
               height: 1.9,
             ),
             tajweedColor: AppColors.tajweedError,
@@ -246,22 +250,22 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
   /// Says what the two highlight colours in the verse above actually mean.
   /// Tajweed slips and plain mispronunciations are different kinds of error
   /// and are corrected differently, so they never share a colour.
-  Widget _buildLegend(ResultState result) {
+  Widget _buildLegend(ResultState result, AppPalette palette) {
     final hasTajweed = result.mistakes.any((m) => m.isTajweed);
     final hasPlain = result.mistakes.any((m) => !m.isTajweed);
     if (!hasTajweed && !hasPlain) return const SizedBox.shrink();
     return Row(
       children: [
         if (hasTajweed) ...[
-          _legendChip(AppColors.tajweedError, _tajweedLabel),
+          _legendChip(AppColors.tajweedError, _tajweedLabel, palette),
           const SizedBox(width: 8),
         ],
-        if (hasPlain) _legendChip(AppColors.plainError, _pronunciationLabel),
+        if (hasPlain) _legendChip(AppColors.plainError, _pronunciationLabel, palette),
       ],
     );
   }
 
-  Widget _legendChip(Color color, String label) {
+  Widget _legendChip(Color color, String label, AppPalette palette) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -280,7 +284,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
           style: pjs(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.textMuted,
+            color: palette.textMuted,
           ),
         ),
       ],
@@ -294,13 +298,6 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
 
   /// Leads with the length the rule requires, and says only which direction
   /// the attempt missed by.
-  ///
-  /// Deliberately never prints the heard count. `predicted_len` is the model's
-  /// estimate from the CTC phoneme sequence, not a measurement of the audio's
-  /// timeline, so "you held 2" can be wrong when the reciter held none at all.
-  /// A learner told that would add two more counts, land on four, and walk
-  /// away believing four is the rule. The target is authoritative and the
-  /// direction is robust; the heard count is neither.
   static String _maddDetail(int got, int expected) {
     final target = expected == 1 ? '1 count' : '$expected counts';
     if (got < expected) return 'Hold $target — yours was too short';
@@ -313,13 +310,12 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
     'insert' => 'Extra sound added',
     'delete' => 'Sound left out',
     'replace' => 'Pronounced differently',
-    _ => kind,
+    _ => 'Pronounced differently',
   };
 
   /// Every mistake, laid out to be read straight through — tajweed rules
-  /// first, then plain pronunciation, then letter characteristics (sifat),
-  /// which the score already counted but the screen never used to show.
-  Widget _buildMistakeList(ResultState result) {
+  /// first, then plain pronunciation, then letter characteristics (sifat).
+  Widget _buildMistakeList(ResultState result, AppPalette palette) {
     final tajweed = result.mistakes.where((m) => m.isTajweed).toList();
     final plain = result.mistakes.where((m) => !m.isTajweed).toList();
     final sifat = result.sifatErrors;
@@ -334,25 +330,26 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
           style: pjs(
             fontSize: 16,
             fontWeight: FontWeight.w800,
-            color: AppColors.textDark,
+            color: palette.textPrimary,
           ),
         ),
         const SizedBox(height: 10),
         if (tajweed.isNotEmpty)
           _section(
+            palette: palette,
             title: _tajweedLabel,
             color: AppColors.tajweedError,
             count: tajweed.length,
             rows: [
               for (final m in tajweed)
                 _mistakeRow(
+                  palette: palette,
                   color: AppColors.tajweedError,
                   arabicText: _snippet(result.verse, m),
                   title: m.ruleNameEn ?? _kindLabel(m.kind),
                   subtitle: m.ruleNameAr,
                   detail: (m.expectedLen != null && m.gotLen != null)
                       ? _maddDetail(m.gotLen!, m.expectedLen!)
-                      // Without a rule name the title already says this.
                       : (m.ruleNameEn != null ? _kindLabel(m.kind) : null),
                 ),
             ],
@@ -360,12 +357,14 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         if (plain.isNotEmpty) ...[
           if (tajweed.isNotEmpty) const SizedBox(height: 12),
           _section(
+            palette: palette,
             title: _pronunciationLabel,
             color: AppColors.plainError,
             count: plain.length,
             rows: [
               for (final m in plain)
                 _mistakeRow(
+                  palette: palette,
                   color: AppColors.plainError,
                   arabicText: _snippet(result.verse, m),
                   title: _kindLabel(m.kind),
@@ -380,18 +379,27 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         if (sifat.isNotEmpty) ...[
           const SizedBox(height: 12),
           _section(
+            palette: palette,
             title: _sifatLabel,
             color: AppColors.sifatError,
             count: sifat.length,
             rows: [
               for (final e in sifat)
                 _mistakeRow(
+                  palette: palette,
                   color: AppColors.sifatError,
                   arabicText: e.phonemesGroup,
-                  title: e.attribute,
+                  title: sifatAttributeLabel(e.attribute),
                   subtitle: null,
-                  detail: 'Heard ${e.predicted} — should be ${e.expected}',
+                  detail: sifatDetail(e.expected, e.predicted),
                 ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                child: Text(
+                  'Heard in your recitation, not marked on the ayah above.',
+                  style: pjs(fontSize: 11, color: palette.textMuted),
+                ),
+              ),
             ],
           ),
         ],
@@ -400,6 +408,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
   }
 
   Widget _section({
+    required AppPalette palette,
     required String title,
     required Color color,
     required int count,
@@ -408,7 +417,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: palette.cardBg,
         border: Border.all(color: color.withValues(alpha: 0.35)),
         borderRadius: BorderRadius.circular(14),
       ),
@@ -440,6 +449,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
   }
 
   Widget _mistakeRow({
+    required AppPalette palette,
     required Color color,
     required String arabicText,
     required String title,
@@ -479,21 +489,21 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                   style: pjs(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
+                    color: palette.textPrimary,
                   ),
                 ),
                 if (subtitle != null)
                   Text(
                     subtitle,
                     textDirection: TextDirection.rtl,
-                    style: arabic(fontSize: 14, color: AppColors.textMuted),
+                    style: arabic(fontSize: 14, color: palette.textMuted),
                   ),
                 if (detail != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       detail,
-                      style: pjs(fontSize: 12, color: AppColors.textMuted),
+                      style: pjs(fontSize: 12, color: palette.textMuted),
                     ),
                   ),
               ],

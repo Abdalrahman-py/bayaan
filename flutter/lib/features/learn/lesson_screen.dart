@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../services/auth_controller.dart';
 import '../../services/lesson_audio_player.dart';
 import '../../shared/widgets/arabic_tile.dart';
@@ -68,22 +69,23 @@ class _LessonScreenState extends State<LessonScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final showFeedback = _controller.phase == LessonPhase.itemFeedback;
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
-            Expanded(child: _buildBody()),
-            if (showFeedback) _buildDuolingoFeedbackBanner(),
+            _buildHeader(palette),
+            Expanded(child: _buildBody(palette)),
+            if (showFeedback) _buildDuolingoFeedbackBanner(palette),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppPalette palette) {
     final lesson = _controller.lesson;
     final total = lesson?.items.length ?? 0;
     final progress =
@@ -106,11 +108,12 @@ class _LessonScreenState extends State<LessonScreen> {
               width: 36,
               height: 36,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: palette.cardBg,
+                border: Border.all(color: palette.borderColor),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 18, color: AppColors.textDark),
+              child: Icon(Icons.close, size: 18, color: palette.textPrimary),
             ),
           ),
           const SizedBox(width: 12),
@@ -120,7 +123,9 @@ class _LessonScreenState extends State<LessonScreen> {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 8,
-                backgroundColor: const Color(0xFFF5F1E6),
+                backgroundColor: palette.isDark
+                    ? palette.cardBg
+                    : const Color(0xFFF5F1E6),
                 valueColor: const AlwaysStoppedAnimation(AppColors.tealStart),
               ),
             ),
@@ -130,7 +135,7 @@ class _LessonScreenState extends State<LessonScreen> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppPalette palette) {
     switch (_controller.phase) {
       case LessonPhase.loading:
         return const Center(child: CircularProgressIndicator());
@@ -142,16 +147,12 @@ class _LessonScreenState extends State<LessonScreen> {
           ),
         );
       case LessonPhase.teaching:
-        // Scrolls: unit 8's narration plus a full ayah in the glyph tiles is
-        // taller than a phone screen. The button follows the text rather than
-        // being pinned to the bottom, so short lessons don't open on a screen
-        // of empty space.
-        return SingleChildScrollView(child: _buildTeach());
+        return SingleChildScrollView(child: _buildTeach(palette));
       case LessonPhase.exercise:
       case LessonPhase.itemFeedback:
-        return SingleChildScrollView(child: _buildExercise());
+        return SingleChildScrollView(child: _buildExercise(palette));
       case LessonPhase.recording:
-        return _buildRecording();
+        return _buildRecording(palette);
       case LessonPhase.grading:
         return const Center(child: CircularProgressIndicator());
       case LessonPhase.summary:
@@ -159,7 +160,7 @@ class _LessonScreenState extends State<LessonScreen> {
     }
   }
 
-  Widget _buildTeach() {
+  Widget _buildTeach(AppPalette palette) {
     final teach = _controller.lesson!.teach!;
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -172,16 +173,13 @@ class _LessonScreenState extends State<LessonScreen> {
             style: pjs(
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
+              color: palette.textPrimary,
             ),
           ),
           const SizedBox(height: 20),
           if (teach.glyphs.isNotEmpty)
             Wrap(
               alignment: WrapAlignment.center,
-              // The glyphs are a sequence — the ayat of a surah, the letters of
-              // a family — so they have to run right to left. Laid out LTR,
-              // Al-Ikhlas opened with its second ayah on the right.
               textDirection: TextDirection.rtl,
               spacing: 12,
               runSpacing: 12,
@@ -191,6 +189,7 @@ class _LessonScreenState extends State<LessonScreen> {
                       text: g,
                       textColor: AppColors.tealStart,
                       borderColor: AppColors.gold,
+                      background: palette.cardBg,
                     ),
                   )
                   .toList(),
@@ -201,15 +200,16 @@ class _LessonScreenState extends State<LessonScreen> {
           Text(
             bidi(teach.narrationEn),
             textAlign: TextAlign.center,
-            style: pjs(fontSize: 15, height: 1.6, color: AppColors.textDark),
+            style: pjs(fontSize: 15, height: 1.6, color: palette.textPrimary),
           ),
           if (teach.focusEn != null) ...[
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.tealStart.withValues(alpha: 0.07),
+                color: AppColors.tealStart.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: palette.borderColor),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,7 +223,7 @@ class _LessonScreenState extends State<LessonScreen> {
                       style: pjs(
                         fontSize: 13,
                         height: 1.5,
-                        color: AppColors.textDark,
+                        color: palette.textPrimary,
                       ),
                     ),
                   ),
@@ -258,7 +258,7 @@ class _LessonScreenState extends State<LessonScreen> {
     );
   }
 
-  Widget _buildExercise() {
+  Widget _buildExercise(AppPalette palette) {
     final item = _controller.currentItem;
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -272,14 +272,12 @@ class _LessonScreenState extends State<LessonScreen> {
             style: pjs(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
+              color: palette.textMuted,
             ),
           ),
           if (item.promptTextAr != null) ...[
             const SizedBox(height: 24),
             Center(
-              // A single letter wants 56pt; a word from unit 7 would run off
-              // the screen at that size, so shrink rather than clip.
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
@@ -327,21 +325,22 @@ class _LessonScreenState extends State<LessonScreen> {
           const SizedBox(height: 32),
           if (item.type == ExerciseType.echo ||
               item.type == ExerciseType.readAloudSyllable)
-            _buildEchoPrompt(item)
+            _buildEchoPrompt(item, palette)
           else
-            _buildOptions(item),
+            _buildOptions(item, palette),
         ],
       ),
     );
   }
 
-  Widget _buildEchoPrompt(LessonItem item) {
+  Widget _buildEchoPrompt(LessonItem item, AppPalette palette) {
     return Column(
       children: [
         ArabicTile(
           text: item.referenceText ?? '',
           textColor: AppColors.tealStart,
           borderColor: AppColors.gold,
+          background: palette.cardBg,
         ),
         const SizedBox(height: 24),
         GestureDetector(
@@ -370,7 +369,7 @@ class _LessonScreenState extends State<LessonScreen> {
     );
   }
 
-  Widget _buildOptions(LessonItem item) {
+  Widget _buildOptions(LessonItem item, AppPalette palette) {
     final bool isFeedback = _controller.phase == LessonPhase.itemFeedback;
     final bool reveal = _controller.answerRevealed;
     final bool hintable =
@@ -391,13 +390,10 @@ class _LessonScreenState extends State<LessonScreen> {
             final bool isPicked = opt == _selectedOption;
             final bool struck = _controller.eliminated.contains(opt);
 
-            Color? bg;
+            Color? bg = palette.cardBg;
             Color? border;
             Color textColor = AppColors.tealStart;
 
-            // A wrong pick is marked wrong; the right answer stays hidden
-            // until the learner asks for it. Showing it on the first miss is
-            // what made "Try Again" pointless.
             if (isPicked && isFeedback && !isCorrect) {
               bg = AppColors.tajweedError.withValues(alpha: 0.12);
               border = AppColors.tajweedError;
@@ -408,14 +404,18 @@ class _LessonScreenState extends State<LessonScreen> {
               border = AppColors.success;
               textColor = AppColors.success;
             }
-            if (struck) textColor = AppColors.textMuted;
+            if (struck) textColor = palette.textMuted;
 
             final tile = ArabicTile(
               text: opt,
               icon: isAudio ? Icons.volume_up : null,
               textColor: textColor,
-              background: struck ? const Color(0xFFF5F1E6) : bg,
-              borderColor: border ?? kTileBorder,
+              background: struck
+                  ? (palette.isDark
+                      ? palette.cardBg.withValues(alpha: 0.5)
+                      : const Color(0xFFF5F1E6))
+                  : bg,
+              borderColor: border ?? palette.borderColor,
               borderWidth: border != null ? 2 : 1,
               onTap: (isFeedback || struck)
                   ? null
@@ -449,7 +449,7 @@ class _LessonScreenState extends State<LessonScreen> {
     );
   }
 
-  Widget _buildRecording() {
+  Widget _buildRecording(AppPalette palette) {
     final s = _controller.elapsedRecordingSec;
     return Center(
       child: Column(
@@ -484,15 +484,13 @@ class _LessonScreenState extends State<LessonScreen> {
   }
 
   /// Duolingo-style bottom banner matching QuizSessionScreen.
-  Widget _buildDuolingoFeedbackBanner() {
+  Widget _buildDuolingoFeedbackBanner(AppPalette palette) {
     final correct = _controller.lastCorrect ?? false;
     final feedback = _controller.lastFeedback;
     final item = _controller.currentItem;
     final bool isChoice =
         item.type != ExerciseType.echo &&
         item.type != ExerciseType.readAloudSyllable;
-    // On a miss the learner has to try again; Continue only appears once
-    // they've got it, asked to see the answer, or missed twice.
     final bool canAdvance = _controller.canAdvance;
     final bool offerReveal =
         !correct && isChoice && !_controller.answerRevealed &&
@@ -502,9 +500,9 @@ class _LessonScreenState extends State<LessonScreen> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: BoxDecoration(
-        color: correct
-            ? const Color(0xFFE8F5E9)
-            : const Color(0xFFFFEBEE),
+        color: palette.isDark
+            ? (correct ? const Color(0xFF142E25) : const Color(0xFF331B21))
+            : (correct ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE)),
         border: Border(
           top: BorderSide(
             color: correct ? AppColors.success : AppColors.tajweedError,
@@ -547,7 +545,7 @@ class _LessonScreenState extends State<LessonScreen> {
               style: pjs(
                 fontSize: 13,
                 height: 1.4,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
           ],
@@ -582,7 +580,7 @@ class _LessonScreenState extends State<LessonScreen> {
                   child: TextButton(
                     onPressed: _controller.revealAnswer,
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textMuted,
+                      foregroundColor: palette.textMuted,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(

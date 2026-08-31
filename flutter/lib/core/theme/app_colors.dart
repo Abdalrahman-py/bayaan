@@ -24,3 +24,25 @@ class AppColors {
     colors: [tealStart, tealEnd],
   );
 }
+
+class AppColorsDark {
+  AppColorsDark._();
+
+  static const Color lightBg = Color(0xFF14211E);
+  static const Color cardBg = Color(0xFF1E2E29);
+  static const Color paperBg = Color(0xFF1A2A26);
+  static const Color textDark = Color(0xFFF0E4C3);
+  static const Color textMuted = Color(0xFF8FA39C);
+  static const Color borderColor = Color(0xFF2A3B35);
+
+  static const Color tealStart = AppColors.tealStart;
+  static const Color tealEnd = AppColors.tealEnd;
+  static const Color gold = AppColors.gold;
+  static const Color cream = AppColors.cream;
+
+  static const Color tajweedError = AppColors.tajweedError;
+  static const Color plainError = AppColors.plainError;
+  static const Color sifatError = AppColors.sifatError;
+  static const Color success = AppColors.success;
+}
+

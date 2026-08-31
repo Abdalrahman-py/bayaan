@@ -33,6 +33,7 @@ flutter:
     - assets/quran/chapters.json
     - assets/quran/pages.json
     - assets/icons/google_logo.png
+    - assets/logo/bayaan_logo.png
     - assets/content/curriculum.json
     - assets/content/lessons/
     - assets/content/quiz/questions.json

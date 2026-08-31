@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../services/recitation_controller.dart';
 import '../../shared/animation/score_math.dart';
 import '../../shared/widgets/dashed_circle_painter.dart';
@@ -29,9 +30,8 @@ class CelebrationScreen extends StatefulWidget {
 }
 
 class _CelebrationScreenState extends State<CelebrationScreen>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late final AnimationController _entryController;
-  late final AnimationController _scoreController;
 
   late final Animation<double> _plateAnim;
   late final Animation<double> _scoreCountAnim;
@@ -53,6 +53,10 @@ class _CelebrationScreenState extends State<CelebrationScreen>
     _plateAnim = CurvedAnimation(
       parent: _entryController,
       curve: const Interval(0.0, 0.35, curve: Curves.easeOutBack),
+    );
+    _scoreCountAnim = CurvedAnimation(
+      parent: _entryController,
+      curve: const Interval(0.25, 0.85, curve: Curves.easeOutCubic),
     );
     _labelAnim = CurvedAnimation(
       parent: _entryController,
@@ -79,40 +83,26 @@ class _CelebrationScreenState extends State<CelebrationScreen>
       end: Offset.zero,
     ).animate(_buttonAnim);
 
-    _scoreController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _scoreCountAnim = CurvedAnimation(
-      parent: _scoreController,
-      curve: Curves.easeOutCubic,
-    );
-
     _entryController.forward();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) _scoreController.forward();
-    });
   }
 
   @override
   void dispose() {
     _entryController.dispose();
-    _scoreController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+
     return Scaffold(
+      backgroundColor: palette.background,
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.lightBg, Color(0xFFF5F1E6)],
-          ),
+        decoration: BoxDecoration(
+          color: palette.background,
         ),
         child: SafeArea(
           child: Padding(
@@ -120,9 +110,9 @@ class _CelebrationScreenState extends State<CelebrationScreen>
             child: Column(
               children: [
                 const Spacer(),
-                _buildScorePlate(),
+                _buildScorePlate(palette),
                 const SizedBox(height: 32),
-                _buildMessage(),
+                _buildMessage(palette),
                 const SizedBox(height: 28),
                 _buildOrnamentStars(),
                 const Spacer(),
@@ -136,7 +126,7 @@ class _CelebrationScreenState extends State<CelebrationScreen>
     );
   }
 
-  Widget _buildScorePlate() {
+  Widget _buildScorePlate(AppPalette palette) {
     return FadeTransition(
       opacity: _plateAnim,
       child: ScaleTransition(
@@ -146,7 +136,7 @@ class _CelebrationScreenState extends State<CelebrationScreen>
           height: 220,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: palette.cardBg,
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.gold, width: 2),
             boxShadow: [
@@ -211,7 +201,7 @@ class _CelebrationScreenState extends State<CelebrationScreen>
     );
   }
 
-  Widget _buildMessage() {
+  Widget _buildMessage(AppPalette palette) {
     return FadeTransition(
       opacity: _messageAnim,
       child: SlideTransition(
@@ -224,7 +214,7 @@ class _CelebrationScreenState extends State<CelebrationScreen>
               style: pjs(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
+                color: palette.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -234,7 +224,7 @@ class _CelebrationScreenState extends State<CelebrationScreen>
               style: pjs(
                 fontSize: 14,
                 height: 1.5,
-                color: AppColors.textMuted,
+                color: palette.textMuted,
               ),
             ),
           ],

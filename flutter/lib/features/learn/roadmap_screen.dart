@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 import '../../services/auth_controller.dart';
 import '../../services/learn_content.dart';
 import '../../services/learn_repository.dart';
@@ -92,8 +93,9 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: palette.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -110,14 +112,15 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                       width: 36,
                       height: 36,
                       alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: palette.cardBg,
+                        border: Border.all(color: palette.borderColor),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.chevron_left,
                         size: 20,
-                        color: AppColors.textDark,
+                        color: palette.textPrimary,
                       ),
                     ),
                   ),
@@ -128,7 +131,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                       style: pjs(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textDark,
+                        color: palette.textPrimary,
                       ),
                     ),
                   ),
@@ -147,7 +150,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
               ),
             ),
             if (_header != null) _buildHeaderCard(_header!),
-            Expanded(child: _buildBody()),
+            Expanded(child: _buildBody(palette)),
           ],
         ),
       ),
@@ -193,12 +196,12 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
     ],
   );
 
-  Widget _buildBody() {
+  Widget _buildBody(AppPalette palette) {
     if (_error != null) {
       return Center(
         child: Text(
           _error!,
-          style: pjs(fontSize: 14, color: AppColors.textMuted),
+          style: pjs(fontSize: 14, color: palette.textMuted),
         ),
       );
     }
@@ -207,11 +210,11 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
     }
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-      children: [for (final unit in _path!.units) _buildUnit(unit)],
+      children: [for (final unit in _path!.units) _buildUnit(unit, palette)],
     );
   }
 
-  Widget _buildUnit(RoadmapUnit unit) {
+  Widget _buildUnit(RoadmapUnit unit, AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -225,7 +228,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                   style: pjs(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
+                    color: palette.textPrimary,
                   ),
                 ),
               ),
@@ -241,19 +244,19 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          ...unit.lessons.map(_buildLessonRow),
+          ...unit.lessons.map((l) => _buildLessonRow(l, palette)),
         ],
       ),
     );
   }
 
-  Widget _buildLessonRow(RoadmapLesson l) {
+  Widget _buildLessonRow(RoadmapLesson l, AppPalette palette) {
     final locked = l.status == LessonStatus.locked;
     final completed = l.status == LessonStatus.completed;
     final color = completed
         ? AppColors.success
         : locked
-        ? AppColors.textMuted
+        ? palette.textMuted
         : AppColors.tealStart;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -261,20 +264,19 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          // ponytail: a locked lesson still opens on tap, deliberately — it is
-          // the only way to reach later units for testing while the track is
-          // being built. The lock styling is honest about the gate; enforcing
-          // it is one line (`onTap: locked ? null : ...`) and must go in
-          // before release.
           onTap: () => context.push(AppRoutes.lessonPath(l.meta.lessonId)),
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: locked ? const Color(0xFFF5F1E6) : Colors.white,
+              color: locked
+                  ? (palette.isDark
+                      ? palette.cardBg.withValues(alpha: 0.5)
+                      : const Color(0xFFF5F1E6))
+                  : palette.cardBg,
               border: Border.all(
                 color: l.meta.isCheckpoint
                     ? AppColors.gold
-                    : const Color(0xFFF5F1E6),
+                    : palette.borderColor,
               ),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -300,8 +302,8 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: locked
-                              ? AppColors.textMuted
-                              : AppColors.textDark,
+                              ? palette.textMuted
+                              : palette.textPrimary,
                         ),
                       ),
                       if (l.meta.isCheckpoint)

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_palette.dart';
 
 class AppBottomNav extends StatelessWidget {
   final int currentIndex; // 0=Home, 1=Surahs, 2=Stats, 3=Settings
@@ -21,13 +22,15 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFF5F1E6))),
+      decoration: BoxDecoration(
+        color: palette.cardBg,
+        border: Border(top: BorderSide(color: palette.borderColor)),
       ),
       child: SafeArea(
         top: false,
+
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: Row(

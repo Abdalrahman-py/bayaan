@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../shared/widgets/animated_arabic_text.dart';
 
 class OnboardingPage2 extends StatefulWidget {
@@ -69,20 +70,21 @@ class _OnboardingPage2State extends State<OnboardingPage2>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Column(
       children: [
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Center(child: _buildCalligraphyCard()),
+            child: Center(child: _buildCalligraphyCard(palette)),
           ),
         ),
-        _buildTexts(),
+        _buildTexts(palette),
       ],
     );
   }
 
-  Widget _buildCalligraphyCard() {
+  Widget _buildCalligraphyCard(AppPalette palette) {
     return FadeTransition(
       opacity: _cardAnim,
       child: AnimatedBuilder(
@@ -96,7 +98,7 @@ class _OnboardingPage2State extends State<OnboardingPage2>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: palette.cardBg,
               border: Border.all(color: AppColors.gold, width: 1),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
@@ -162,7 +164,7 @@ class _OnboardingPage2State extends State<OnboardingPage2>
     );
   }
 
-  Widget _buildTexts() {
+  Widget _buildTexts(AppPalette palette) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: FadeTransition(
@@ -178,7 +180,7 @@ class _OnboardingPage2State extends State<OnboardingPage2>
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   height: 1.2,
-                  color: AppColors.textDark,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -189,7 +191,7 @@ class _OnboardingPage2State extends State<OnboardingPage2>
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                   height: 1.5,
-                  color: AppColors.textMuted,
+                  color: palette.textMuted,
                 ),
               ),
             ],
@@ -199,3 +201,4 @@ class _OnboardingPage2State extends State<OnboardingPage2>
     );
   }
 }
+

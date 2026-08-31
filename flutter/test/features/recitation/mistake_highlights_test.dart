@@ -77,6 +77,15 @@ void main() {
       ]);
     });
 
+    test('an insertion at the very end marks the last cluster', () {
+      // Real engine output: `uthmani_pos: [len, len]` when the reciter added a
+      // sound after the last letter. Growing forward finds nothing, so this
+      // used to vanish from the ayah while still being counted on the ring.
+      expect(mistakeHighlights(muqattaat, [at(5, 5)]), [
+        const Highlight(3, 5, true),
+      ]);
+    });
+
     test('empty inputs yield nothing', () {
       expect(mistakeHighlights('', [at(0, 3)]), isEmpty);
       expect(mistakeHighlights('بسم', const []), isEmpty);
@@ -88,6 +97,13 @@ void main() {
       expect(mistakeSnippet(muqattaat, at(1, 2)), 'لٓ');
       expect(mistakeSnippet(muqattaat, at(0, 1)), 'ا');
       expect(mistakeSnippet(muqattaat, at(3, 4)), 'مٓ');
+    });
+
+    test('an insertion gets the same cluster the verse marks, not a blank', () {
+      // The chip in the breakdown list and the mark on the ayah are two views
+      // of one mistake; a blank chip beside a marked letter reads as a bug.
+      expect(mistakeSnippet(muqattaat, at(1, 1)), 'لٓ');
+      expect(mistakeSnippet(muqattaat, at(5, 5)), 'مٓ');
     });
   });
 }
