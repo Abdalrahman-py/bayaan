@@ -152,6 +152,10 @@ class Muaalem:
                 exp_val = _sifa_str(row.get(f"exp_{key}"))
                 if not pred_val or pred_val == "None" or exp_val is None:
                     continue
+                # CTC blanks / padding tokens represent unaligned frames or silence,
+                # not active letter quality mispronunciations.
+                if pred_val in ("[pad]", "<pad>", "pad", "None", ""):
+                    continue
                 if pred_val == exp_val:
                     continue
                 confidence = None
