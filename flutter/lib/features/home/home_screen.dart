@@ -9,6 +9,7 @@ import '../../core/theme/app_palette.dart';
 import '../../services/accounts_manager.dart';
 import '../../services/auth_controller.dart';
 import '../../services/quran_text.dart';
+import '../settings/widgets/account_avatar.dart';
 
 class HomeScreen extends StatefulWidget {
   final AuthController auth;
@@ -36,17 +37,26 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
 
+    AccountsManager.instance.load().then((_) {
+      if (mounted) {
+        AccountsManager.instance.syncWithAuth(
+          displayName: widget.auth.displayName,
+          email: widget.auth.email,
+        );
+      }
+    });
+
     _entryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 900),
     );
 
     _headerAnim = CurvedAnimation(
       parent: _entryController,
-      curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
+      curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
     );
     _headerSlide = Tween<Offset>(
-      begin: const Offset(0, -0.15),
+      begin: const Offset(0, 0.15),
       end: Offset.zero,
     ).animate(_headerAnim);
 
@@ -85,13 +95,13 @@ class _HomeScreenState extends State<HomeScreen>
   String get _displayName {
     final active = AccountsManager.instance.activeAccount;
     if (active.name.isNotEmpty && active.name != 'Learner') return active.name;
+    if (widget.auth.displayName != null && widget.auth.displayName!.isNotEmpty) {
+      return widget.auth.displayName!;
+    }
     final email = widget.auth.email;
     if (email != null && email.isNotEmpty) return email.split('@').first;
     return 'Learner';
   }
-
-  String get _avatarInitial =>
-      _displayName.isNotEmpty ? _displayName[0].toUpperCase() : 'B';
 
   @override
   Widget build(BuildContext context) {
@@ -104,16 +114,21 @@ class _HomeScreenState extends State<HomeScreen>
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(palette),
-                    _buildResumeSection(palette),
-                    _buildQuizSection(palette),
-                    _buildSuggestedSection(palette),
-                  ],
-                ),
+              child: ListenableBuilder(
+                listenable: Listenable.merge([AccountsManager.instance, widget.auth]),
+                builder: (context, _) {
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(palette),
+                        _buildResumeSection(palette),
+                        _buildQuizSection(palette),
+                        _buildSuggestedSection(palette),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -123,6 +138,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildHeader(AppPalette palette) {
+    final activeAccount = AccountsManager.instance.activeAccount.copyWith(
+      name: _displayName,
+    );
+
     return FadeTransition(
       opacity: _headerAnim,
       child: SlideTransition(
@@ -159,21 +178,19 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.tealStart,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.gold, width: 2),
-                ),
-                child: Text(
-                  _avatarInitial,
-                  style: pjs(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              Semantics(
+                button: true,
+                label: 'Learner profile: $_displayName, tap to edit',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(100),
+                  onTap: () => context.push(AppRoutes.editProfile),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: AccountAvatar(
+                      account: activeAccount,
+                      size: 44,
+                      isDecorative: false,
+                    ),
                   ),
                 ),
               ),

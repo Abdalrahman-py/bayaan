@@ -45,6 +45,36 @@ class AccountsManager extends ChangeNotifier {
     await prefs.setString(_kActiveAccountIdKey, _activeAccountId);
   }
 
+  void syncWithAuth({String? displayName, String? email}) {
+    bool changed = false;
+    final nameToUse = (displayName != null && displayName.trim().isNotEmpty)
+        ? displayName.trim()
+        : null;
+
+    if (_accounts.length == 1 && _accounts.first.name == 'Learner' && nameToUse != null) {
+      _accounts = [
+        _accounts.first.copyWith(
+          name: nameToUse,
+          email: email ?? _accounts.first.email,
+        ),
+      ];
+      changed = true;
+    } else if (activeAccount.name == 'Learner' && nameToUse != null) {
+      _accounts = _accounts.map((a) {
+        if (a.id == _activeAccountId) {
+          return a.copyWith(name: nameToUse, email: email ?? a.email);
+        }
+        return a;
+      }).toList();
+      changed = true;
+    }
+
+    if (changed) {
+      notifyListeners();
+      _save();
+    }
+  }
+
   void switchAccount(String id) {
     if (_accounts.any((a) => a.id == id)) {
       _activeAccountId = id;
@@ -53,10 +83,20 @@ class AccountsManager extends ChangeNotifier {
     }
   }
 
-  void updateActiveAccount({required String name, required String email}) {
+  void updateActiveAccount({
+    required String name,
+    String? email,
+    String? avatarPath,
+    bool clearAvatar = false,
+  }) {
     _accounts = _accounts.map((a) {
       if (a.id == _activeAccountId) {
-        return a.copyWith(name: name, email: email);
+        return a.copyWith(
+          name: name,
+          email: email ?? a.email,
+          avatarPath: avatarPath,
+          clearAvatar: clearAvatar,
+        );
       }
       return a;
     }).toList();
@@ -64,11 +104,30 @@ class AccountsManager extends ChangeNotifier {
     _save();
   }
 
-  void addAccount({required String name, required String email}) {
+  void addAccount({
+    required String name,
+    String? avatarPath,
+    String email = '',
+  }) {
     final newId = DateTime.now().millisecondsSinceEpoch.toString();
-    final newAccount = Account(id: newId, name: name, email: email);
+    final newAccount = Account(
+      id: newId,
+      name: name,
+      email: email,
+      avatarPath: avatarPath,
+    );
     _accounts.add(newAccount);
     _activeAccountId = newId;
+    notifyListeners();
+    _save();
+  }
+
+  void removeAccount(String id) {
+    if (_accounts.length <= 1) return;
+    _accounts.removeWhere((a) => a.id == id);
+    if (_activeAccountId == id) {
+      _activeAccountId = _accounts.first.id;
+    }
     notifyListeners();
     _save();
   }

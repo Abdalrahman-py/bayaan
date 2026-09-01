@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bayaan/features/settings/settings_screen.dart';
+import 'package:bayaan/services/accounts_manager.dart';
 import 'package:bayaan/services/app_settings.dart';
 import 'package:bayaan/services/auth_controller.dart';
 import 'package:bayaan/services/reciter_audio.dart';
@@ -13,6 +14,9 @@ class _MockAuthController extends AuthController {
   String? get email => 'testuser@example.com';
 
   @override
+  String? get displayName => 'Test User';
+
+  @override
   Future<void> signOut() async {
     signedOut = true;
   }
@@ -23,6 +27,7 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       await AppSettings.instance.load();
+      await AccountsManager.instance.load();
     });
 
     Future<void> pumpSettings(WidgetTester tester, AuthController auth) async {
@@ -50,22 +55,24 @@ void main() {
       await tester.pumpAndSettle();
 
       // Header & Profile
-      // The tab bar now lives in the router shell, so only the title is here.
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('الإعدادات'), findsOneWidget);
+      expect(find.text('Test User'), findsOneWidget);
       expect(find.text('testuser@example.com'), findsOneWidget);
-      expect(find.text('T'), findsOneWidget);
 
       // Section headers
-      expect(find.text('Recitation & Audio'), findsOneWidget);
-      expect(find.text('Mushaf & Display'), findsOneWidget);
-      expect(find.text('Practice Goal'), findsOneWidget);
-      expect(find.text('About & Support'), findsOneWidget);
+      expect(find.text('RECITATION & COACHING'), findsOneWidget);
+      expect(find.text('PRACTICE & REMINDERS'), findsOneWidget);
+      expect(find.text('PREFERENCES'), findsOneWidget);
+      expect(find.text('ABOUT & LEGAL'), findsOneWidget);
 
-      // Interactive widgets
+      // Interactive rows
       expect(find.text('Reference Reciter'), findsOneWidget);
+      expect(find.text('Tajweed Sensitivity'), findsOneWidget);
       expect(find.text('Madd Length'), findsOneWidget);
-      expect(find.text('Show transliteration & translation'), findsOneWidget);
+      expect(find.text('Show Transliteration'), findsOneWidget);
+      expect(find.text('App Language'), findsOneWidget);
+      expect(find.text('About Bayaan'), findsOneWidget);
 
       // Tap Sign Out opens confirmation dialog
       await tester.tap(find.widgetWithText(OutlinedButton, 'Sign Out'));
@@ -96,32 +103,43 @@ void main() {
       await pumpSettings(tester, _MockAuthController());
       final settings = AppSettings.instance;
 
-      await tester.tap(find.text(MaddStyle.ishbaa.name));
+      // Madd Length picker
+      await tester.tap(find.text('Madd Length'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(MaddStyle.ishbaa.name).last);
       await tester.pumpAndSettle();
       expect(settings.maddStyle, MaddStyle.ishbaa);
-      // The counts under the heading follow the choice.
-      expect(find.textContaining(MaddStyle.ishbaa.summary), findsOneWidget);
 
-      await tester.tap(find.text('Auto-play reference audio'));
+      // Switches
+      await tester.tap(find.text('Auto-play Reference Audio'));
       await tester.pumpAndSettle();
       expect(settings.autoPlayReference, isFalse);
 
-      await tester.tap(find.text('Show transliteration & translation'));
+      await tester.tap(find.text('Show Transliteration'));
       await tester.pumpAndSettle();
       expect(settings.showTranslation, isFalse);
 
-      await tester.tap(find.text(Reciter.fallback.name));
+      // Reciter picker
+      await tester.tap(find.text('Reference Reciter'));
       await tester.pumpAndSettle();
       await tester.tap(find.text(Reciter.alafasy.name).last);
       await tester.pumpAndSettle();
       expect(settings.reciter, Reciter.alafasy);
 
-      // Reloading from the store returns the same choices, not the defaults.
+      // Language picker
+      await tester.tap(find.text('App Language'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('العربية (Arabic)').last);
+      await tester.pumpAndSettle();
+      expect(settings.appLanguage, 'ar');
+
+      // Reloading from the store returns the same choices
       await settings.load();
       expect(settings.maddStyle, MaddStyle.ishbaa);
       expect(settings.autoPlayReference, isFalse);
       expect(settings.showTranslation, isFalse);
       expect(settings.reciter, Reciter.alafasy);
+      expect(settings.appLanguage, 'ar');
     });
 
     testWidgets('opens on whatever was saved last', (tester) async {
@@ -129,6 +147,7 @@ void main() {
         'reference_reciter': Reciter.abdulBasit.id,
         'madd_style': MaddStyle.qasr.id,
         'daily_goal_minutes': 30,
+        'app_language': 'ar',
       });
       await AppSettings.instance.load();
 
@@ -136,7 +155,9 @@ void main() {
 
       expect(find.text(Reciter.abdulBasit.name), findsOneWidget);
       expect(find.textContaining(MaddStyle.qasr.summary), findsOneWidget);
-      expect(find.text('30 min'), findsOneWidget);
+      expect(find.text('30 min/day'), findsOneWidget);
+      expect(find.text('العربية'), findsOneWidget);
     });
   });
 }
+

@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../services/accounts_manager.dart';
+import '../services/app_settings.dart';
 import '../services/auth_controller.dart';
 import '../services/quran_text.dart';
 import '../services/recitation_controller.dart';
@@ -44,6 +46,14 @@ class AppState extends ChangeNotifier {
     }
     try {
       await auth.init(Supabase.instance.client);
+    } catch (_) {}
+    try {
+      await AppSettings.instance.load();
+      await AccountsManager.instance.load();
+      AccountsManager.instance.syncWithAuth(
+        displayName: auth.displayName,
+        email: auth.email,
+      );
     } catch (_) {}
     await floor;
     booting = false;

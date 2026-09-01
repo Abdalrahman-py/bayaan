@@ -7,7 +7,7 @@ class Account {
   const Account({
     required this.id,
     required this.name,
-    required this.email,
+    this.email = '',
     this.avatarPath,
   });
 
@@ -33,9 +33,9 @@ class Account {
   };
 
   factory Account.fromJson(Map<String, dynamic> json) => Account(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    email: json['email'] as String,
+    id: json['id'] as String? ?? '1',
+    name: json['name'] as String? ?? 'Learner',
+    email: json['email'] as String? ?? '',
     avatarPath: json['avatarPath'] as String?,
   );
 }

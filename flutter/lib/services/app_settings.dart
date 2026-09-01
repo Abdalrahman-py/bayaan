@@ -106,6 +106,8 @@ class AppSettings extends ChangeNotifier {
   static const _kReminderTime = 'reminder_time';
   static const _kStreakAlerts = 'streak_alerts';
   static const _kPracticeReminders = 'practice_reminders';
+  static const _kAppLanguage = 'app_language';
+  static const _kTajweedSensitivity = 'tajweed_sensitivity';
 
   Reciter reciter = Reciter.fallback;
   MaddStyle maddStyle = MaddStyle.fallback;
@@ -117,6 +119,8 @@ class AppSettings extends ChangeNotifier {
   String reminderTime = '8:00 PM';
   bool streakAlerts = true;
   bool practiceReminders = true;
+  String appLanguage = 'en'; // 'en' or 'ar'
+  String tajweedSensitivity = 'Balanced'; // 'Relaxed', 'Balanced', 'Strict'
 
   static Future<SharedPreferences?> _prefs() async {
     try {
@@ -140,6 +144,8 @@ class AppSettings extends ChangeNotifier {
     reminderTime = p.getString(_kReminderTime) ?? '8:00 PM';
     streakAlerts = p.getBool(_kStreakAlerts) ?? true;
     practiceReminders = p.getBool(_kPracticeReminders) ?? true;
+    appLanguage = p.getString(_kAppLanguage) ?? 'en';
+    tajweedSensitivity = p.getString(_kTajweedSensitivity) ?? 'Balanced';
 
     final themeStr = p.getString(_kThemeMode);
     if (themeStr == 'light') {
@@ -216,6 +222,18 @@ class AppSettings extends ChangeNotifier {
     practiceReminders = v;
     notifyListeners();
     await (await _prefs())?.setBool(_kPracticeReminders, v);
+  }
+
+  Future<void> setAppLanguage(String v) async {
+    appLanguage = v;
+    notifyListeners();
+    await (await _prefs())?.setString(_kAppLanguage, v);
+  }
+
+  Future<void> setTajweedSensitivity(String v) async {
+    tajweedSensitivity = v;
+    notifyListeners();
+    await (await _prefs())?.setString(_kTajweedSensitivity, v);
   }
 }
 
